@@ -1,0 +1,21 @@
+name: Controlla dati
+
+on:
+  push:
+    branches: [main]
+    paths: ["data/**"]
+  workflow_dispatch:
+
+jobs:
+  verifica:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Il file dati e valido e i test sulle bollette reali passano
+        run: |
+          npm ci
+          node -e "const d=require('./data/dati.json'); if(!d.tariffe?.luce||!d.indici?.pun) throw new Error('dati.json non valido'); console.log('Dati al', d.aggiornato_al)"
+          npm test

@@ -1,0 +1,6 @@
+{
+  "appId": "it.simulatorebollette.app",
+  "appName": "Simulatore Bollette",
+  "webDir": "www",
+  "android": { "allowMixedContent": false }
+}

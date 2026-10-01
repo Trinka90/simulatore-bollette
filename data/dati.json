@@ -1,0 +1,263 @@
+{
+ "versione": 1,
+ "aggiornato_al": "2026-10-01",
+ "tariffe": {
+  "_nota": "Componenti regolate. Ogni blocco ha validita e fonte. Aggiornare i valori ogni trimestre (oneri) e ogni anno (rete).",
+  "luce": {
+   "rete": {
+    "valido_dal": "2026-01-01",
+    "valido_al": "2026-12-31",
+    "fonte": "Bolletta Hera STG 07-08/2026 (tariffa rete domestici 2026)",
+    "verificato": true,
+    "quota_fissa_mese": 1.92,
+    "quota_potenza_kw_mese": 1.9766,
+    "quota_energia_kwh": 0.01473
+   },
+   "oneri": {
+    "valido_dal": "2026-07-01",
+    "valido_al": "2026-12-31",
+    "fonte": "Bolletta Hera STG 07-08/2026; confermati per il Q4 2026 da ARERA delibera 343/2026/R/com (ASOS dal 01/07/2026, ARIM dal 01/01/2026)",
+    "verificato": true,
+    "asos_kwh": 0.031515,
+    "arim_kwh": 0.001638
+   },
+   "imposte": {
+    "valido_dal": "2026-01-01",
+    "valido_al": "2026-12-31",
+    "fonte": "Bolletta Hera STG 07-08/2026",
+    "verificato": true,
+    "accisa_kwh": 0.0227,
+    "esenzione_kwh_mese": 150,
+    "esenzione_potenza_max_kw": 3.0,
+    "esenzione_annuo_pieno_kwh": 1800,
+    "esenzione_annuo_max_kwh": 2640,
+    "iva_domestico": 0.1
+   },
+   "canone_rai_mese": 9.0,
+   "canone_rai_mesi": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+   ],
+   "ripartizione_fasce_tipica": {
+    "F1": 0.33,
+    "F2": 0.31,
+    "F3": 0.36
+   },
+   "dispacciamento": {
+    "_nota": "CDISPD fissato da ARERA (valore STG domestici non vulnerabili), si applica anche alle offerte del mercato libero dal 2026 (delibera 386/2025). Comprensivo delle perdite di rete, si applica ai kWh prelevati.",
+    "cdispd_mensile": {
+     "2026-03": 0.016509,
+     "2026-07": 0.0384637,
+     "2026-08": 0.018468
+    },
+    "fonte": "Edison Energia, corrispettivi STG mensili; bolletta Hera 07-08/2026"
+   },
+   "perdite_bt": {
+    "valore": 0.1,
+    "fonte": "ARERA TIS, 10% dal 01/01/2023 (Bluenergy componenti regolate Q1 2026; CTE Enel 2026)"
+   }
+  },
+  "gas": {
+   "rete_oneri": {
+    "valido_dal": "2026-04-01",
+    "valido_al": "2026-12-31",
+    "fonte": "Quota fissa e 1° scaglione: bolletta Estra 07/2026 (ARERA 588/2025, 98/2026). Scaglioni superiori: valori V0.3 NON verificati",
+    "verificato": true,
+    "ambito": "Centrale (Toscana, Umbria, Marche)",
+    "quota_fissa_annua": 51.96,
+    "scaglioni_variabili_annui": [
+     [
+      120,
+      0.149254
+     ],
+     [
+      480,
+      0.335843
+     ],
+     [
+      1560,
+      0.306123
+     ],
+     [
+      5000,
+      0.300923
+     ],
+     [
+      80000,
+      0.26989
+     ],
+     [
+      200000,
+      0.22231
+     ],
+     [
+      1000000,
+      0.14127
+     ],
+     [
+      null,
+      0.127569
+     ]
+    ],
+    "verificato_fino_smc_anno": 120,
+    "_nota_1_scaglione": "0,149254 = 0,30 € / 2,01 Smc dalla bolletta (incertezza di arrotondamento circa ±0,0025)",
+    "_nota_q4_2026": "Dal 01/10/2026 (delibera 343/2026): RE, RS, UG1, GS, UG3 confermati; CRVI 0,721 -> 0,613 c€/Smc; CRVOS 3,14 c€/Smc (valore precedente non trovato). Effetto stimato inferiore a 0,01 €/Smc."
+   },
+   "imposte": {
+    "valido_dal": "2026-01-01",
+    "valido_al": "2026-12-31",
+    "fonte": "Bolletta Estra 07/2026: accisa 1° scaglione 0,044, addizionale Toscana 0,022, IVA 10% consumi e 22% quote fisse",
+    "verificato": true,
+    "accisa_scaglioni_annui": [
+     [
+      120,
+      0.044
+     ],
+     [
+      480,
+      0.175
+     ],
+     [
+      1560,
+      0.17
+     ],
+     [
+      null,
+      0.186
+     ]
+    ],
+    "addizionale_regionale_scaglioni_annui": [
+     [
+      null,
+      0.022
+     ]
+    ],
+    "_addizionale_nota": "Toscana: 0,022 €/Smc verificato nel 1° scaglione; scaglioni superiori da verificare",
+    "iva_ridotta": 0.1,
+    "iva_ordinaria": 0.22,
+    "soglia_iva_ridotta_smc_anno": 480,
+    "iva_quote_fisse": 0.22,
+    "_iva_quote_fisse_nota": "Verificato su bolletta Estra 07/2026: quote fisse vendita e rete al 22%",
+    "verificato_fino_smc_anno": 120
+   }
+  }
+ },
+ "indici": {
+  "_nota": "Indici di mercato mensili. 'reale' = valore pubblicato. I mesi assenti vengono SIMULATI secondo 'metodo_simulazione'. Aggiornare ogni mese aggiungendo il valore reale.",
+  "aggiornato_al": "2026-10-01",
+  "pun": {
+   "unita": "€/kWh",
+   "fonte": "GME, medie mensili PUN Index per fascia (a4energie.it, 30/09/2026). Verificato: CELD Hera STG = PUN fascia x 1,10",
+   "mesi": {
+    "2026-01": {
+     "F0": 0.132665,
+     "F1": 0.151261,
+     "F2": 0.137405,
+     "F3": 0.118292,
+     "F23": 0.124858
+    },
+    "2026-02": {
+     "F0": 0.114405,
+     "F1": 0.12228,
+     "F2": 0.119837,
+     "F3": 0.105296,
+     "F23": 0.110572
+    },
+    "2026-03": {
+     "F0": 0.1434,
+     "F1": 0.143021,
+     "F2": 0.153908,
+     "F3": 0.138088,
+     "F23": 0.143582
+    },
+    "2026-04": {
+     "F0": 0.119466,
+     "F1": 0.111138,
+     "F2": 0.138261,
+     "F3": 0.116632,
+     "F23": 0.123399
+    },
+    "2026-05": {
+     "F0": 0.119351,
+     "F1": 0.107174,
+     "F2": 0.131438,
+     "F3": 0.120815,
+     "F23": 0.124464
+    },
+    "2026-06": {
+     "F0": 0.132505,
+     "F1": 0.12576,
+     "F2": 0.1517,
+     "F3": 0.127236,
+     "F23": 0.135691
+    },
+    "2026-07": {
+     "F0": 0.157038,
+     "F1": 0.154201,
+     "F2": 0.169384,
+     "F3": 0.152256,
+     "F23": 0.1585
+    },
+    "2026-08": {
+     "F0": 0.179999,
+     "F1": 0.174516,
+     "F2": 0.204353,
+     "F3": 0.171716,
+     "F23": 0.182468
+    },
+    "2026-09": {
+     "F0": 0.207542,
+     "F1": 0.20635,
+     "F2": 0.227576,
+     "F3": 0.197024,
+     "F23": 0.208146,
+     "_nota": "provvisorio, dati fino al 30/09"
+    }
+   }
+  },
+  "psv": {
+   "unita": "€/Smc",
+   "fonte": "Medie mensili PSV (energiachiara.it); settembre stimato da quotazioni giornaliere 16-30/09 (0,76-0,83) e +13% su agosto (switcho.it)",
+   "mesi": {
+    "2026-01": 0.404227,
+    "2026-02": 0.377233,
+    "2026-03": 0.558338,
+    "2026-04": 0.493117,
+    "2026-05": 0.502398,
+    "2026-06": 0.505178,
+    "2026-07": 0.606917,
+    "2026-08": 0.686889,
+    "2026-09": 0.78
+   }
+  },
+  "cdispd": {
+   "unita": "€/kWh",
+   "fonte": "Edison corrispettivi STG (marzo, agosto 2026); bolletta Hera (luglio 2026). Comprensivo delle perdite, si applica ai kWh prelevati",
+   "mesi": {
+    "2026-03": 0.016509,
+    "2026-07": 0.0384637,
+    "2026-08": 0.018468
+   }
+  },
+  "metodo_simulazione": {
+   "pun": "Scenario centrale: ultimo mese reale (per fascia) mantenuto costante. Contesto: spot fine settembre ~0,20 €/kWh; ARERA ha alzato del 63% la materia energia per il Q4 2026.",
+   "psv": "Scenario centrale: 0,77 €/Smc = TTF novembre 2026 ~71 €/MWh (quotazioni 29/09-01/10/2026) + differenziale PSV-TTF ~2 €/MWh, convertito con 0,010583 MWh/Smc.",
+   "psv_centrale": 0.77,
+   "cdispd": "Media dei mesi reali disponibili, mantenuta costante.",
+   "scenari": {
+    "basso": 0.75,
+    "centrale": 1.0,
+    "alto": 1.25
+   },
+   "_scenari_nota": "Moltiplicatori applicati SOLO ai valori simulati di PUN e PSV"
+  }
+ }
+}

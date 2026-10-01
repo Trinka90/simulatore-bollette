@@ -1,0 +1,58 @@
+name: Compila APK
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ["data/**", "README.md"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Dipendenze, test e build web
+        run: |
+          npm ci
+          npm test
+          npm run build
+          npx cap sync android
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: android-actions/setup-android@v3
+
+      - name: Compila APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleRelease --no-daemon
+          cp app/build/outputs/apk/release/app-release.apk ../SimulatoreBollette-1.0.${{ github.run_number }}.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SimulatoreBollette-apk
+          path: SimulatoreBollette-*.apk
+
+      - name: Pubblica in Releases
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: Simulatore Bollette 1.0.${{ github.run_number }}
+          files: SimulatoreBollette-*.apk
+          make_latest: true
+          body: |
+            Scarica il file .apk dal telefono e aprilo per installarlo
+            (la prima volta Android chiede di consentire l'installazione da questa fonte).
