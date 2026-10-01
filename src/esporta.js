@@ -15,7 +15,7 @@ const GRUPPI = [["vendita", "Spesa per la vendita"], ["rete", "Spesa per la rete
   ["imposte", "Accise e addizionali"], ["iva", "IVA"], ["altro", "Altre partite (fuori campo IVA)"]];
 const descrPrezzo = (o) => o.fornitura === "GAS"
   ? `${o.tipoPrezzo === "indicizzato" ? "PSV + " : ""}${nf(o.prezzoSmc)} €/Smc`
-  : `${o.tipoPrezzo === "indicizzato" ? "PUN + " : ""}${Object.entries(o.prezzi).map(([k, v]) => `${k} ${nf(v)}`).join(", ")} €/kWh`;
+  : `${o.tipoPrezzo === "indicizzato" ? "PUN + " : ""}${Object.entries(o.prezzi).map(([k, v]) => (k === "F0" ? nf(v) : `${k} ${nf(v)}`)).join(", ")} €/kWh`;
 
 function nuovo(titolo, sotto) {
   const doc = new jsPDF({ unit: "mm", format: "a4" });

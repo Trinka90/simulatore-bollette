@@ -66,7 +66,7 @@ function toast(msg, ms = 2600) {
 const T = () => S.dati.tariffe, I = () => S.dati.indici;
 const descrPrezzo = (o) => {
   if (o.fornitura === "GAS") return `${o.tipoPrezzo === "indicizzato" ? "PSV + " : ""}${nf(o.prezzoSmc)} €/Smc`;
-  const p = Object.entries(o.prezzi || {}).map(([k, v]) => `${k} ${nf(v)}`).join(" · ");
+  const p = Object.entries(o.prezzi || {}).map(([k, v]) => (k === "F0" ? nf(v) : `${k} ${nf(v)}`)).join(" · ");
   return `${o.tipoPrezzo === "indicizzato" ? "PUN + " : ""}${p} €/kWh`;
 };
 
@@ -253,44 +253,106 @@ function nuovaOfferta(fornitura) {
       altriSmc: 0, quotaFissaAnnua: null, note: [] };
 }
 
-// coda di CTE da confermare
-let codaCte = [];
+// ------------------------------------------------------------------ IMPORT CTE (automatico)
+// L'app legge la CTE e salva l'offerta da sola. Chiede solo i numeri indispensabili che nel PDF non ci sono.
+function cosaManca(o) {
+  const m = [];
+  const indic = o.tipoPrezzo === "indicizzato";
+  if (o.fornitura === "LUCE") {
+    for (const [k, v] of Object.entries(o.prezzi || {})) {
+      if (v == null || Number.isNaN(v)) m.push({ campo: "p:" + k,
+        domanda: `${indic ? "Maggiorazione sul PUN" : "Prezzo dell'energia"}${k === "F0" ? "" : " in fascia " + k.replace("F23", "F2-F3")} (€/kWh)`,
+        aiuto: indic ? "Nella CTE: il numero dopo «PUN +» (spread) alla voce «Costo per consumi»." : "Nella CTE: voce «Costo per consumi» o «Prezzo energia»." });
+    }
+  } else if (o.prezzoSmc == null || Number.isNaN(o.prezzoSmc)) {
+    m.push({ campo: "gas", domanda: `${indic ? "Maggiorazione sul PSV" : "Prezzo del gas"} (€/Smc)`,
+      aiuto: indic ? "Nella CTE: il numero dopo «PSV +» alla voce «Costo per consumi»." : "Nella CTE: voce «Costo per consumi» o «Prezzo gas»." });
+  }
+  if (o.quotaFissaAnnua == null || Number.isNaN(o.quotaFissaAnnua)) {
+    m.push({ campo: "quota", domanda: "Costo fisso (€ all'anno)", aiuto: "Nella CTE: «Costo fisso anno» o «Quota fissa». Se è indicata al mese, moltiplicala per 12." });
+  }
+  return m;
+}
+
+let esitiImport = [];
 $("#filePdf").addEventListener("change", async (e) => {
   const files = [...e.target.files];
   e.target.value = "";
   if (!files.length) return;
+  $("#titolo").textContent = "Lettura CTE";
   $("#vista").innerHTML = `<div class="empty"><span class="spin"></span><p>Leggo ${files.length} CTE…</p></div>`;
-  codaCte = [];
+  esitiImport = [];
   for (const f of files) {
     try {
       const an = analizza(await testoPdf(f, pdfjs));
+      if (!an.tipo) { esitiImport.push({ file: f.name, illeggibile: true }); continue; }
       const off = { id: uid(), incluso: true, ...bozzaOfferta(an, f.name) };
-      codaCte.push({ off, an, file: f.name });
+      if (!off.nome) off.nome = f.name.replace(/\.pdf$/i, "");
+      S.offerte.push(off);
+      esitiImport.push({ file: f.name, id: off.id });
     } catch (err) {
-      codaCte.push({ off: { ...nuovaOfferta("LUCE"), nome: f.name, fonte: `CTE ${f.name}` },
-        an: { campi: {}, avvisi: [`Impossibile leggere il PDF: ${err.message}`] }, file: f.name });
+      console.error(err);
+      esitiImport.push({ file: f.name, illeggibile: true });
     }
   }
-  prossimaCte();
+  salva();
+  vistaImport();
 });
-function prossimaCte() {
-  const c = codaCte.shift();
-  if (!c) { vai("confronto"); return; }
-  editor(c.off, c.an, c.file, codaCte.length);
+
+function vistaImport() {
+  $("#titolo").textContent = "CTE lette";
+  let html = "";
+  for (const es of esitiImport) {
+    if (es.illeggibile) {
+      html += `<div class="card"><b>✕ ${h(es.file)}</b><div class="small mut">Non riesco a leggere questo PDF: probabilmente è una scansione (un'immagine) o non è una CTE.</div></div>`;
+      continue;
+    }
+    const o = S.offerte.find((x) => x.id === es.id);
+    if (!o) continue;
+    const manca = cosaManca(o);
+    const tipo = o.tipoPrezzo === "indicizzato" ? '<span class="b var">VARIABILE</span>' : '<span class="b reale">PREZZO FISSO</span>';
+    html += `<div class="card"><div class="row sp"><b class="grow">${manca.length ? "⚠" : "✓"} ${h(o.fornitore || "Fornitore non indicato")}</b>
+      <span>${o.fornitura === "LUCE" ? "Luce" : "Gas"} ${tipo}</span></div><div class="small">${h(o.nome)}</div>`;
+    if (!manca.length) {
+      html += `<div class="small mut">${h(descrPrezzo(o))} · costo fisso ${eur(o.quotaFissaAnnua, 0)}/anno</div>`;
+    } else {
+      html += `<div class="small" style="margin-top:6px">Nella CTE non ho trovato ${manca.length === 1 ? "questo dato" : "questi dati"}:</div>`;
+      html += manca.map((m) => `<label>${h(m.domanda)}</label><input inputmode="decimal" data-manca="${o.id}|${m.campo}"><div class="frase">${h(m.aiuto)}</div>`).join("");
+    }
+    html += `</div>`;
+  }
+  const daCompletare = esitiImport.some((es) => !es.illeggibile && cosaManca(S.offerte.find((x) => x.id === es.id) || {}).length);
+  html += `<button class="btn full" id="impFine">${daCompletare ? "Salva e vai al confronto" : "Vai al confronto"}</button>
+    ${daCompletare ? '<p class="small mut">Le offerte con dati mancanti restano escluse dal confronto finché non li inserisci.</p>' : ""}`;
+  $("#vista").innerHTML = html;
+  window.scrollTo(0, 0);
+  $("#impFine").onclick = () => {
+    for (const i of $$("[data-manca]")) {
+      const v = pnum(i.value);
+      if (v == null || Number.isNaN(v)) continue;
+      const [id, campo] = i.dataset.manca.split("|");
+      const o = S.offerte.find((x) => x.id === id);
+      if (campo === "quota") o.quotaFissaAnnua = v;
+      else if (campo === "gas") o.prezzoSmc = v;
+      else o.prezzi[campo.slice(2)] = v;
+    }
+    salva();
+    vai("confronto");
+  };
 }
 
 function editor(o, an = null, file = "", restanti = 0) {
-  $("#titolo").textContent = an ? "Conferma CTE" : "Offerta";
-  const fr = (k) => (an?.campi?.[k] ? `<div class="frase">Letto: ${h(an.campi[k].frase)}</div>` : "");
+  $("#titolo").textContent = "Offerta";
+  const fr = () => "";
   const luce = o.fornitura === "LUCE";
   const strutt = luce ? ("F0" in o.prezzi ? "F0" : "F23" in o.prezzi ? "F23" : "F123") : "";
   const indic = o.tipoPrezzo === "indicizzato";
   const fasce = { F0: ["F0"], F23: ["F1", "F23"], F123: ["F1", "F2", "F3"] }[strutt] || [];
-  const campoPrezzo = (k) => `<label>${indic ? "Spread su PUN" : "Prezzo"} ${k === "F0" ? "monorario" : k} (€/kWh)</label>
+  const campoPrezzo = (k) => `<label>${indic ? "Maggiorazione sul PUN" : "Prezzo"}${k === "F0" ? "" : " fascia " + k} (€/kWh)</label>
     <input inputmode="decimal" data-p="${k}" value="${h(nf(o.prezzi[k]))}">${fr(k === "F0" && !an?.campi?.F0 ? "spread" : k)}`;
-  let html = an ? `<div class="card small"><b>${h(file)}</b>${restanti ? ` · ancora ${restanti} da confermare` : ""}
-      <div class="mut">Ho letto i valori qui sotto: controllali con la frase originale e completa quelli mancanti.</div></div>` : "";
-  if (an?.avvisi?.length) html += `<div class="warn"><b>Da controllare</b><ul style="margin:4px 0;padding-left:18px">${an.avvisi.map((a) => `<li>${h(a)}</li>`).join("")}</ul></div>`;
+  const altre = () => `<label>Note</label><textarea id="fNote" rows="3">${h((o.note || []).join("\n"))}</textarea>
+      <label>Fonte</label><input id="fFonte" value="${h(o.fonte)}"></details>`;
+  let html = "";
   html += `<div class="card">
     <div class="seg" id="fForn"><button data-v="LUCE" class="${luce ? "on" : ""}">Luce</button><button data-v="GAS" class="${!luce ? "on" : ""}">Gas</button></div>
     <label>Fornitore</label><input id="fFornitore" value="${h(o.fornitore)}">
@@ -302,6 +364,8 @@ function editor(o, an = null, file = "", restanti = 0) {
       <button data-v="F0" class="${strutt === "F0" ? "on" : ""}">Monoraria</button><button data-v="F23" class="${strutt === "F23" ? "on" : ""}">Bioraria</button>
       <button data-v="F123" class="${strutt === "F123" ? "on" : ""}">Trioraria</button></div>
       ${fasce.map(campoPrezzo).join("")}
+      <label>Costo fisso (€ all'anno)</label><input inputmode="decimal" id="fQuota" value="${h(nf(o.quotaFissaAnnua))}">
+      <details style="margin-top:14px"><summary class="small"><b>Opzioni avanzate</b> — di solito non serve toccarle</summary>
       <label>Perdite di rete</label><select id="fPerdite">
         <option value="nessuna" ${o.perdite === "nessuna" ? "selected" : ""}>Già comprese nel prezzo</option>
         <option value="indice" ${o.perdite === "indice" ? "selected" : ""}>Solo il PUN maggiorato del 10% (PUN × 1,10 + spread)</option>
@@ -310,13 +374,15 @@ function editor(o, an = null, file = "", restanti = 0) {
       <div class="sw"><span>Dispacciamento CDISPD stabilito da ARERA</span><input type="checkbox" id="fCd" ${o.cdispd === "arera" ? "checked" : ""}></div>
       <div id="fCdVal" ${o.cdispd === "arera" ? "hidden" : ""}><label>Dispacciamento €/kWh</label><input inputmode="decimal" id="fCdv" value="${o.cdispd === "arera" ? "" : h(nf(o.cdispd))}"></div>
       <label>Altri corrispettivi €/kWh (opzionale)</label><input inputmode="decimal" id="fAltri" value="${h(nf(o.altriKwh))}">`;
+    html += altre();
   } else {
-    html += `<label>${indic ? "Spread su PSV" : "Prezzo gas"} (€/Smc)</label><input inputmode="decimal" id="fPrezzoSmc" value="${h(nf(o.prezzoSmc))}">${fr("prezzo") || fr("spread")}
+    html += `<label>${indic ? "Maggiorazione sul PSV" : "Prezzo gas"} (€/Smc)</label><input inputmode="decimal" id="fPrezzoSmc" value="${h(nf(o.prezzoSmc))}">
+      <label>Costo fisso (€ all'anno)</label><input inputmode="decimal" id="fQuota" value="${h(nf(o.quotaFissaAnnua))}">
+      <details style="margin-top:14px"><summary class="small"><b>Opzioni avanzate</b> — di solito non serve toccarle</summary>
       <label>Altri corrispettivi €/Smc (opzionale)</label><input inputmode="decimal" id="fAltri" value="${h(nf(o.altriSmc))}">`;
+    html += altre();
   }
-  html += `<label>Quota fissa (€/anno)</label><input inputmode="decimal" id="fQuota" value="${h(nf(o.quotaFissaAnnua))}">${fr("quotaAnno") || fr("quotaMese")}
-    <label>Note e clausole</label><textarea id="fNote" rows="4">${h((o.note || []).filter((x) => !x.startsWith("Frase") ).join("\n"))}</textarea>
-    <label>Fonte</label><input id="fFonte" value="${h(o.fonte)}"></div>
+  html += `</div>
     <div class="row"><button class="btn" id="fSalva">${an ? "Conferma e salva" : "Salva"}</button>
     <button class="btn sec" id="fAnnulla">${an ? "Scarta" : "Annulla"}</button></div>`;
   $("#vista").innerHTML = html;
@@ -353,7 +419,7 @@ function editor(o, an = null, file = "", restanti = 0) {
     editor(o, an, file, restanti);
   }));
   if (luce) $("#fCd").onchange = (e) => ($("#fCdVal").hidden = e.target.checked);
-  $("#fAnnulla").onclick = () => (an ? prossimaCte() : vai("offerte"));
+  $("#fAnnulla").onclick = () => vai("offerte");
   $("#fSalva").onclick = () => {
     leggi();
     $$("input.err").forEach((i) => i.classList.remove("err"));
@@ -377,7 +443,7 @@ function editor(o, an = null, file = "", restanti = 0) {
     if (i >= 0) S.offerte[i] = o; else S.offerte.push(o);
     salva();
     toast("Offerta salvata");
-    if (an) prossimaCte(); else vai("offerte");
+    vai("offerte");
   };
 }
 
@@ -395,10 +461,11 @@ function vistaConsumi() {
     <label>Potenza impegnata (kW)</label><select id="lKw">${[1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 7, 8, 9, 10, 15].map((k) => `<option ${k === L.potenzaKw ? "selected" : ""}>${String(k).replace(".", ",")}</option>`).join("")}</select>
     <div class="sw"><span>Abitazione di residenza</span><input type="checkbox" id="lRes" ${L.residente ? "checked" : ""}></div>
     <div class="sw"><span>Canone RAI in bolletta</span><input type="checkbox" id="lRai" ${L.canoneRai ? "checked" : ""}></div>
-    <label>Ripartizione per fascia (%)</label>
+    <details style="margin-top:10px"><summary class="small"><b>Dettagli facoltativi</b> — fasce orarie e consumi mese per mese</summary>
+    <label>Ripartizione per fascia (%) — dalla bolletta, se la conosci</label>
     <div class="row">${["F1", "F2", "F3"].map((f) => `<div><label style="margin:0">${f}</label><input inputmode="decimal" data-rip="${f}" value="${nf(L.ripartizione[f] * 100, 1)}"></div>`).join("")}</div>
-    <details style="margin-top:10px"><summary class="small"><b>Consumi mese per mese (opzionale)</b> — ${L.profilo ? "personalizzati" : "profilo standard"}</summary>
-      <div class="small mut">Inserisci i kWh di ogni mese (anche approssimativi). Vuoto = profilo standard stimato.</div>${prof(L.profilo, "pl")}</details>
+    <label>Consumi mese per mese — ${L.profilo ? "personalizzati" : "vuoto = profilo standard"}</label>
+${prof(L.profilo, "pl")}</details>
   </div>
   <div class="card"><div class="sw"><h3 style="margin:0">Gas</h3><input type="checkbox" id="gAtt" ${G.attiva ? "checked" : ""}></div>
     <label>Consumo annuo (Smc)</label><input inputmode="decimal" id="gSmc" value="${nf(G.consumoAnnuoSmc)}">

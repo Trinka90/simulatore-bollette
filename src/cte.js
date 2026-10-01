@@ -106,16 +106,16 @@ export function analizza(testoGrezzo) {
   if (/(?:prelevat\w*|consumat\w*|consumi)[^.]{0,30}(?:maggiorat\w*|comprensiv\w*|aumentat\w*)[^.]{0,15}perdite/i.test(t)) perdite = "tutto";
   if (/(?:al|il) PUN[^.]{0,30}(?:perdite|maggiorat)/i.test(t)) perdite = "indice";
 
-  // indizi da far controllare
-  const ctx = (re, msg) => {
-    const m = re.exec(t);
-    if (m) avvisi.push(`${msg} Frase: …${t.slice(Math.max(0, m.index - 50), m.index + m[0].length + 60).trim()}…`);
-  };
-  if (tipo === "LUCE") ctx(/perdite di rete/i, "Parla di perdite di rete: verifica se il prezzo è già comprensivo o va maggiorato del 10%.");
-  ctx(/sconto|bonus/i, "Ci sono sconti o bonus: controlla se sono condizionati (domiciliazione, bolletta web…).");
-  ctx(/(?:per|durata(?: di)?|bloccat\w* (?:per)?)\s*\d{1,2}\s*mesi/i, "Durata del prezzo:");
-  if (!Object.keys(campi).length) avvisi.push("Nessun prezzo riconosciuto: inserisci i valori a mano.");
-  return { tipo, indicizzata, campi, info, avvisi, perdite };
+  // note in parole semplici (nessuna domanda: le decisioni le prende l'app)
+  const note = [];
+  const PERD = { nessuna: "prezzo già comprensivo delle perdite di rete", indice: "PUN maggiorato del 10% di perdite di rete + spread",
+    tutto: "prezzo applicato ai kWh consumati + 10% di perdite di rete" };
+  if (tipo === "LUCE" && /perdite/i.test(t)) note.push(`Perdite di rete: ${PERD[perdite]} (dalla CTE).`);
+  const dur = /(?:per|durata(?: di)?|bloccat\w*(?: per)?|valid\w*(?: per)?)\s*(\d{1,2})\s*mesi/i.exec(t);
+  if (dur) note.push(`Prezzo valido per ${dur[1]} mesi.`);
+  if (/sconto|bonus/i.test(t)) note.push("La CTE cita sconti o bonus: non sono inclusi nel calcolo (spesso dipendono da domiciliazione o bolletta online).");
+  if (!Object.keys(campi).length) avvisi.push("Nessun prezzo riconosciuto nel PDF.");
+  return { tipo, indicizzata, campi, info, avvisi, perdite, note };
 }
 
 /** Converte il risultato dell'analisi in un'offerta (bozza da confermare). */
@@ -125,7 +125,7 @@ export function bozzaOfferta(an, nomeFile = "") {
     fornitura: an.tipo || "LUCE", fornitore: an.info.fornitore, nome: an.info.nome || nomeFile.replace(/\.pdf$/i, ""),
     fonte: nomeFile ? `CTE ${nomeFile}` : "", tipoPrezzo: an.indicizzata ? "indicizzato" : "fisso",
     quotaFissaAnnua: c("quotaAnno") ?? (c("quotaMese") != null ? c("quotaMese") * 12 : null),
-    note: [...an.avvisi],
+    note: [...(an.note || [])],
   };
   if (off.fornitura === "LUCE") {
     let prezzi = {};
