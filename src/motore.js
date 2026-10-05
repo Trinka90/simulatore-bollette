@@ -139,8 +139,11 @@ export function calcolaLuce(offerta, consumi, utenza, periodo, tariffe) {
     }
     add("vendita", `Energia ${fascia}`, kwh * kPerd, "kWh", prezzo, kwh * kPerd * prezzo, iva);
   }
+  if (offerta.dispacciamentoKwh) add("vendita", "Dispacciamento (CDISPD)", q, "kWh", offerta.dispacciamentoKwh, q * offerta.dispacciamentoKwh, iva);
+  if (offerta.sbilanciamentoKwh) add("vendita", "Corrispettivo di sbilanciamento", q, "kWh", offerta.sbilanciamentoKwh, q * offerta.sbilanciamentoKwh, iva);
   if (offerta.altriKwh) add("vendita", "Dispacciamento e altri corrispettivi", q, "kWh", offerta.altriKwh, q * offerta.altriKwh, iva);
   add("vendita", "Quota fissa venditore", mesi, "mesi", offerta.quotaFissaMese || 0, mesi * (offerta.quotaFissaMese || 0), iva);
+  if (offerta.dispbtMese) add("vendita", "Dispacciamento quota fissa (DISPbt)", mesi, "mesi", offerta.dispbtMese, mesi * offerta.dispbtMese, iva);
 
   add("rete", "Quota fissa rete", mesi, "mesi", rete.quota_fissa_mese, mesi * rete.quota_fissa_mese, iva);
   const kwm = utenza.potenzaKw * mesi;

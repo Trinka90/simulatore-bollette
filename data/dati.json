@@ -1,6 +1,6 @@
 {
- "versione": 1,
- "aggiornato_al": "2026-10-01",
+ "versione": 2,
+ "aggiornato_al": "2026-10-05",
  "tariffe": {
   "_nota": "Componenti regolate. Ogni blocco ha validita e fonte. Aggiornare i valori ogni trimestre (oneri) e ogni anno (rete).",
   "luce": {
@@ -240,24 +240,47 @@
   },
   "cdispd": {
    "unita": "€/kWh",
-   "fonte": "Edison corrispettivi STG (marzo, agosto 2026); bolletta Hera (luglio 2026). Comprensivo delle perdite, si applica ai kWh prelevati",
+   "fonte": "Bolletta Enel Energia mercato libero lug-ago 2026 (CDispD); si applica ai kWh prelevati",
    "mesi": {
-    "2026-03": 0.016509,
-    "2026-07": 0.0384637,
-    "2026-08": 0.018468
+    "2026-07": 0.025043,
+    "2026-08": 0.025043
    }
   },
   "metodo_simulazione": {
    "pun": "Scenario centrale: ultimo mese reale (per fascia) mantenuto costante. Contesto: spot fine settembre ~0,20 €/kWh; ARERA ha alzato del 63% la materia energia per il Q4 2026.",
    "psv": "Scenario centrale: 0,77 €/Smc = TTF novembre 2026 ~71 €/MWh (quotazioni 29/09-01/10/2026) + differenziale PSV-TTF ~2 €/MWh, convertito con 0,010583 MWh/Smc.",
    "psv_centrale": 0.77,
-   "cdispd": "Media dei mesi reali disponibili, mantenuta costante.",
+   "cdispd": "Mercato libero: ultimo CDispD noto (0,025043 €/kWh, bolletta Enel lug-ago 2026) mantenuto; sbilanciamento = media dei mesi noti; DISPbt quota fissa 0,09225 €/mese.",
    "scenari": {
     "basso": 0.75,
     "centrale": 1.0,
     "alto": 1.25
    },
    "_scenari_nota": "Moltiplicatori applicati SOLO ai valori simulati di PUN e PSV"
+  },
+  "cdispd_stg": {
+   "unita": "€/kWh",
+   "fonte": "Edison corrispettivi STG (marzo, agosto 2026); bolletta Hera (luglio 2026). Comprensivo delle perdite, si applica ai kWh prelevati",
+   "mesi": {
+    "2026-03": 0.016509,
+    "2026-07": 0.0384637,
+    "2026-08": 0.018468
+   },
+   "_nota": "Valori del Servizio Tutele Graduali: solo riferimento, non usati per il mercato libero."
+  },
+  "sbilanciamento": {
+   "unita": "€/kWh",
+   "fonte": "Bolletta Enel Energia mercato libero lug-ago 2026 (corrispettivo di sbilanciamento)",
+   "mesi": {
+    "2026-07": 0.003455,
+    "2026-08": 0.00396
+   }
+  },
+  "dispbt_fisso": {
+   "unita": "€/mese",
+   "valore": 0.09225,
+   "valido_al": "2026-12-31",
+   "fonte": "Bolletta Enel Energia mercato libero lug-ago 2026 (DISPbt parte fissa)"
   }
  }
 }

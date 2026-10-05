@@ -65,11 +65,22 @@ test("simulazione 12 mesi: consumo totale, scenari, prezzo massimo", () => {
   vicino(e.prezzo, 0.15, 1e-12, "tetto");
 });
 
-test("parità con la versione Python (report Enel/Estra)", () => {
+test("simulazione 12 mesi di riferimento (Enel Flex, Estra)", () => {
   const U = { luce: { potenzaKw: 6, residente: true, consumoAnnuoKwh: 3175, canoneRai: true, ripartizione: { F1: 0.33, F2: 0.31, F3: 0.36 } },
     gas: { consumoAnnuoSmc: 39, profilo: { 1: 4, 2: 3, 3: 4, 4: 4, 5: 2, 6: 3, 7: 2, 8: 3, 9: 3, 10: 3, 11: 4, 12: 4 } } };
   const enel = simula({ fornitura: "LUCE", tipoPrezzo: "indicizzato", prezzi: { F0: 0.02226 }, perdite: "indice", prezzoMax: 0.174, quotaFissaAnnua: 180 }, U, T, I, "2026-10");
-  vicino(enel.centrale.reduce((s, m) => s + m.risultato.totale, 0), 1409.59, 0.005, "enel");
+  vicino(enel.centrale.reduce((s, m) => s + m.risultato.totale, 0), 1425.69, 0.005, "enel");
   const estra = simula({ fornitura: "GAS", tipoPrezzo: "indicizzato", prezzoSmc: 0.025, altriSmc: 0.0507541, quotaFissaAnnua: 30 }, U, T, I, "2026-10");
   vicino(estra.alto.reduce((s, m) => s + m.risultato.totale, 0), 153.78, 0.005, "estra alto");
+});
+
+test("bolletta Enel mercato libero luglio-agosto 2026 = 84,40 € (+ canone RAI)", () => {
+  // prezzo fisso 0,10818 €/kWh, perdite 10% fatturate, 108 + 111 kWh, 3 kW residente
+  const o = { prezzi: { F0: 0.10818 }, perdite: 0.10, quotaFissaMese: 9, dispbtMese: 0.09225,
+    dispacciamentoKwh: 0.025043, sbilanciamentoKwh: (108 * 0.003455 + 111 * 0.00396) / 219 };
+  const r = calcolaLuce(o, { F0: 219 }, { potenzaKw: 3, residente: true, consumoAnnuoKwh: 1300, canoneRai: true },
+    new Periodo(data(2026, 7, 1), data(2026, 8, 31)), T);
+  for (const [g, v] of Object.entries({ vendita: 50.54, rete: 18.93, oneri: 7.26, imposte: 0, iva: 7.67 }))
+    vicino(r.gruppo(g), v, 0.02, g);
+  vicino(r.totale - r.gruppo("altro"), 84.40, 0.02, "totale");
 });

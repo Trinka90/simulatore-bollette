@@ -57,10 +57,27 @@ export function psvMese(indici, a, m, scenario) {
 
 export function cdispdMese(indici, a, m) {
   const serie = indici.cdispd.mesi, k = ym(a, m);
-  if (serie[k] != null) return ap("CDISPD dispacciamento", serie[k], "€/kWh", "REALE", "valore ARERA del mese");
-  const v = Object.values(serie);
-  return ap("CDISPD dispacciamento", v.reduce((x, y) => x + y, 0) / v.length, "€/kWh", "SIMULATO",
-    `media dei mesi noti (${Object.keys(serie).sort().join(", ")})`);
+  if (serie[k] != null) return ap("Dispacciamento CDISPD", serie[k], "€/kWh", "REALE", indici.cdispd.fonte);
+  const [rif, v] = ultimoReale(serie);
+  return ap("Dispacciamento CDISPD", v, "€/kWh", "SIMULATO", `ultimo valore noto (${rif}) mantenuto`);
+}
+
+export function sbilanciamentoMese(indici, a, m) {
+  const s = indici.sbilanciamento;
+  if (!s) return null;
+  const k = ym(a, m);
+  if (s.mesi[k] != null) return ap("Sbilanciamento", s.mesi[k], "€/kWh", "REALE", s.fonte);
+  const v = Object.values(s.mesi);
+  return ap("Sbilanciamento", v.reduce((x, y) => x + y, 0) / v.length, "€/kWh", "SIMULATO",
+    `media dei mesi noti (${Object.keys(s.mesi).sort().join(", ")})`);
+}
+
+export function dispbtMese(indici, periodo) {
+  const d = indici.dispbt_fisso;
+  if (!d) return null;
+  const reale = periodo.fine <= daIso(d.valido_al);
+  return ap("DISPbt quota fissa", d.valore, "€/mese", reale ? "REALE" : "SIMULATO",
+    reale ? d.fonte : `valore valido fino al ${d.valido_al} mantenuto`);
 }
 
 function tariffaApplicata(blocco, nome, periodo) {
@@ -99,12 +116,17 @@ export function simulaLuce(off, utenza, tariffe, indici, inizio, nMesi = 12, sce
     const cdv = cd === "arera" ? cdispdMese(indici, a, m)
       : ap("CDISPD dispacciamento", Number(cd), "€/kWh", "REALE", "valore indicato nella CTE");
     app.push(cdv);
+    const sb = cd === "arera" ? sbilanciamentoMese(indici, a, m) : null;
+    const db = cd === "arera" ? dispbtMese(indici, per) : null;
+    if (sb) app.push(sb);
+    if (db) app.push(db);
     app.push(tariffaApplicata(tariffe.luce.oneri, "Oneri di sistema ASOS/ARIM", per));
     app.push(tariffaApplicata(tariffe.luce.rete, "Tariffe di rete", per));
     const o = {
       prezzi: off.prezzi, indicizzata: indic, indice,
       quotaFissaMese: (off.quotaFissaAnnua || 0) / 12,
-      altriKwh: cdv.valore + (off.altriKwh || 0),
+      dispacciamentoKwh: cdv.valore, sbilanciamentoKwh: sb ? sb.valore : 0, dispbtMese: db ? db.valore : 0,
+      altriKwh: off.altriKwh || 0,
       perdite: off.perdite === "tutto" ? 0.1 : 0,
       perditeIndice: off.perdite === "indice" ? 0.1 : 0,
       prezzoMax: off.prezzoMax ?? null,

@@ -371,7 +371,7 @@ function editor(o, an = null, file = "", restanti = 0) {
         <option value="indice" ${o.perdite === "indice" ? "selected" : ""}>Solo il PUN maggiorato del 10% (PUN × 1,10 + spread)</option>
         <option value="tutto" ${o.perdite === "tutto" ? "selected" : ""}>Tutto il prezzo applicato ai kWh + 10%</option></select>
       <label>Prezzo massimo €/kWh (se previsto)</label><input inputmode="decimal" id="fMax" value="${h(nf(o.prezzoMax))}">${fr("prezzoMax")}
-      <div class="sw"><span>Dispacciamento CDISPD stabilito da ARERA</span><input type="checkbox" id="fCd" ${o.cdispd === "arera" ? "checked" : ""}></div>
+      <div class="sw"><span>Dispacciamento standard (CDISPD + sbilanciamento)</span><input type="checkbox" id="fCd" ${o.cdispd === "arera" ? "checked" : ""}></div>
       <div id="fCdVal" ${o.cdispd === "arera" ? "hidden" : ""}><label>Dispacciamento €/kWh</label><input inputmode="decimal" id="fCdv" value="${o.cdispd === "arera" ? "" : h(nf(o.cdispd))}"></div>
       <label>Altri corrispettivi €/kWh (opzionale)</label><input inputmode="decimal" id="fAltri" value="${h(nf(o.altriKwh))}">`;
     html += altre();
@@ -538,6 +538,8 @@ async function aggiornaDati(manuale = false) {
     if (!r.ok) throw new Error("HTTP " + r.status);
     const nuovi = await r.json();
     if (!nuovi?.tariffe?.luce || !nuovi?.indici?.pun) throw new Error("file dati non valido");
+    const piuVecchi = (nuovi.versione || 0) < (S.dati.versione || 0) || nuovi.aggiornato_al < S.dati.aggiornato_al;
+    if (piuVecchi) { if (manuale) toast("I dati dell'app sono già i più recenti"); return true; }
     const cambiato = nuovi.aggiornato_al !== S.dati.aggiornato_al;
     S.dati = nuovi; salva(); statoDati();
     if (manuale) toast(cambiato ? `Dati aggiornati al ${nuovi.aggiornato_al}` : "Dati già aggiornati");
