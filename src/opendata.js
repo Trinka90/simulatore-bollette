@@ -53,7 +53,8 @@ const NOMI_VENDITORI = {
   "duferco-energia.it": "Duferco Energia", "tate.it": "Tate", "sinergy.it": "Sinergy", "optimaitalia.com": "Optima",
   "fastweb.it": "Fastweb", "axpo.com": "Axpo", "repower.com": "Repower", "enegan.it": "Enegan", "bluenergygroup.it": "Bluenergy",
   "iliad.it": "Iliad", "vivienergia.it": "Vivi Energia", "segnoverde.it": "Segnoverde", "poste.it": "Poste Energia",
-  "posteitaliane.it": "Poste Energia", "magisenergia.it": "Magis", "elitenergia.it": "Elit", "agsm.it": "AGSM AIM",
+  "posteitaliane.it": "Poste Energia", "heracomm.gruppohera.it": "Hera Comm", "estenergy.gruppohera.it": "EstEnergy (Hera)", "a2a.it": "A2A Energia",
+  "aceaenergia.it": "Acea Energia", "estraprometeo.it": "Estra Prometeo", "seviren.it": "SEV (Iren)", "unionenergia.it": "Union Energia", "magisenergia.it": "Magis", "elitenergia.it": "Elit", "agsm.it": "AGSM AIM",
 };
 export function dominio(url) {
   if (!url) return "";

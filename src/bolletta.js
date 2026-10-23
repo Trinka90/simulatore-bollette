@@ -201,7 +201,7 @@ function bollettaLuce(off, per, k, cons, u, annuo, ctx, scenario) {
         case "01": add("vendita", c.n, mesi, "mesi", p.pr / 12, p.pr * mesi / 12); break;
         case "02": add("vendita", `${c.n} (${L.potenzaKw} kW)`, L.potenzaKw * mesi, "kW·mese", p.pr / 12, p.pr * L.potenzaKw * mesi / 12); break;
         case "03": {
-          const qf = qtaFascia(mono ? null : f);
+          const qf = qtaFascia(mono || !p.f ? null : f); // senza fascia: tutti i kWh
           // prezzo senza perdite (solo CTE che lo dichiarano): kWh fatturati + λ
           const k2 = !variabile && off.perditeIncluse === false ? 1 + lambda : 1;
           add("vendita", c.n + etich + (k2 > 1 ? ` (kWh + ${Math.round(lambda * 100)}% perdite)` : ""), qf * k2, "kWh", p.pr, qf * k2 * p.pr);
@@ -440,5 +440,25 @@ export function daCte(o) {
     idx: variab ? [{ c: luce ? "12" : "14", k: null }] : [], disp, reg: [], comp, sc: [], cond: [], serv: [], att: [], canali: [], pag: [],
     singola: true, res: "T", zone: null, cons: null, pot: null, durata: null, dal: null, al: null,
     descr: (o.note || []).join(" "), note: o.note || [], fonte: o.fonte || "inserita da te", url: "", tel: "",
+  };
+}
+
+/**
+ * Servizio a Tutele Graduali (STG, ex maggior tutela per i domestici non vulnerabili).
+ * Prezzo: PUN di fascia del mese × (1+λ) + CDISPD + CSED + CPSTGD, più la quota fissa dell'asta della tua area
+ * (parametro "gamma", per €/POD/anno; il Portale pubblica la media nazionale). Verificato sulla bolletta Hera STG lug-ago 2026.
+ */
+export function offertaSTG(P, quotaAnnua = null) {
+  const q = quotaAnnua ?? P.gamma ?? 0;
+  return {
+    id: "STG", stg: true, mia: true, venditore: "Tutele Graduali", nome: "Servizio a Tutele Graduali (STG)", forn: "LUCE",
+    tipo: "variabile", fasce: "03", perditeIncluse: true, tetto: null, idx: [{ c: "12", k: null }], disp: [{ c: "14", v: null }], reg: [],
+    comp: [
+      { n: quotaAnnua != null ? "Quota fissa STG della tua area" : "Quota fissa STG (media nazionale delle aste)", m: "01", opz: false, p: [{ f: null, pr: q, u: "01" }] },
+      { n: "Corrispettivi STG (CSED + CPSTGD)", m: "02", opz: false, p: [{ f: null, pr: (P.csed || 0) + (P.cpstgd || 0), u: "03" }] },
+    ],
+    sc: [], cond: [], serv: [], att: [], canali: [], pag: [], singola: true, res: "T", zone: null, cons: null, pot: null, durata: null, dal: null, al: null,
+    descr: "Prezzo dell'energia = PUN di fascia del mese + 10% di perdite di rete, come nelle bollette STG. Vale per i clienti domestici non vulnerabili passati dalla maggior tutela; i clienti vulnerabili hanno il servizio di vulnerabilità, con prezzi diversi.",
+    note: [], fonte: "Regole ARERA del Servizio a Tutele Graduali; parametri CDISPD, CSED, CPSTGD e gamma dal Portale Offerte", url: "https://www.arera.it", tel: "",
   };
 }

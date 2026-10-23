@@ -77,3 +77,16 @@ test("tutte le offerte del campione si simulano senza errori", () => {
     assert.ok(Number.isFinite(t) && t > 0, `${o.id} ${o.nome}: ${t}`);
   }
 });
+
+test("STG: bolletta Hera STG luglio-agosto 2026 = 41,01 € con il nuovo motore", async () => {
+  const { offertaSTG, calcolaBolletta } = await import("../src/bolletta.js");
+  const { Periodo } = await import("../src/motore.js");
+  const u = { comune: { regione: "09", provincia: "051" }, residente: true, ingresso: "2026-07", bollettaWeb: false, domiciliazione: false,
+    luce: { potenzaKw: 6, canoneRai: true } };
+  // parametri di luglio e agosto 2026 (CDISPD mensile STG, CPSTGD del III trimestre), come in bolletta
+  const mese = (cdispd) => ({ ...ctx, E: { ...ctx.E, cdispd, csed: 0.00056, cpstgd: 0.00208 } });
+  const off = offertaSTG({ gamma: -73.5737, csed: 0.00056, cpstgd: 0.00208 });
+  const lug = calcolaBolletta(off, Periodo.mese(2026, 7), 0, { F1: 0.093, F2: 0.352, F3: 10.137 }, u, 3175.22, mese(0.0384637)).risultato;
+  const ago = calcolaBolletta(off, Periodo.mese(2026, 8), 1, { F1: 0.526, F2: 1.276, F3: 7.436 }, u, 3175.22, mese(0.018468)).risultato;
+  vicino(lug.totale + ago.totale, 41.01, 0.06, "totale STG");
+});

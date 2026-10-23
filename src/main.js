@@ -1,6 +1,6 @@
 import * as pdfjs from "pdfjs-dist";
 import { analizza, bozzaOfferta, testoPdf } from "./cte.js";
-import { contesto, simulaOfferta, totaleMesi, riepilogoOfferta, bollettaPersonalizzata, consumiMensili, daCte, eVariabile } from "./bolletta.js";
+import { contesto, simulaOfferta, totaleMesi, riepilogoOfferta, bollettaPersonalizzata, consumiMensili, daCte, eVariabile, offertaSTG } from "./bolletta.js";
 import { aggiornaCatalogo, filtra, classifica, scadenza, SITUAZIONI } from "./catalogo.js";
 import { scaricaTesto, salvaCatalogo, caricaCatalogo, catalogoIniziale, nativo } from "./archivio.js";
 import { isoGiorno } from "./opendata.js";
@@ -28,12 +28,12 @@ const trovaComune = (istat) => COMUNI.find((c) => c.istat === istat);
 const UTENZA_DEF = {
   versione: 3, comune: trovaComune("051026"), residente: true, situazione: "01", ingresso: null,
   bollettaWeb: true, domiciliazione: true,
-  luce: { attiva: true, potenzaKw: 6, annuo: 3175, mesi: null, ripartizione: { F1: 0.33, F2: 0.31, F3: 0.36 }, canoneRai: true },
+  luce: { attiva: true, potenzaKw: 6, annuo: 3175, mesi: null, ripartizione: { F1: 0.33, F2: 0.31, F3: 0.36 }, canoneRai: true, stg: true, stgQuota: null },
   gas: { attiva: true, annuo: 39, mesi: { 1: 4, 2: 3, 3: 4, 4: 4, 5: 2, 6: 3, 7: 2, 8: 3, 9: 3, 10: 3, 11: 4, 12: 4 }, uso: "cottura", zona: "D" },
 };
 function migraUtenza(v) {
   if (!v) return structuredClone(UTENZA_DEF);
-  if (v.versione === 3) return v;
+  if (v.versione === 3) { if (v.luce.stg === undefined) Object.assign(v.luce, { stg: true, stgQuota: null }); return v; }
   const n = structuredClone(UTENZA_DEF);
   if (v.luce) Object.assign(n.luce, { attiva: v.luce.attiva, potenzaKw: v.luce.potenzaKw, annuo: v.luce.consumoAnnuoKwh, mesi: v.luce.profilo,
     ripartizione: v.luce.ripartizione || n.luce.ripartizione, canoneRai: v.luce.canoneRai });
@@ -43,7 +43,7 @@ function migraUtenza(v) {
 }
 
 const S = {
-  tab: "offerte", forn: "LUCE", filtroTipo: "tutte", cerca: "", quante: 30,
+  tab: "offerte", forn: "LUCE", mostraScadute: false, filtroTipo: "tutte", cerca: "", quante: 30,
   utenza: migraUtenza(LS.get("utenza", null)),
   cte: LS.get("cte", LS.get("offerte", [])),
   dati: LS.get("dati", datiInclusi),
@@ -136,7 +136,7 @@ async function aggiornaIndici() {
 
 // ------------------------------------------------------------------ classifica (con cache)
 const cache = new Map();
-function chiave(forn) { return JSON.stringify([forn, U(), S.catalogo?.data, S.catalogo?.offerte.length, S.dati.aggiornato_al, S.cte.length, S.cte.map((c) => c.id + c.incluso)]); }
+function chiave(forn) { return JSON.stringify([forn, S.mostraScadute, U(), S.catalogo?.data, S.catalogo?.offerte.length, S.dati.aggiornato_al, S.cte.length, S.cte.map((c) => c.id + c.incluso)]); }
 function offerteCte(forn) {
   return S.cte.filter((o) => o.fornitura === forn && o.incluso !== false && cteCompleta(o)).map(daCte);
 }
@@ -144,14 +144,20 @@ function calcolaClassifica(forn) {
   const k = chiave(forn);
   if (cache.has(k)) return cache.get(k);
   const u = U(), ctx = CTX();
-  const f = filtra(S.catalogo?.offerte || [], u, S.dati.regolate, oggiIso());
-  const lista = classifica([...f[forn], ...offerteCte(forn)], u, ctx);
-  const out = { lista, escluse: f.escluse[forn], nValide: f[forn].length };
+  const f = filtra(S.catalogo?.offerte || [], u, S.dati.regolate, oggiIso(), { scadute: S.mostraScadute });
+  const rif = forn === "LUCE" && u.luce.stg ? [offertaSTG(ctx.E, u.luce.stgQuota)] : [];
+  const lista = classifica([...f[forn], ...offerteCte(forn), ...rif], u, ctx);
+  const out = { lista, escluse: f.escluse[forn], nValide: f[forn].length, scaduteDopo: f.scaduteDopo[forn].filter((o) => o.al >= S.catalogo.data) };
   cache.set(k, out);
   return out;
 }
 
 // ------------------------------------------------------------------ OFFERTE
+const GRANDI = ["Enel Energia", "Plenitude", "Edison Energia", "E.ON", "Engie", "A2A Energia", "Hera Comm", "Iren", "Acea Energia", "Sorgenia", "Estra", "Illumia", "Pulsee", "Dolomiti Energia", "Octopus Energy", "NeN"];
+function venditoriPrincipali(lista) {
+  const v = [...new Set(lista.map((o) => o.venditore))];
+  return [...v.filter((x) => GRANDI.includes(x)), ...v.filter((x) => !GRANDI.includes(x))].slice(0, 8).join(", ");
+}
 async function vistaOfferte() {
   const v = $("#vista"), u = U();
   if (!S.catalogo) { v.innerHTML = `<div class="empty"><span class="spin"></span><p>Carico le offerte…</p></div>`; return; }
@@ -177,10 +183,14 @@ async function vistaOfferte() {
       <button data-v="GAS" class="${S.forn === "GAS" ? "on" : ""}" ${u.gas.attiva ? "" : "disabled"}>Gas</button></div>
     <div class="small mut" style="margin:8px 2px">${R.nValide} offerte disponibili per te tra quelle pubblicate sul Portale Offerte ARERA il ${dataIt(S.catalogo.data)}${S.catalogo.iniziale ? " (elenco iniziale incluso nell'app)" : ""}.</div>
     ${vecchio ? `<div class="warn small">Le offerte sono del ${dataIt(S.catalogo.data)}. ${S.aggiornando ? `<span id="avanz">${h(S.avanzamento)}</span>` : `<button class="btn sec mini" id="aggOra">Aggiorna ora</button>`}</div>` : ""}
+    ${R.scaduteDopo.length ? `<div class="warn small"><b>${R.scaduteDopo.length} offerte scadute dopo il ${dataIt(S.catalogo.data)}</b>, tra cui
+      ${h(venditoriPrincipali(R.scaduteDopo))}. Molti venditori (Enel, Plenitude, Edison, E.ON…) pubblicano offerte valide
+      un paio di settimane e poi le rinnovano: scarica le offerte di oggi per i prezzi attuali.
+      <div class="sw"><span>Mostra anche queste (prezzi del ${dataIt(S.catalogo.data)})</span><input type="checkbox" id="mScad" ${S.mostraScadute ? "checked" : ""}></div></div>` : ""}
     <div class="row filtri"><div class="seg" id="sTipo">${["tutte", "fisso", "variabile"].map((t) => `<button data-v="${t}" class="${S.filtroTipo === t ? "on" : ""}">${t === "tutte" ? "Tutte" : t === "fisso" ? "Fisse" : "Variabili"}</button>`).join("")}</div></div>
     <input id="cerca" placeholder="Cerca fornitore o offerta" value="${h(S.cerca)}" style="margin-top:8px">`;
   if (mie.length) {
-    html += `<div class="card small"><b>Le tue CTE in classifica</b>${mie.map((r) => `<div class="row sp" style="margin-top:4px"><span>${h(r.offerta.nome)}</span>
+    html += `<div class="card small"><b>Le tue offerte di riferimento</b>${mie.map((r) => `<div class="row sp" style="margin-top:4px" data-det="${h(r.offerta.id)}" role="button"><span class="link">${h(r.offerta.nome)} ›</span>
       <span class="r"><b>${R.lista.indexOf(r) + 1}ª</b> su ${R.lista.length} · ${r === R.lista[0] ? "la più conveniente" : "+" + eur(r.centrale - best, 0) + "/anno"}</span></div>`).join("")}</div>`;
   }
   if (!lista.length) html += `<div class="empty">Nessuna offerta con questi filtri.</div>`;
@@ -194,8 +204,8 @@ async function vistaOfferte() {
         <div class="r"><div class="tot">${eur(r.centrale, 0)}</div><div class="small mut">${eur(r.centrale / 12)}/mese</div></div></div>
       <div class="barbox"><div class="bar" style="width:${(r.centrale / max) * 100}%"></div>
         ${variab && r.alto > r.basso ? `<div class="rng" style="left:${(r.basso / max) * 100}%;width:${((r.alto - r.basso) / max) * 100}%"></div>` : ""}</div>
-      <div class="row small tags">${o.mia ? badge("LA TUA CTE", "mia") : ""}${badge(TIPI[o.tipo] || "FISSO", variab ? "var" : "reale")}
-        ${sc ? `<span class="b ${sc.giorni <= 7 ? "urg" : "sc"}">firma entro ${dataIt(sc.al)}</span>` : ""}
+      <div class="row small tags">${o.mia ? badge(o.stg ? "TUTELE GRADUALI" : "LA TUA CTE", "mia") : ""}${badge(TIPI[o.tipo] || "FISSO", variab ? "var" : "reale")}
+        ${sc ? (sc.giorni < 0 ? `<span class="b urg">SCADUTA il ${dataIt(sc.al)}</span>` : `<span class="b ${sc.giorni <= 7 ? "urg" : "sc"}">firma entro ${dataIt(sc.al)}</span>`) : ""}
         <span class="r grow">${pos === 1 ? badge("PIÙ CONVENIENTE", "best") : `+${eur(r.centrale - best, 0)}/anno`}</span></div>
       <div class="small mut" style="margin-top:4px">${nf(r.costoMedio, 3)} €/${S.forn === "LUCE" ? "kWh" : "Smc"} tutto compreso${variab && r.alto > r.basso ? ` · scenari ${eur(r.basso, 0)}–${eur(r.alto, 0)}` : ""}</div>
     </div>`;
@@ -215,6 +225,7 @@ async function vistaOfferte() {
   $("#cerca").oninput = (e) => { clearTimeout(vistaOfferte._t); vistaOfferte._t = setTimeout(() => { S.cerca = e.target.value.trim(); S.quante = 30; vistaOfferte().then(() => { const c = $("#cerca"); c.focus(); c.setSelectionRange(c.value.length, c.value.length); }); }, 300); };
   $("#altre") && ($("#altre").onclick = () => { S.quante += 30; vistaOfferte(); });
   $("#aggOra") && ($("#aggOra").onclick = () => aggiorna(true));
+  $("#mScad") && ($("#mScad").onchange = (e) => { S.mostraScadute = e.target.checked; vistaOfferte(); });
   $$("[data-det]").forEach((c) => c.addEventListener("click", () => vistaDettaglio(c.dataset.det)));
   $("#pdfConf").onclick = () => esegui(() => pdfConfronto(R.lista.slice(0, 30), S.forn, u, S.dati, S.catalogo), "classifica");
 }
@@ -242,7 +253,7 @@ function tabellaApplicati(app) {
     `<tr><td>${h(a.nome)}<div class="frase">${h(a.nota)}</div></td><td>${badge(a.tipo)}</td>
      <td class="r num">${a.valore == null ? "" : nf(a.valore, 6) + " " + h(a.unita)}</td></tr>`).join("") + "</table>";
 }
-const trovaOfferta = (id) => (S.catalogo?.offerte || []).find((o) => o.id === id) || offerteCte("LUCE").concat(offerteCte("GAS")).find((o) => o.id === id);
+const trovaOfferta = (id) => id === "STG" ? offertaSTG(CTX().E, S.utenza.luce.stgQuota) : (S.catalogo?.offerte || []).find((o) => o.id === id) || offerteCte("LUCE").concat(offerteCte("GAS")).find((o) => o.id === id);
 
 function schedaOfferta(o) {
   const sc = scadenza(o, oggiIso());
@@ -293,7 +304,7 @@ function vistaDettaglio(id, scenario = "centrale") {
   $("#titolo").textContent = "Dettaglio offerta";
   let html = `<button class="btn sec" id="indietro">‹ Indietro</button>
     <h2>${h(o.venditore)} — ${h(o.nome)}</h2>
-    <div class="row small tags">${o.mia ? badge("LA TUA CTE", "mia") : ""}${badge(TIPI[o.tipo] || "FISSO", eVariabile(o) ? "var" : "reale")}<span class="mut grow">${h(descrizionePrezzo(o))}</span></div>`;
+    <div class="row small tags">${o.mia ? badge(o.stg ? "TUTELE GRADUALI" : "LA TUA CTE", "mia") : ""}${badge(TIPI[o.tipo] || "FISSO", eVariabile(o) ? "var" : "reale")}<span class="mut grow">${h(descrizionePrezzo(o))}</span></div>`;
   if (scen.length > 1) {
     html += `<div class="seg" style="margin:12px 0">${scen.map((s) => `<button data-sc="${s}" class="${s === scenario ? "on" : ""}">${s} ${eur(totaleMesi(ris[s]), 0)}</button>`).join("")}</div>`;
   }
@@ -605,6 +616,9 @@ function vistaProfilo() {
     <div class="small mut">In bolletta: «consumo annuo». Se scrivi i mesi qui sotto, conta la loro somma.</div>
     <label>Potenza impegnata (kW)</label><select id="lKw">${[1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 7, 8, 9, 10, 15].map((k) => `<option value="${k}" ${k === u.luce.potenzaKw ? "selected" : ""}>${String(k).replace(".", ",")}</option>`).join("")}</select>
     <div class="sw"><span>Canone RAI in bolletta</span><input type="checkbox" id="lRai" ${u.luce.canoneRai ? "checked" : ""}></div>
+    <div class="sw"><span>Confronta con il Servizio a Tutele Graduali (STG)</span><input type="checkbox" id="lStg" ${u.luce.stg ? "checked" : ""}></div>
+    <label>Quota fissa STG della tua area (€ all'anno, facoltativa)</label><input inputmode="decimal" id="lStgQ" value="${h(nv(u.luce.stgQuota))}" placeholder="vuoto = media nazionale ${nf(CTX().E.gamma, 2)}">
+    <div class="small mut">In una bolletta STG è la quota fissa della vendita (spesso negativa): importo al mese × 12. Dipende dall'area in cui sei stato assegnato.</div>
     <label>Consumo per fascia (%)</label>
     <div class="row">${["F1", "F2", "F3"].map((f) => `<div><label style="margin:0">${f}</label><input inputmode="decimal" data-rip="${f}" value="${nf(u.luce.ripartizione[f] * 100, 1)}"></div>`).join("")}</div>
     <label>Consumi mese per mese (kWh) — ${u.luce.mesi ? "<b>i tuoi</b>" : "stimati dal consumo annuo"}</label>
@@ -660,6 +674,7 @@ function vistaProfilo() {
       versione: 3, comune, residente: $("#pRes").checked, situazione: $("#pSit").value, ingresso: $("#pIng").value,
       bollettaWeb: $("#pWeb").checked, domiciliazione: $("#pDom").checked,
       luce: { attiva: $("#lAtt").checked, annuo: v("#lKwh", 1), potenzaKw: Number($("#lKw").value), canoneRai: $("#lRai").checked,
+        stg: $("#lStg").checked, stgQuota: (() => { const x = pnum($("#lStgQ").value); return x == null || Number.isNaN(x) ? null : x; })(),
         ripartizione: { F1: rip.F1 / sr, F2: rip.F2 / sr, F3: rip.F3 / sr }, mesi: mesi("pl", !!u.luce.mesi) },
       gas: { attiva: $("#gAtt").checked, annuo: v("#gSmc", 0), uso: $("#gUso").value, zona: $("#gZona").value, mesi: mesi("pg", !!u.gas.mesi) },
     };

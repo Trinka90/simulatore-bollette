@@ -47,7 +47,6 @@ export function anomalia(o) {
 /** Motivo per cui un'offerta non vale per l'utente, oppure null. */
 export function esclusione(o, u, annuo, oggiIso) {
   if (!o.singola) return "si sottoscrive solo insieme a luce+gas (dual)";
-  if (o.al && o.al < oggiIso) return "non più sottoscrivibile";
   if (o.dal && o.dal > oggiIso) return "non ancora sottoscrivibile";
   if (o.res === "R" && !u.residente) return "solo per residenti";
   if (o.res === "NR" && u.residente) return "solo per non residenti";
@@ -56,18 +55,21 @@ export function esclusione(o, u, annuo, oggiIso) {
   if (o.forn === "LUCE" && !entro(u.luce.potenzaKw, o.pot)) return "potenza impegnata fuori dai limiti dell'offerta";
   if (!entro(annuo, o.cons)) return "consumo annuo fuori dai limiti dell'offerta";
   if (anomalia(o)) return "dati del venditore incoerenti (es. prezzo e quota fissa scambiati)";
+  if (o.al && o.al < oggiIso) return "non più sottoscrivibile";
   return null;
 }
 
 /** Offerte valide per l'utente divise per fornitura, con i motivi delle esclusioni. */
-export function filtra(offerte, u, R, oggiIso) {
-  const out = { LUCE: [], GAS: [], escluse: { LUCE: {}, GAS: {} } };
+export function filtra(offerte, u, R, oggiIso, { scadute = false } = {}) {
+  const out = { LUCE: [], GAS: [], escluse: { LUCE: {}, GAS: {} }, scaduteDopo: { LUCE: [], GAS: [] } };
   const annuo = { LUCE: u.luce?.attiva ? consumoAnnuo(u, "LUCE", R) : 0, GAS: u.gas?.attiva ? consumoAnnuo(u, "GAS", R) : 0 };
   for (const o of offerte) {
     const f = o.forn;
     if (f === "LUCE" && !u.luce?.attiva) continue;
     if (f === "GAS" && !u.gas?.attiva) continue;
     const e = esclusione(o, u, annuo[f], oggiIso);
+    if (e === "non più sottoscrivibile") out.scaduteDopo[f].push(o);
+    if (e === "non più sottoscrivibile" && scadute) { out[f].push(o); continue; }
     if (e) out.escluse[f][e] = (out.escluse[f][e] || 0) + 1;
     else out[f].push(o);
   }
