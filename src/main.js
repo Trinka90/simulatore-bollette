@@ -1,6 +1,6 @@
 import * as pdfjs from "pdfjs-dist";
 import { analizza, bozzaOfferta, testoPdf } from "./cte.js";
-import { contesto, simulaOfferta, totaleMesi, riepilogoOfferta, bollettaPersonalizzata, consumiMensili, daCte, eVariabile, offertaSTG } from "./bolletta.js";
+import { contesto, simulaOfferta, totaleMesi, riepilogoOfferta, bollettaPersonalizzata, consumiMensili, daCte, eVariabile, offertaSTG, scontiEPenali } from "./bolletta.js";
 import { aggiornaCatalogo, filtra, classifica, scadenza, SITUAZIONI } from "./catalogo.js";
 import { scaricaTesto, salvaCatalogo, caricaCatalogo, catalogoIniziale, nativo } from "./archivio.js";
 import { isoGiorno } from "./opendata.js";
@@ -196,19 +196,21 @@ async function vistaOfferte() {
   if (!lista.length) html += `<div class="empty">Nessuna offerta con questi filtri.</div>`;
   const max = Math.max(...lista.slice(0, S.quante).map((r) => r.alto));
   lista.slice(0, S.quante).forEach((r) => {
-    const o = r.offerta, pos = R.lista.indexOf(r) + 1, sc = scadenza(o, oggiIso()), variab = eVariabile(o);
-    html += `<div class="card ${o.mia ? "mia" : ""}" data-det="${h(o.id)}" role="button">
-      <div class="rank"><div class="pos ${pos === 1 ? "p1" : ""}">${pos}</div>
-        <div class="min0"><b>${h(o.venditore)}</b><div class="small">${h(o.nome)}</div>
-          <div class="small mut">${h(descrizionePrezzo(o))}</div></div>
-        <div class="r"><div class="tot">${eur(r.centrale, 0)}</div><div class="small mut">${eur(r.centrale / 12)}/mese</div></div></div>
-      <div class="barbox"><div class="bar" style="width:${(r.centrale / max) * 100}%"></div>
-        ${variab && r.alto > r.basso ? `<div class="rng" style="left:${(r.basso / max) * 100}%;width:${((r.alto - r.basso) / max) * 100}%"></div>` : ""}</div>
-      <div class="row small tags">${o.mia ? badge(o.stg ? "TUTELE GRADUALI" : "LA TUA CTE", "mia") : ""}${badge(TIPI[o.tipo] || "FISSO", variab ? "var" : "reale")}
+    const o = r.offerta, pos = R.lista.indexOf(r) + 1, sc = scadenza(o, oggiIso()), variab = eVariabile(o), sp = r.sp;
+    const unita = S.forn === "LUCE" ? "kWh" : "Smc";
+    html += `<article class="offer ${o.mia ? "mia" : ""} ${pos === 1 ? "primo" : ""}" data-det="${h(o.id)}" role="button">
+      <div class="offer-head"><div class="pos">${pos}</div>
+        <div class="who"><div class="vend">${h(o.venditore)}</div><div class="nome">${h(o.nome)}</div></div>
+        <div class="price"><div class="tot">${eur(r.centrale, 0)}</div><div class="sub">${eur(r.centrale / 12)}/mese</div></div></div>
+      <div class="chips">${o.mia ? badge(o.stg ? "TUTELE GRADUALI" : "LA TUA CTE", "mia") : ""}${badge(TIPI[o.tipo] || "PREZZO FISSO", variab ? "var" : "fix")}
         ${sc ? (sc.giorni < 0 ? `<span class="b urg">SCADUTA il ${dataIt(sc.al)}</span>` : `<span class="b ${sc.giorni <= 7 ? "urg" : "sc"}">firma entro ${dataIt(sc.al)}</span>`) : ""}
-        <span class="r grow">${pos === 1 ? badge("PIÙ CONVENIENTE", "best") : `+${eur(r.centrale - best, 0)}/anno`}</span></div>
-      <div class="small mut" style="margin-top:4px">${nf(r.costoMedio, 3)} €/${S.forn === "LUCE" ? "kWh" : "Smc"} tutto compreso${variab && r.alto > r.basso ? ` · scenari ${eur(r.basso, 0)}–${eur(r.alto, 0)}` : ""}</div>
-    </div>`;
+        ${pos === 1 ? badge("PIÙ CONVENIENTE", "best") : ""}</div>
+      <div class="facts"><div><span>Prezzo</span><b>${h(descrizionePrezzo(o)) || "—"}</b></div>
+        <div><span>Costo vero</span><b>${nf(r.costoMedio, 3)} €/${unita}</b></div>
+        <div><span>${pos === 1 ? "Risparmio" : "In più"}</span><b class="${pos === 1 ? "ok" : ""}">${pos === 1 ? "il migliore" : "+" + eur(r.centrale - best, 0) + "/anno"}</b></div></div>
+      ${pillole(sp)}
+      ${variab && r.alto > r.basso ? `<div class="scen small">Scenari PUN/PSV: <b>${eur(r.basso, 0)}</b> – <b>${eur(r.alto, 0)}</b></div>` : ""}
+    </article>`;
   });
   if (lista.length > S.quante) html += `<button class="btn sec full" id="altre">Mostra altre ${Math.min(30, lista.length - S.quante)} (di ${lista.length})</button>`;
   const esc = Object.entries(R.escluse || {});
@@ -255,39 +257,63 @@ function tabellaApplicati(app) {
 }
 const trovaOfferta = (id) => id === "STG" ? offertaSTG(CTX().E, S.utenza.luce.stgQuota) : (S.catalogo?.offerte || []).find((o) => o.id === id) || offerteCte("LUCE").concat(offerteCte("GAS")).find((o) => o.id === id);
 
+/** Segnali in evidenza: sconti inclusi, sconti esclusi, penali, deposito, condizioni limitanti. */
+function pillole(sp) {
+  if (!sp) return "";
+  const p = [];
+  if (sp.totApplicati > 0.005) p.push(`<span class="pill save">✓ Sconti inclusi −${eur(sp.totApplicati, 0)}</span>`);
+  if (sp.esclusi.length) p.push(`<span class="pill neutral">${sp.esclusi.length} scont${sp.esclusi.length > 1 ? "i" : "o"} non applicat${sp.esclusi.length > 1 ? "i" : "o"}</span>`);
+  if (sp.penali.length) p.push(`<span class="pill bad">⚠ Penale se recedi prima</span>`);
+  if (sp.deposito) p.push(sp.depositoSoloSenzaDom && S.utenza.domiciliazione ? `<span class="pill neutral">Nessun deposito con domiciliazione</span>` : `<span class="pill warn">${sp.depositoSoloSenzaDom ? "Deposito se non domicili" : "Deposito cauzionale"}</span>`);
+  if (sp.vincoli.some((v) => v.limitante)) p.push(`<span class="pill warn">Condizioni limitanti</span>`);
+  return p.length ? `<div class="pills">${p.join("")}</div>` : "";
+}
+
+function sezioneScontiPenali(o, sp) {
+  let html = `<section class="sez" id="s-sconti"><h3>Sconti e penali</h3>`;
+  html += `<div class="sub-h ok">Sconti inclusi nel totale</div>`;
+  html += sp.applicati.length ? `<table class="lista">${sp.applicati.map((x) => `<tr><td>${h(x.nome)}<div class="frase">${x.mesi === 1 ? "una volta" : `in ${x.mesi} bollette`}${x.iva ? ", prima dell'IVA" : ", fuori campo IVA"}</div></td>
+      <td class="r num ok">−${eur(x.totale)}</td></tr>`).join("")}<tr class="t"><td>Totale sconti in 12 mesi</td><td class="r num ok">−${eur(sp.totApplicati)}</td></tr></table>`
+    : `<p class="small mut">Nessuno sconto incluso.</p>`;
+  if (sp.esclusi.length) {
+    html += `<div class="sub-h">Sconti non inclusi</div><table class="lista">${sp.esclusi.map((x) => `<tr><td>${h(x.nome)}<div class="frase">${h(x.motivo)}${x.comeOttenerlo ? ` — <a href="#" class="vaiProf">${h(x.comeOttenerlo)}</a>` : ""}</div></td>
+      <td class="r num mut">${h(x.valore)}</td></tr>`).join("")}</table>`;
+  }
+  html += `<div class="sub-h bad">Penali e vincoli</div>`;
+  const righe = [];
+  for (const p of sp.penali) righe.push(`<li><b>Recesso anticipato:</b> ${h(p.testo)}${p.limitante ? " " + badge("LIMITANTE", "urg") : ""}</li>`);
+  for (const v of sp.vincoli) righe.push(`<li><b>${CONDIZIONI[v.tipo] || "Condizione"}:</b> ${h(v.testo || "vedi le condizioni del venditore")}${v.limitante ? " " + badge("LIMITANTE", "urg") : ""}</li>`);
+  if (sp.deposito) righe.push(`<li><b>Garanzie e deposito:</b> ${h(sp.deposito)}</li>`);
+  html += righe.length ? `<ul class="small">${righe.join("")}</ul>` : `<p class="small mut">${o.mia ? "Controlla penali e vincoli sulla tua CTE." : "Nessuna penale o condizione limitante dichiarata al Portale."}</p>`;
+  return html + `</section>`;
+}
+
 function schedaOfferta(o) {
   const sc = scadenza(o, oggiIso());
   const righe = [];
   if (!o.mia) {
     righe.push(["Durata", durata(o)]);
-    righe.push(["Sottoscrivibile", `${o.dal ? "dal " + dataIt(o.dal) : ""} ${sc ? `fino al <b>${dataIt(sc.al)}</b> (${sc.giorni <= 0 ? "ultimo giorno" : "tra " + sc.giorni + " giorni"})` : "senza scadenza indicata"}`]);
+    righe.push(["Sottoscrivibile", `${o.dal ? "dal " + dataIt(o.dal) + " " : ""}${sc ? `fino al <b>${dataIt(sc.al)}</b> (${sc.giorni < 0 ? "scaduta" : sc.giorni === 0 ? "ultimo giorno" : "tra " + sc.giorni + " giorni"})` : "senza scadenza indicata"}`]);
     if (o.att.length) righe.push(["Vale per", o.att.map((x) => ATTIVAZIONI[x] || x).join(", ")]);
     if (o.canali.length) righe.push(["Si attiva", o.canali.map((x) => CANALI[x] || x).join(", ")]);
     if (o.pag.length) righe.push(["Pagamento", o.pag.map((x) => PAGAMENTI[x] || x).join(", ")]);
-    if (o.zone) righe.push(["Zone", "offerta limitata ad alcune zone (comprende la tua)"]);
-    if (o.garanzie) righe.push(["Garanzie", h(o.garanzie)]);
+    if (o.zone) righe.push(["Zone", "limitata ad alcune zone (compresa la tua)"]);
     if (o.serv.length) righe.push(["Servizi inclusi", h(o.serv.join(", "))]);
   }
   righe.push(["Fonte", h(o.fonte)]);
-  let html = `<div class="card small"><table class="kv">${righe.map(([k, v]) => `<tr><td>${k}</td><td>${v}</td></tr>`).join("")}</table>
-    ${o.descr ? `<p class="mut">${h(o.descr)}</p>` : ""}
-    <div class="row">${o.url ? `<a class="btn sec" href="${h(o.url)}" target="_blank" rel="noopener">Pagina dell'offerta</a>` : ""}${o.tel ? `<a class="btn sec" href="tel:${h(o.tel)}">Chiama ${h(o.tel)}</a>` : ""}</div></div>`;
-  // cosa si paga al venditore
-  const comp = o.comp.map((c) => `<li><b>${h(c.n)}</b>${c.opz ? ` <span class="mut">(dichiarata facoltativa${c.m === "06" ? ": non conteggiata" : ""})</span>` : ""}: ${c.p.map((p) =>
-    `${p.f && o.fasce !== "01" ? ({ "01": "F1", "02": "F2", "03": "F3", "91": "F2+F3", "07": "Peak", "08": "OffPeak" }[p.f] || p.f) + " " : ""}${nf(p.pr)} ${{ "01": "€/anno", "02": "€/kW anno", "03": "€/kWh", "04": "€/Smc", "05": "€ una tantum" }[p.u] || ""}${p.dur ? ` per ${p.dur} mesi` : ""}${p.fino ? ` fino a ${p.fino}` : ""}${p.da != null || p.a ? ` (consumi ${nf(p.da || 0, 0)}–${p.a ? nf(p.a, 0) : "∞"})` : ""}`).join("; ")}</li>`);
-  const disp = o.disp.length ? `<li><b>Dispacciamento</b>: ${o.disp.map((d) => d.v > 0 ? `${nf(d.v)} €/kWh` : "valori ARERA").join(", ")}</li>` : "";
-  const reg = o.reg.length ? `<li><b>Componenti regolate</b>: ${o.reg.map((x) => NOMI_REGOLATE[x] || x).join(", ")} (valori ARERA)</li>` : "";
-  const idx = eVariabile(o) ? `<li><b>Indice</b>: ${o.forn === "LUCE" ? "PUN" : "PSV"} del mese${o.forn === "LUCE" ? " + perdite di rete 10%" : ""}${o.idx[0]?.k && o.idx[0].k !== 1 ? ` × ${o.idx[0].k}` : ""}${o.tetto ? `, con prezzo massimo ${nf(o.tetto)} €/kWh` : ""}</li>` : "";
-  const sconti = o.sc.map((s) => `<li><b>${h(s.n)}</b>: ${s.p.map((p) => `${nf(p.pr)} ${{ "01": "€/anno", "02": "€/kW", "03": "€/kWh", "04": "€/Smc", "05": "€", "06": "%" }[p.u] || ""}`).join(", ")}
-    — ${VALIDITA_SCONTO[s.val] || ""}${s.dur ? `, per ${s.dur} mesi` : ""}; condizione: ${s.cond === "99" ? h(s.condD || "altra condizione") : CONDIZIONI_SCONTO[s.cond] || "nessuna"}${s.iva ? "" : "; non soggetto a IVA"}</li>`);
-  html += `<div class="card small"><b>Cosa paghi al venditore</b><ul>${idx}${comp.join("")}${disp}${reg}</ul>
-    ${sconti.length ? `<b>Sconti</b><ul>${sconti.join("")}</ul>` : ""}</div>`;
-  if (o.cond?.length) {
-    const lim = o.cond.filter((c) => c.lim), altre = o.cond.filter((c) => !c.lim);
-    html += `<details class="card small"><summary><b>Condizioni contrattuali</b>${lim.length ? ` — ${lim.length} limitant${lim.length > 1 ? "i" : "e"}` : ""}</summary>
-      <ul>${[...lim, ...altre].map((c) => `<li>${c.lim ? badge("LIMITANTE", "urg") + " " : ""}<b>${CONDIZIONI[c.t] || "Altro"}</b>: ${h(c.d)}</li>`).join("")}</ul></details>`;
-  }
-  return html;
+  // prezzi
+  const U_ = { "01": "€/anno", "02": "€/kW anno", "03": "€/kWh", "04": "€/Smc", "05": "€ una tantum" };
+  const FA = { "01": "F1", "02": "F2", "03": "F3", "91": "F2+F3", "07": "Peak", "08": "OffPeak" };
+  const comp = o.comp.map((c) => `<tr><td>${h(c.n)}${c.opz && c.m === "06" ? `<div class="frase">opzione facoltativa, non conteggiata</div>` : ""}</td><td class="r num">${c.p.map((p) =>
+    `${p.f && o.fasce !== "01" ? (FA[p.f] || p.f) + " " : ""}${nf(p.pr)} ${U_[p.u] || ""}${p.dur ? ` per ${p.dur} mesi` : ""}${p.fino ? ` fino a ${p.fino}` : ""}${p.da != null || p.a ? ` (consumi ${nf(p.da || 0, 0)}–${p.a ? nf(p.a, 0) : "∞"})` : ""}`).join("<br>")}</td></tr>`);
+  if (eVariabile(o)) comp.unshift(`<tr><td>Indice</td><td class="r">${o.forn === "LUCE" ? "PUN del mese + 10% perdite" : "PSV del mese"}${o.idx[0]?.k && o.idx[0].k !== 1 ? ` × ${o.idx[0].k}` : ""}${o.tetto ? `<br>max ${nf(o.tetto)} €/kWh` : ""}</td></tr>`);
+  if (o.disp.length) comp.push(`<tr><td>Dispacciamento</td><td class="r">${o.disp.map((d) => (d.v > 0 ? `${nf(d.v)} €/kWh` : "valori ARERA")).join(", ")}</td></tr>`);
+  if (o.reg.length) comp.push(`<tr><td>Componenti regolate</td><td class="r">${o.reg.map((x) => NOMI_REGOLATE[x] || x).join(", ")} (ARERA)</td></tr>`);
+  return `<section class="sez" id="s-prezzi"><h3>Prezzi dell'offerta</h3><table class="lista">${comp.join("")}</table>
+      <p class="small mut">Trasporto, oneri di sistema e imposte non dipendono dal venditore: sono uguali per tutti e calcolati con i valori ARERA.</p></section>
+    <section class="sez" id="s-info"><h3>Condizioni e contatti</h3><table class="kv">${righe.map(([k, v]) => `<tr><td>${k}</td><td>${v}</td></tr>`).join("")}</table>
+      ${o.descr ? `<p class="small mut">${h(o.descr)}</p>` : ""}
+      <div class="row">${o.url ? `<a class="btn sec" href="${h(o.url)}" target="_blank" rel="noopener">Pagina dell'offerta</a>` : ""}${o.tel ? `<a class="btn sec" href="tel:${h(o.tel)}">Chiama</a>` : ""}</div></section>`;
 }
 
 function vistaDettaglio(id, scenario = "centrale") {
@@ -300,40 +326,41 @@ function vistaDettaglio(id, scenario = "centrale") {
   const unita = o.forn === "LUCE" ? "kWh" : "Smc";
   const cons = mesi.reduce((a, m) => a + m.consumo, 0);
   const tot = totaleMesi(mesi), altro = mesi.reduce((a, m) => a + m.risultato.gruppo("altro"), 0);
-  const avvisi = [...new Set(mesi.flatMap((m) => m.risultato.avvisi))];
+  const sp = scontiEPenali(o, mesi, u);
+  const avvisi = [...new Set(mesi.flatMap((m) => m.risultato.avvisi))].filter((x) => !/^Sconto/.test(x));
   $("#titolo").textContent = "Dettaglio offerta";
-  let html = `<button class="btn sec" id="indietro">‹ Indietro</button>
-    <h2>${h(o.venditore)} — ${h(o.nome)}</h2>
-    <div class="row small tags">${o.mia ? badge(o.stg ? "TUTELE GRADUALI" : "LA TUA CTE", "mia") : ""}${badge(TIPI[o.tipo] || "FISSO", eVariabile(o) ? "var" : "reale")}<span class="mut grow">${h(descrizionePrezzo(o))}</span></div>`;
-  if (scen.length > 1) {
-    html += `<div class="seg" style="margin:12px 0">${scen.map((s) => `<button data-sc="${s}" class="${s === scenario ? "on" : ""}">${s} ${eur(totaleMesi(ris[s]), 0)}</button>`).join("")}</div>`;
-  }
-  html += `<div class="kpi"><div><span class="small mut">12 bollette</span><b>${eur(tot)}</b></div>
-    <div><span class="small mut">Media al mese</span><b>${eur(tot / 12)}</b></div>
-    <div><span class="small mut">Costo vero</span><b>${nf((tot - altro) / cons, 4)} €/${unita}</b><span class="small mut">tutto compreso</span></div></div>`;
+  let html = `<button class="btn ghost" id="indietro">‹ Indietro</button>
+    <section class="hero"><div class="vend">${h(o.venditore)}</div><h2>${h(o.nome)}</h2>
+      <div class="chips">${o.mia ? badge(o.stg ? "TUTELE GRADUALI" : "LA TUA CTE", "mia") : ""}${badge(TIPI[o.tipo] || "PREZZO FISSO", eVariabile(o) ? "var" : "fix")}</div>
+      ${scen.length > 1 ? `<div class="seg" style="margin:12px 0 4px">${scen.map((s) => `<button data-sc="${s}" class="${s === scenario ? "on" : ""}">${s}<br><b>${eur(totaleMesi(ris[s]), 0)}</b></button>`).join("")}</div>` : ""}
+      <div class="kpi"><div><span>12 bollette</span><b>${eur(tot)}</b></div><div><span>Al mese</span><b>${eur(tot / 12)}</b></div>
+        <div><span>Costo vero</span><b>${nf((tot - altro) / cons, 4)}</b><span>€/${unita} tutto compreso</span></div></div>
+      ${pillole(sp)}</section>
+    <nav class="jump"><a href="#s-sconti">Sconti e penali</a><a href="#s-prezzi">Prezzi</a><a href="#s-info">Condizioni</a><a href="#s-calc">Bolletta su misura</a><a href="#s-mesi">12 bollette</a></nav>`;
   if (avvisi.length) html += `<div class="warn small"><b>Da sapere</b><ul>${avvisi.map((x) => `<li>${h(x)}</li>`).join("")}</ul></div>`;
+  html += sezioneScontiPenali(o, sp);
   html += schedaOfferta(o);
-  // bolletta su misura
   const L = o.forn === "LUCE";
-  html += `<div class="card"><b>Quanto pagherei per una bolletta precisa?</b>
-    <div class="small mut">Scrivi il periodo e il consumo di una tua bolletta: calcolo tutte le voci con questa offerta.</div>
+  html += `<section class="sez" id="s-calc"><h3>Bolletta su misura</h3>
+    <div class="small mut">Periodo e consumo di una tua bolletta: calcolo tutte le voci con questa offerta.</div>
     <div class="row"><div><label>Dal</label><input type="date" id="bDal" value="${u.ingresso}-01"></div><div><label>Al</label><input type="date" id="bAl"></div></div>
     <label>Consumo totale (${unita})</label><input inputmode="decimal" id="bQ" placeholder="es. ${L ? "800" : "120"}">
     ${L ? `<details><summary class="small">Consumo per fascia (facoltativo)</summary><div class="row">${["F1", "F2", "F3"].map((f) => `<div><label>${f} kWh</label><input inputmode="decimal" data-bf="${f}"></div>`).join("")}</div></details>` : ""}
-    <button class="btn full" id="bCalc" style="margin-top:10px">Calcola la bolletta</button><div id="bRis"></div></div>`;
-  html += `<h2>Le 12 bollette mese per mese</h2>`;
+    <button class="btn full" id="bCalc" style="margin-top:10px">Calcola la bolletta</button><div id="bRis"></div></section>
+    <section class="sez" id="s-mesi"><h3>Le 12 bollette mese per mese</h3>`;
   html += mesi.map((m, i) => `<details class="m" ${i === 0 ? "open" : ""}><summary><span>${m.etichetta} ${badge(m.simulato ? "SIMULATO" : "REALE")}</span>
       <span class="num">${eur(m.risultato.totale)}</span></summary><div>
       <div class="small mut" style="margin-bottom:6px">Consumo ${nf(m.consumo, 1)} ${unita} · ${m.periodo.giorni} giorni · ${i === 0 ? "prima bolletta" : `mese ${i + 1} di fornitura`}</div>
       ${tabellaVoci(m.risultato)}${tabellaApplicati(m.applicati)}
     </div></details>`).join("");
-  html += `<button class="btn full" id="pdfBoll" style="margin-top:12px">Esporta le 12 bollette in PDF</button>`;
+  html += `<button class="btn full" id="pdfBoll" style="margin-top:12px">Esporta le 12 bollette in PDF</button></section>`;
   $("#vista").innerHTML = html;
   window.scrollTo(0, 0);
-  // fine periodo di default: un mese (luce bimestrale non obbligatoria)
   const d = new Date(`${u.ingresso}-01T00:00:00Z`); const f = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0));
   $("#bAl").value = f.toISOString().slice(0, 10);
-  $("#indietro").onclick = () => vai(o.mia ? "cte" : "offerte");
+  $("#indietro").onclick = () => vai(o.mia && !o.stg ? "cte" : "offerte");
+  $$(".jump a").forEach((a) => (a.onclick = (e) => { e.preventDefault(); $(a.getAttribute("href")).scrollIntoView({ behavior: "smooth", block: "start" }); }));
+  $$(".vaiProf").forEach((a) => (a.onclick = (e) => { e.preventDefault(); vai("profilo"); }));
   $$("[data-sc]").forEach((b) => (b.onclick = () => vistaDettaglio(id, b.dataset.sc)));
   $("#pdfBoll").onclick = () => esegui(() => pdfBollette(o, ris, scenario, u, S.dati), "bollette");
   $("#bCalc").onclick = () => {

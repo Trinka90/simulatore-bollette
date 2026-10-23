@@ -114,14 +114,24 @@ export function calcolaBolletta(off, per, k, cons, u, annuo, ctx, scenario = "ce
   return off.forn === "LUCE" ? bollettaLuce(off, per, k, cons, u, annuo, ctx, scenario) : bollettaGas(off, per, k, cons, u, annuo, ctx, scenario);
 }
 
+/** Lo sconto entra nel calcolo per questo utente? {applicato, motivo, comeOttenerlo} */
+export function statoSconto(s, u) {
+  const cond = s.cond || "00";
+  if (s.val === "03") return { applicato: false, motivo: "vale solo dopo i primi 12 mesi" };
+  if (cond === "00") return { applicato: true };
+  if ((cond === "01" || cond === "02") && u.bollettaWeb) return { applicato: true, condizione: CONDIZIONI_SCONTO[cond] };
+  if (cond === "03" && u.bollettaWeb && u.domiciliazione) return { applicato: true, condizione: CONDIZIONI_SCONTO[cond] };
+  if (cond === "99") return { applicato: false, motivo: `richiede ${s.condD || "una condizione particolare indicata dal venditore"}`, altro: true };
+  return { applicato: false, motivo: `richiede ${CONDIZIONI_SCONTO[cond]}`,
+    comeOttenerlo: cond === "03" ? "attiva bolletta online e domiciliazione nel profilo" : "attiva la bolletta online nel profilo" };
+}
+
 /** Sconti dell'offerta applicabili all'utente in questo mese. Restituisce [{nome, importo, gruppo, aliquota?}] e note. */
 function sconti(off, k, a, m, mesi, q, perFascia, u, annuo, baseVendita, regolate, note) {
   const out = [];
   for (const s of off.sc) {
-    const cond = s.cond || "00";
-    const ok = cond === "00" || ((cond === "01" || cond === "02") && u.bollettaWeb) || (cond === "03" && u.bollettaWeb && u.domiciliazione);
-    if (!ok) { note.add(`Sconto «${s.n}» non conteggiato: richiede ${cond === "99" ? (s.condD || "una condizione particolare") : CONDIZIONI_SCONTO[cond]}.`); continue; }
-    if (s.val === "03") { note.add(`Sconto «${s.n}» non conteggiato: vale dopo i primi 12 mesi.`); continue; }
+    const st = statoSconto(s, u);
+    if (!st.applicato) { note.add(`Sconto «${s.n}» non conteggiato: ${st.motivo}.`); continue; }
     if (!valeNelMese(s, k, a, m)) continue;
     const primo = s.mese ? true : k === 0;
     for (const p of s.p) {
@@ -401,6 +411,7 @@ export function riepilogoOfferta(off, u, ctx, conScenari = true) {
   out.costoMedio = cons ? (tot - altro) / cons : 0;
   out.mesiSimulati = centrale.filter((x) => x.simulato).length;
   out.avvisi = [...new Set(centrale.flatMap((x) => x.risultato.avvisi))];
+  out.sp = scontiEPenali(off, centrale, u);
   return out;
 }
 
@@ -461,4 +472,29 @@ export function offertaSTG(P, quotaAnnua = null) {
     descr: "Prezzo dell'energia = PUN di fascia del mese + 10% di perdite di rete, come nelle bollette STG. Vale per i clienti domestici non vulnerabili passati dalla maggior tutela; i clienti vulnerabili hanno il servizio di vulnerabilità, con prezzi diversi.",
     note: [], fonte: "Regole ARERA del Servizio a Tutele Graduali; parametri CDISPD, CSED, CPSTGD e gamma dal Portale Offerte", url: "https://www.arera.it", tel: "",
   };
+}
+
+/** Riepilogo sconti e penali di un'offerta sui 12 mesi simulati (importi IVA esclusa, segno positivo = risparmio). */
+export function scontiEPenali(off, mesi, u) {
+  const applicati = new Map();
+  for (const m of mesi) for (const v of m.risultato.voci) {
+    if (!/^Sconto/.test(v.descrizione)) continue;
+    const nome = v.descrizione.replace(/^Sconto( non soggetto a IVA)?: /, "");
+    const x = applicati.get(nome) || { nome, totale: 0, mesi: 0, iva: v.gruppo !== "altro" };
+    x.totale -= v.importo; x.mesi++;
+    applicati.set(nome, x);
+  }
+  const esclusi = off.sc.map((s) => ({ s, st: statoSconto(s, u) })).filter((x) => !x.st.applicato)
+    .map(({ s, st }) => ({ nome: s.n, motivo: st.motivo, comeOttenerlo: st.comeOttenerlo,
+      valore: s.p.map((p) => `${String(p.pr).replace(".", ",")} ${{ "01": "€/anno", "02": "€/kW", "03": "€/kWh", "04": "€/Smc", "05": "€", "06": "%" }[p.u] || ""}`).join(" + ") }));
+  const vero = (c) => c.d && !/^Condizione [A-Z_a-z]+$/.test(c.d);
+  const penali = off.cond.filter((c) => c.t === "05").map((c) => ({ testo: vero(c) ? c.d : "L'offerta prevede oneri in caso di recesso anticipato: dettagli nelle condizioni del venditore.", limitante: c.lim }));
+  const vincoli = off.cond.filter((c) => c.t !== "05" && (c.lim || c.t === "04")).map((c) => ({ tipo: c.t, testo: vero(c) ? c.d : "", limitante: c.lim }));
+  const g = (off.garanzie || "").trim();
+  // deposito: citato e non negato ("nessun deposito", "non è richiesto", "senza deposito")
+  const negato = /nessun\w*\s+(?:deposito|garanzia|cauzion)|non\s+(?:è\s+|e'\s+|viene\s+)?(?:richiest|previst|prevede|richiede|dovut|applicat)|senza\s+(?:alcun\s+)?deposito|^\s*(?:no|nessun\w*|non previst\w*)\W*$/i.test(g);
+  const deposito = g && /deposit|cauzion|fideiuss/i.test(g) && !negato ? g : null;
+  const totApplicati = [...applicati.values()].reduce((a, x) => a + x.totale, 0);
+  const depositoSoloSenzaDom = !!deposito && /domicili|addebito diretto|sdd|rid\b/i.test(deposito);
+  return { applicati: [...applicati.values()], totApplicati, esclusi, penali, vincoli, deposito, depositoSoloSenzaDom };
 }
