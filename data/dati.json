@@ -1,6 +1,6 @@
 {
- "versione": 2,
- "aggiornato_al": "2026-10-05",
+ "versione": 3,
+ "aggiornato_al": "2026-10-23",
  "tariffe": {
   "_nota": "Componenti regolate. Ogni blocco ha validita e fonte. Aggiornare i valori ogni trimestre (oneri) e ogni anno (rete).",
   "luce": {
@@ -282,5 +282,1261 @@
    "valido_al": "2026-12-31",
    "fonte": "Bolletta Enel Energia mercato libero lug-ago 2026 (DISPbt parte fissa)"
   }
+ },
+ "regolate": {
+  "_nota": "Componenti regolate. Fonte principale: parametri giornalieri del Portale Offerte (open data), che l'app scarica ogni giorno. Qui la copia di riserva e i valori che i parametri non contengono.",
+  "parametri": {
+   "E": {
+    "data": "2026-10-06",
+    "fonte": "Portale Offerte, PO_Parametri_Mercato_Libero_E_20261006.csv",
+    "valori": {
+     "acc_a_h_h": 4820.0,
+     "acc_a_h_l": 0.0125,
+     "acc_a_l_h": 0.0075,
+     "acc_a_l_l": 0.0125,
+     "acc_c_nr": 0.0227,
+     "acc_c_r_h": 0.0227,
+     "acc_c_r_l": 0.0227,
+     "arim_dnr_f": 0.0,
+     "arim_dnr_v": 0.001638,
+     "arim_dr": 0.001638,
+     "arim_nd_b1_c": 0.001616,
+     "arim_nd_b1_f": 3.0276,
+     "arim_nd_b1_p": 3.4524,
+     "arim_nd_b2_c": 0.001616,
+     "arim_nd_b2_f": 3.0276,
+     "arim_nd_b2_p": 3.27,
+     "arim_nd_b3_c": 0.001616,
+     "arim_nd_b3_f": 3.0276,
+     "arim_nd_b3_p": 3.636,
+     "arim_nd_b4_c": 0.001616,
+     "arim_nd_b4_f": 3.0828,
+     "arim_nd_b4_p": 3.636,
+     "arim_nd_b5_c": 0.001616,
+     "arim_nd_b5_f": 3.0828,
+     "arim_nd_b5_p": 3.636,
+     "arim_nd_b6_c": 0.001614,
+     "arim_nd_b6_f": 3.0276,
+     "arim_nd_b6_p": 3.4524,
+     "asos_dnr_f": 95.0916,
+     "asos_dnr_v": 0.031515,
+     "asos_dr": 0.031515,
+     "asos_nd_b1_c": 0.031881,
+     "asos_nd_b1_f": 12.9924,
+     "asos_nd_b1_p": 14.8164,
+     "asos_nd_b2_c": 0.031881,
+     "asos_nd_b2_f": 12.9924,
+     "asos_nd_b2_p": 14.0328,
+     "asos_nd_b3_c": 0.031881,
+     "asos_nd_b3_f": 12.9924,
+     "asos_nd_b3_p": 15.6012,
+     "asos_nd_b4_c": 0.031881,
+     "asos_nd_b4_f": 13.2336,
+     "asos_nd_b4_p": 15.6012,
+     "asos_nd_b5_c": 0.031881,
+     "asos_nd_b5_f": 13.2336,
+     "asos_nd_b5_p": 15.6012,
+     "asos_nd_b6_c": 0.031875,
+     "asos_nd_b6_f": 12.9924,
+     "asos_nd_b6_p": 14.8164,
+     "capprod": 0.0,
+     "cdispd": 0.016776,
+     "cpstgd": 0.00289,
+     "cpty_mrkt_1": 0.003765,
+     "cpty_mrkt_2": 0.003765,
+     "cpty_mrkt_3": 0.010167,
+     "cpty_mrkt_mt": 0.006193,
+     "csed": 0.00056,
+     "dis_b1_c": 0.00068,
+     "dis_b1_f": 5.3471,
+     "dis_b1_p": 32.9297,
+     "dis_b2_c": 0.00068,
+     "dis_b2_f": 5.3471,
+     "dis_b2_p": 31.1874,
+     "dis_b3_c": 0.00068,
+     "dis_b3_f": 5.3471,
+     "dis_b3_p": 34.672,
+     "dis_b4_c": 0.00068,
+     "dis_b4_f": 5.8818,
+     "dis_b4_p": 34.672,
+     "dis_b5_c": 0.00068,
+     "dis_b5_f": 5.8818,
+     "dis_b5_p": 34.672,
+     "dis_b6_c": 0.00066,
+     "dis_b6_f": 5.3471,
+     "dis_b6_p": 32.9297,
+     "dispbt_d": 1.107,
+     "dispbt_nd": 1.107,
+     "gamma": -73.5737,
+     "interr": 0.001079,
+     "iva_a": 0.22,
+     "iva_c": 0.1,
+     "lambda": 0.1,
+     "mis": 21.8469,
+     "modeol": 0.001096,
+     "msd": 0.004663,
+     "pcv_a": 41.18,
+     "pcv_c": 41.18,
+     "rst": 0.000572,
+     "rstg": 0.0,
+     "sigma1": 23.04,
+     "sigma2": 23.52,
+     "sigma3": 0.0119,
+     "terna": 0.000717,
+     "tras": 0.0119,
+     "uc3": 0.00276,
+     "uc6p_d": 7e-05,
+     "uc6p_nd": 7e-05,
+     "uc6s_d": 0.1988,
+     "uc6s_nd": 1.6824,
+     "uniess": 0.003322
+    }
+   },
+   "G": {
+    "data": "2026-10-06",
+    "fonte": "Portale Offerte, PO_Parametri_Mercato_Libero_G_20261006.csv",
+    "valori": {
+     "cpr": 0.0,
+     "grad": 0.0,
+     "gs": 0.003907,
+     "iva_f1": 0.1,
+     "iva_f2": 0.1,
+     "iva_f3": 0.22,
+     "iva_f4": 0.22,
+     "iva_ui": 0.22,
+     "qt": 0.105049,
+     "qvd_f_d": 55.39,
+     "qvd_f_nd": 55.39,
+     "qvd_v_d": 0.007946,
+     "qvd_v_nd": 0.007946,
+     "re": 0.029417,
+     "rs": 0.002788,
+     "st_a1": -0.23,
+     "st_a2": -0.35,
+     "st_a3": 0.0,
+     "st_a4": 0.0,
+     "st_a5": -0.35,
+     "st_a6": 0.0,
+     "tau1_cc1_a1": 80.76,
+     "tau1_cc1_a2": 69.6,
+     "tau1_cc1_a3": 73.59,
+     "tau1_cc1_a4": 67.78,
+     "tau1_cc1_a5": 87.42,
+     "tau1_cc1_a6": 96.32,
+     "tau1_cc2_a1": 588.13,
+     "tau1_cc2_a2": 487.71,
+     "tau1_cc2_a3": 508.79,
+     "tau1_cc2_a4": 481.6,
+     "tau1_cc2_a5": 659.42,
+     "tau1_cc2_a6": 672.81,
+     "tau1_cc3_a1": 1134.78,
+     "tau1_cc3_a2": 992.47,
+     "tau1_cc3_a3": 1043.82,
+     "tau1_cc3_a4": 992.23,
+     "tau1_cc3_a5": 1327.55,
+     "tau1_cc3_a6": 1447.35,
+     "tau3_f1_a1": 0.0,
+     "tau3_f1_a2": 0.0,
+     "tau3_f1_a3": 0.0,
+     "tau3_f1_a4": 0.0,
+     "tau3_f1_a5": 0.0,
+     "tau3_f1_a6": 0.0,
+     "tau3_f2_a1": 0.107315,
+     "tau3_f2_a2": 0.079367,
+     "tau3_f2_a3": 0.111183,
+     "tau3_f2_a4": 0.132517,
+     "tau3_f2_a5": 0.193801,
+     "tau3_f2_a6": 0.258579,
+     "tau3_f3_a1": 0.098223,
+     "tau3_f3_a2": 0.072643,
+     "tau3_f3_a3": 0.101763,
+     "tau3_f3_a4": 0.12129,
+     "tau3_f3_a5": 0.177381,
+     "tau3_f3_a6": 0.236671,
+     "tau3_f4_a1": 0.098636,
+     "tau3_f4_a2": 0.072949,
+     "tau3_f4_a3": 0.102191,
+     "tau3_f4_a4": 0.1218,
+     "tau3_f4_a5": 0.178128,
+     "tau3_f4_a6": 0.237667,
+     "tau3_f5_a1": 0.073701,
+     "tau3_f5_a2": 0.054508,
+     "tau3_f5_a3": 0.076358,
+     "tau3_f5_a4": 0.09101,
+     "tau3_f5_a5": 0.133098,
+     "tau3_f5_a6": 0.177586,
+     "tau3_f6_a1": 0.037333,
+     "tau3_f6_a2": 0.02761,
+     "tau3_f6_a3": 0.038678,
+     "tau3_f6_a4": 0.0461,
+     "tau3_f6_a5": 0.06742,
+     "tau3_f6_a6": 0.089955,
+     "ug1": 0.034837,
+     "ug2p_d_f1": 0.0,
+     "ug2p_d_f2": 0.0496,
+     "ug2p_d_f3": 0.0293,
+     "ug2p_d_f4": 0.0237,
+     "ug2p_d_f5": 0.017,
+     "ug2p_d_f6": 0.0071,
+     "ug2p_nd_f1": 0.0,
+     "ug2p_nd_f2": 0.0496,
+     "ug2p_nd_f3": 0.0293,
+     "ug2p_nd_f4": 0.0237,
+     "ug2p_nd_f5": 0.017,
+     "ug2p_nd_f6": 0.0071,
+     "ug2s": -21.63,
+     "ug3": 0.007292,
+     "vr_a1": 0.07,
+     "vr_a2": -0.01,
+     "vr_a3": 0.0,
+     "vr_a4": 0.0,
+     "vr_a5": -0.37,
+     "vr_a6": 0.0
+    }
+   }
+  },
+  "ppe": {
+   "valore": -0.01027,
+   "valido_dal": "2026-10-01",
+   "valido_al": "2026-12-31",
+   "fonte": "Dettaglio offerta del Portale Offerte, rilevato il 2026-10-06"
+  },
+  "ccr": {
+   "trimestri": {
+    "2026-Q4": 0.025212,
+    "2027-Q1": 0.025212,
+    "2027-Q2": 0.027267,
+    "2027-Q3": 0.027267
+   },
+   "fonte": "Dettaglio offerta del Portale Offerte, rilevato il 2026-10-06 (€/Smc, PCS 0,03852 GJ/Smc)"
+  },
+  "regioni": {
+   "01": {
+    "nome": "Piemonte",
+    "ambito_gas": 1,
+    "zona_climatica_capoluogo": "E",
+    "accisa_gas": [
+     [
+      120,
+      0.044
+     ],
+     [
+      480,
+      0.175
+     ],
+     [
+      1560,
+      0.17
+     ],
+     [
+      null,
+      0.186
+     ]
+    ],
+    "addizionale_gas": [
+     [
+      120,
+      0.022
+     ],
+     [
+      480,
+      0.0258
+     ],
+     [
+      1560,
+      0.0258
+     ],
+     [
+      null,
+      0.0258
+     ]
+    ]
+   },
+   "02": {
+    "nome": "Valle d'Aosta",
+    "ambito_gas": 1,
+    "zona_climatica_capoluogo": "E",
+    "accisa_gas": [
+     [
+      120,
+      0.044
+     ],
+     [
+      480,
+      0.175
+     ],
+     [
+      1560,
+      0.17
+     ],
+     [
+      null,
+      0.186
+     ]
+    ],
+    "addizionale_gas": [
+     [
+      120,
+      0.0
+     ],
+     [
+      480,
+      0.0
+     ],
+     [
+      1560,
+      0.0
+     ],
+     [
+      null,
+      0.0
+     ]
+    ]
+   },
+   "03": {
+    "nome": "Lombardia",
+    "ambito_gas": 2,
+    "zona_climatica_capoluogo": "E",
+    "accisa_gas": [
+     [
+      120,
+      0.044
+     ],
+     [
+      480,
+      0.175
+     ],
+     [
+      1560,
+      0.17
+     ],
+     [
+      null,
+      0.186
+     ]
+    ],
+    "addizionale_gas": [
+     [
+      120,
+      0.0
+     ],
+     [
+      480,
+      0.0
+     ],
+     [
+      1560,
+      0.0
+     ],
+     [
+      null,
+      0.0
+     ]
+    ]
+   },
+   "04": {
+    "nome": "Trentino-Alto Adige",
+    "ambito_gas": 2,
+    "zona_climatica_capoluogo": "E",
+    "accisa_gas": [
+     [
+      120,
+      0.044
+     ],
+     [
+      480,
+      0.175
+     ],
+     [
+      1560,
+      0.17
+     ],
+     [
+      null,
+      0.186
+     ]
+    ],
+    "addizionale_gas": [
+     [
+      120,
+      0.0
+     ],
+     [
+      480,
+      0.0
+     ],
+     [
+      1560,
+      0.0
+     ],
+     [
+      null,
+      0.0
+     ]
+    ]
+   },
+   "05": {
+    "nome": "Veneto",
+    "ambito_gas": 2,
+    "zona_climatica_capoluogo": "E",
+    "accisa_gas": [
+     [
+      120,
+      0.044
+     ],
+     [
+      480,
+      0.175
+     ],
+     [
+      1560,
+      0.17
+     ],
+     [
+      null,
+      0.186
+     ]
+    ],
+    "addizionale_gas": [
+     [
+      120,
+      0.007747
+     ],
+     [
+      480,
+      0.023241
+     ],
+     [
+      1560,
+      0.025823
+     ],
+     [
+      null,
+      0.030987
+     ]
+    ]
+   },
+   "06": {
+    "nome": "Friuli-Venezia Giulia",
+    "ambito_gas": 2,
+    "zona_climatica_capoluogo": "E",
+    "accisa_gas": [
+     [
+      120,
+      0.044
+     ],
+     [
+      480,
+      0.175
+     ],
+     [
+      1560,
+      0.17
+     ],
+     [
+      null,
+      0.186
+     ]
+    ],
+    "addizionale_gas": [
+     [
+      120,
+      0.0
+     ],
+     [
+      480,
+      0.0
+     ],
+     [
+      1560,
+      0.0
+     ],
+     [
+      null,
+      0.0
+     ]
+    ]
+   },
+   "07": {
+    "nome": "Liguria",
+    "ambito_gas": 1,
+    "zona_climatica_capoluogo": "D",
+    "accisa_gas": [
+     [
+      120,
+      0.044
+     ],
+     [
+      480,
+      0.175
+     ],
+     [
+      1560,
+      0.17
+     ],
+     [
+      null,
+      0.186
+     ]
+    ],
+    "addizionale_gas": [
+     [
+      120,
+      0.022
+     ],
+     [
+      480,
+      0.0258
+     ],
+     [
+      1560,
+      0.0258
+     ],
+     [
+      null,
+      0.0258
+     ]
+    ]
+   },
+   "08": {
+    "nome": "Emilia-Romagna",
+    "ambito_gas": 2,
+    "zona_climatica_capoluogo": "E",
+    "accisa_gas": [
+     [
+      120,
+      0.044
+     ],
+     [
+      480,
+      0.175
+     ],
+     [
+      1560,
+      0.17
+     ],
+     [
+      null,
+      0.186
+     ]
+    ],
+    "addizionale_gas": [
+     [
+      120,
+      0.022
+     ],
+     [
+      480,
+      0.030987
+     ],
+     [
+      1560,
+      0.030987
+     ],
+     [
+      null,
+      0.030987
+     ]
+    ]
+   },
+   "09": {
+    "nome": "Toscana",
+    "ambito_gas": 3,
+    "zona_climatica_capoluogo": "D",
+    "accisa_gas": [
+     [
+      120,
+      0.044
+     ],
+     [
+      480,
+      0.175
+     ],
+     [
+      1560,
+      0.17
+     ],
+     [
+      null,
+      0.186
+     ]
+    ],
+    "addizionale_gas": [
+     [
+      120,
+      0.022
+     ],
+     [
+      480,
+      0.030987
+     ],
+     [
+      1560,
+      0.030987
+     ],
+     [
+      null,
+      0.030987
+     ]
+    ]
+   },
+   "10": {
+    "nome": "Umbria",
+    "ambito_gas": 3,
+    "zona_climatica_capoluogo": "E",
+    "accisa_gas": [
+     [
+      120,
+      0.044
+     ],
+     [
+      480,
+      0.175
+     ],
+     [
+      1560,
+      0.17
+     ],
+     [
+      null,
+      0.186
+     ]
+    ],
+    "addizionale_gas": [
+     [
+      120,
+      0.005165
+     ],
+     [
+      480,
+      0.005165
+     ],
+     [
+      1560,
+      0.005165
+     ],
+     [
+      null,
+      0.005165
+     ]
+    ]
+   },
+   "11": {
+    "nome": "Marche",
+    "ambito_gas": 3,
+    "zona_climatica_capoluogo": "D",
+    "accisa_gas": [
+     [
+      120,
+      0.044
+     ],
+     [
+      480,
+      0.175
+     ],
+     [
+      1560,
+      0.17
+     ],
+     [
+      null,
+      0.186
+     ]
+    ],
+    "addizionale_gas": [
+     [
+      120,
+      0.0155
+     ],
+     [
+      480,
+      0.0181
+     ],
+     [
+      1560,
+      0.0207
+     ],
+     [
+      null,
+      0.0258
+     ]
+    ]
+   },
+   "12": {
+    "nome": "Lazio",
+    "ambito_gas": 5,
+    "zona_climatica_capoluogo": "D",
+    "accisa_gas": [
+     [
+      120,
+      0.044
+     ],
+     [
+      480,
+      0.175
+     ],
+     [
+      1560,
+      0.17
+     ],
+     [
+      null,
+      0.186
+     ]
+    ],
+    "addizionale_gas": [
+     [
+      120,
+      0.022
+     ],
+     [
+      480,
+      0.03099
+     ],
+     [
+      1560,
+      0.03099
+     ],
+     [
+      null,
+      0.03099
+     ]
+    ]
+   },
+   "13": {
+    "nome": "Abruzzo",
+    "ambito_gas": 4,
+    "zona_climatica_capoluogo": "E",
+    "accisa_gas": [
+     [
+      120,
+      0.038
+     ],
+     [
+      480,
+      0.135
+     ],
+     [
+      1560,
+      0.12
+     ],
+     [
+      null,
+      0.15
+     ]
+    ],
+    "addizionale_gas": [
+     [
+      120,
+      0.01033
+     ],
+     [
+      480,
+      0.01033
+     ],
+     [
+      1560,
+      0.01033
+     ],
+     [
+      null,
+      0.01033
+     ]
+    ]
+   },
+   "14": {
+    "nome": "Molise",
+    "ambito_gas": 4,
+    "zona_climatica_capoluogo": "E",
+    "accisa_gas": [
+     [
+      120,
+      0.038
+     ],
+     [
+      480,
+      0.135
+     ],
+     [
+      1560,
+      0.12
+     ],
+     [
+      null,
+      0.15
+     ]
+    ],
+    "addizionale_gas": [
+     [
+      120,
+      0.019
+     ],
+     [
+      480,
+      0.030987
+     ],
+     [
+      1560,
+      0.030987
+     ],
+     [
+      null,
+      0.030987
+     ]
+    ]
+   },
+   "15": {
+    "nome": "Campania",
+    "ambito_gas": 5,
+    "zona_climatica_capoluogo": "C",
+    "accisa_gas": [
+     [
+      120,
+      0.038
+     ],
+     [
+      480,
+      0.135
+     ],
+     [
+      1560,
+      0.12
+     ],
+     [
+      null,
+      0.15
+     ]
+    ],
+    "addizionale_gas": [
+     [
+      120,
+      0.019
+     ],
+     [
+      480,
+      0.031
+     ],
+     [
+      1560,
+      0.031
+     ],
+     [
+      null,
+      0.031
+     ]
+    ]
+   },
+   "16": {
+    "nome": "Puglia",
+    "ambito_gas": 4,
+    "zona_climatica_capoluogo": "C",
+    "accisa_gas": [
+     [
+      120,
+      0.038
+     ],
+     [
+      480,
+      0.135
+     ],
+     [
+      1560,
+      0.12
+     ],
+     [
+      null,
+      0.15
+     ]
+    ],
+    "addizionale_gas": [
+     [
+      120,
+      0.019
+     ],
+     [
+      480,
+      0.03098
+     ],
+     [
+      1560,
+      0.03098
+     ],
+     [
+      null,
+      0.03098
+     ]
+    ]
+   },
+   "17": {
+    "nome": "Basilicata",
+    "ambito_gas": 4,
+    "zona_climatica_capoluogo": "E",
+    "accisa_gas": [
+     [
+      120,
+      0.038
+     ],
+     [
+      480,
+      0.135
+     ],
+     [
+      1560,
+      0.12
+     ],
+     [
+      null,
+      0.15
+     ]
+    ],
+    "addizionale_gas": [
+     [
+      120,
+      0.019
+     ],
+     [
+      480,
+      0.025823
+     ],
+     [
+      1560,
+      0.025823
+     ],
+     [
+      null,
+      0.025823
+     ]
+    ]
+   },
+   "18": {
+    "nome": "Calabria",
+    "ambito_gas": 6,
+    "zona_climatica_capoluogo": "D",
+    "accisa_gas": [
+     [
+      120,
+      0.038
+     ],
+     [
+      480,
+      0.135
+     ],
+     [
+      1560,
+      0.12
+     ],
+     [
+      null,
+      0.15
+     ]
+    ],
+    "addizionale_gas": [
+     [
+      120,
+      0.005165
+     ],
+     [
+      480,
+      0.005165
+     ],
+     [
+      1560,
+      0.005165
+     ],
+     [
+      null,
+      0.005165
+     ]
+    ]
+   },
+   "19": {
+    "nome": "Sicilia",
+    "ambito_gas": 6,
+    "zona_climatica_capoluogo": "B",
+    "accisa_gas": [
+     [
+      120,
+      0.038
+     ],
+     [
+      480,
+      0.135
+     ],
+     [
+      1560,
+      0.12
+     ],
+     [
+      null,
+      0.15
+     ]
+    ],
+    "addizionale_gas": [
+     [
+      120,
+      0.0
+     ],
+     [
+      480,
+      0.0
+     ],
+     [
+      1560,
+      0.0
+     ],
+     [
+      null,
+      0.0
+     ]
+    ]
+   },
+   "20": {
+    "nome": "Sardegna",
+    "ambito_gas": 6,
+    "zona_climatica_capoluogo": "C",
+    "accisa_gas": [
+     [
+      120,
+      0.038
+     ],
+     [
+      480,
+      0.135
+     ],
+     [
+      1560,
+      0.12
+     ],
+     [
+      null,
+      0.15
+     ]
+    ],
+    "addizionale_gas": [
+     [
+      null,
+      0.0
+     ]
+    ],
+    "_nota": "Sardegna non rilevata sul Portale: accise del Mezzogiorno, addizionale da verificare"
+   }
+  },
+  "province_speciali": {
+   "059": {
+    "nome": "Latina",
+    "accisa_gas": [
+     [
+      120,
+      0.038
+     ],
+     [
+      480,
+      0.135
+     ],
+     [
+      1560,
+      0.12
+     ],
+     [
+      null,
+      0.15
+     ]
+    ],
+    "addizionale_gas": [
+     [
+      120,
+      0.019
+     ],
+     [
+      480,
+      0.03099
+     ],
+     [
+      1560,
+      0.03099
+     ],
+     [
+      null,
+      0.03099
+     ]
+    ]
+   },
+   "060": {
+    "nome": "Frosinone",
+    "accisa_gas": [
+     [
+      120,
+      0.038
+     ],
+     [
+      480,
+      0.135
+     ],
+     [
+      1560,
+      0.12
+     ],
+     [
+      null,
+      0.15
+     ]
+    ],
+    "addizionale_gas": [
+     [
+      120,
+      0.019
+     ],
+     [
+      480,
+      0.03099
+     ],
+     [
+      1560,
+      0.03099
+     ],
+     [
+      null,
+      0.03099
+     ]
+    ]
+   }
+  },
+  "profili_gas": {
+   "fonte": "Regole per il calcolo della spesa, Portale Offerte v4.0 (16/02/2026), appendice: profili di prelievo AT 2025/2026",
+   "C1": {
+    "B": {
+     "10": 0.0,
+     "11": 0.0,
+     "12": 26.0816357,
+     "1": 31.9118241,
+     "2": 24.7889579,
+     "3": 17.2175799,
+     "4": 0,
+     "5": 0,
+     "6": 0,
+     "7": 0,
+     "8": 0,
+     "9": 0
+    },
+    "C": {
+     "10": 0.0,
+     "11": 10.5605109,
+     "12": 22.5061041,
+     "1": 26.6326652,
+     "2": 20.7234414,
+     "3": 15.2857002,
+     "4": 4.2915763,
+     "5": 0,
+     "6": 0,
+     "7": 0,
+     "8": 0,
+     "9": 0
+    },
+    "D": {
+     "10": 0.0,
+     "11": 13.546763,
+     "12": 21.1883316,
+     "1": 25.8516945,
+     "2": 19.1039767,
+     "3": 13.4431506,
+     "4": 6.8660818,
+     "5": 0,
+     "6": 0,
+     "7": 0,
+     "8": 0,
+     "9": 0
+    },
+    "E": {
+     "10": 5.5194873,
+     "11": 14.8851505,
+     "12": 22.0494524,
+     "1": 24.2610252,
+     "2": 17.5032776,
+     "3": 10.9498316,
+     "4": 4.831774,
+     "5": 0,
+     "6": 0,
+     "7": 0,
+     "8": 0,
+     "9": 0
+    },
+    "F": {
+     "10": 6.4769407,
+     "11": 13.7764218,
+     "12": 20.2207842,
+     "1": 22.7314363,
+     "2": 16.6800704,
+     "3": 10.6482268,
+     "4": 4.9866098,
+     "5": 2.4582801,
+     "6": 0.3817316,
+     "7": 0,
+     "8": 0,
+     "9": 1.6394976
+    }
+   },
+   "C2": {
+    "10": 7.2982139,
+    "11": 9.1423084,
+    "12": 12.2074716,
+    "1": 13.4956479,
+    "2": 11.2628566,
+    "3": 11.1005836,
+    "4": 7.5419819,
+    "5": 6.2026357,
+    "6": 5.4659533,
+    "7": 5.1313777,
+    "8": 5.2406872,
+    "9": 5.9102822
+   },
+   "quota_riscaldamento_misto": 0.6
+  },
+  "profilo_luce": {
+   "fonte": "Profilo mensile tipico domestico (stima)",
+   "mesi": {
+    "1": 9.5,
+    "2": 8.6,
+    "3": 8.4,
+    "4": 7.5,
+    "5": 7.3,
+    "6": 7.8,
+    "7": 8.9,
+    "8": 8.2,
+    "9": 7.6,
+    "10": 7.8,
+    "11": 8.6,
+    "12": 9.8
+   },
+   "ripartizione_fasce": {
+    "F1": 0.33,
+    "F2": 0.31,
+    "F3": 0.36
+   }
+  },
+  "canone_rai": {
+   "importo_mese": 9.0,
+   "mesi": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10
+   ],
+   "fonte": "Canone RAI 2026: 90 € in 10 rate mensili in bolletta luce"
+  },
+  "soglia_iva_gas_smc": 480,
+  "scaglioni_gas_smc": [
+   120,
+   480,
+   1560,
+   5000,
+   80000,
+   200000
+  ]
  }
 }

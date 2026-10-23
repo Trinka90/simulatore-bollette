@@ -66,3 +66,19 @@ details.m>div{padding:0 12px 12px;overflow-x:auto}
 .grid12 label{margin:4px 0 2px;font-size:11px}
 .spin{display:inline-block;width:16px;height:16px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:s .8s linear infinite}
 @keyframes s{to{transform:rotate(360deg)}}
+
+/* v2: catalogo offerte */
+.prof{cursor:pointer}.prof .link{color:var(--pri);font-weight:600;margin-top:4px}
+.card.mia{border-color:var(--pri);box-shadow:0 0 0 1px var(--pri)}
+.b.mia{color:#fff;background:var(--pri)}.b.urg{color:#fff;background:var(--bad)}.b.sc{color:var(--mut);background:var(--bg);border:1px solid var(--line)}
+.tags{gap:6px;margin-top:6px}.tags>*{flex:0 0 auto}.tags .grow{flex:1}
+.min0{min-width:0;overflow-wrap:anywhere}
+.btn.mini{min-height:34px;padding:6px 12px;font-size:13px}
+.sugg{display:flex;flex-direction:column;gap:2px;margin-top:4px}
+.sugg button{text-align:left;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:9px 12px;font:15px system-ui}
+table.kv td:first-child{color:var(--mut);white-space:nowrap;padding-right:10px;width:1%}
+input.tip{color:var(--mut);font-style:italic}
+.spin.sm{width:11px;height:11px;border-width:2px;vertical-align:-1px}
+.seg button:disabled{opacity:.4}
+details.card>summary{cursor:pointer}
+a{color:var(--pri)}
