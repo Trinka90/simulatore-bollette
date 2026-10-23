@@ -1,0 +1,34 @@
+name: Esplora open data
+on:
+  push:
+    branches: [esplora-opendata]
+    paths: [".github/workflows/esplora.yml"]
+permissions:
+  contents: write
+jobs:
+  scarica:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Scarica
+        run: |
+          mkdir -p campioni
+          UA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 Chrome/126 Safari/537.36"
+          B=https://www.ilportaleofferte.it/portaleOfferte
+          curl -sSL -A "$UA" "$B/it/open-data.page" -o campioni/open-data.html -w "page %{http_code}\n" || true
+          for i in $(seq 0 12); do
+            D=$(date -u -d "-$i day" +%Y%m%d); Y=$(date -u -d "-$i day" +%Y); M=$(date -u -d "-$i day" +%-m)
+            for T in E_MLIBERO G_MLIBERO E_PLACET G_PLACET; do
+              F=campioni/PO_Offerte_${T}_$D.xml
+              [ -s "$F" ] && continue
+              C=$(curl -sSL -A "$UA" "$B/resources/opendata/csv/offerteML/${Y}_${M}/PO_Offerte_${T}_$D.xml" -o "$F" -w "%{http_code}")
+              echo "$T $D $C $(stat -c%s $F)"
+              if [ "$C" != 200 ] || ! head -c 200 "$F" | grep -q "<"; then rm -f "$F"; fi
+            done
+          done
+          ls -la campioni
+          # tieni solo il file piu recente per tipo
+          for T in E_MLIBERO G_MLIBERO E_PLACET G_PLACET; do ls campioni/PO_Offerte_${T}_*.xml 2>/dev/null | sort | head -n -1 | xargs -r rm; done
+          gzip -k campioni/*.xml || true; rm -f campioni/*.xml
+          git config user.name "github-actions"; git config user.email "actions@github.com"
+          git add campioni; git commit -m "campioni open data" && git push
