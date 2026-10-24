@@ -88,6 +88,16 @@ export function analizzaBolletta(testo, comuni = []) {
     }
     if (c.comune) break;
   }
+  // consumo medio (giornaliero, mensile o annuo) e storico dei consumi, se la bolletta li riporta
+  const medio = trova(t, new RegExp(String.raw`consumo\s+medio\s+(giornaliero|mensile|annuo|al\s+giorno|al\s+mese)[^0-9]{0,60}?${N}\s*${U}`, "i"),
+    (m) => ({ q: num(m[2]), per: /giorn/i.test(m[1]) ? "giorno" : /mes/i.test(m[1]) ? "mese" : "anno" }));
+  if (medio && medio.valore.q != null) c.consumoMedio = medio;
+  const st = storicoConsumi(t, U);
+  if (st.length) c.storico = { valore: st, frase: `${st.length} periodi nello storico dei consumi` };
+  if (!c.consumoAnnuo && st.length) {
+    const r = consumiDaBollette(st.map((x) => ({ ...x })));
+    if (r && r.coperti >= 11) c.consumoAnnuo = { valore: Math.round(Object.values(r.mesi).reduce((a, b) => a + b, 0)), frase: "somma dello storico dei consumi degli ultimi 12 mesi" };
+  }
   if (tipo === "LUCE" && !c.consumoPeriodo && c.F1 && c.F2 && c.F3) c.consumoPeriodo = { valore: c.F1.valore + c.F2.valore + c.F3.valore, frase: "somma delle fasce F1+F2+F3" };
   if (!c.consumoAnnuo) avvisi.push("Non trovo il consumo annuo: controlla la sezione «consumi» della bolletta.");
   if (!c.codiceOfferta) avvisi.push("Non trovo il codice offerta (32 caratteri): senza, non posso ritrovare la tua offerta nel catalogo ARERA.");
@@ -111,11 +121,21 @@ export function consumoPerMese(dal, al, q) {
  * Restituisce {mesi:{1..12}, coperti:n, daStima:[mesi mancanti]} oppure null.
  */
 export function consumiDaBollette(bollette) {
-  const perMese = {};
+  const perMese = {}, daStorico = {};
   for (const b of bollette) {
     if (!b.dal || !b.al || !(b.consumo > 0)) continue;
     for (const [k, v] of Object.entries(consumoPerMese(b.dal, b.al, b.consumo))) perMese[k] = (perMese[k] || 0) + v;
   }
+  // storico riportato nelle bollette: riempie solo i mesi non coperti da una bolletta (vince la bolletta più recente)
+  for (const b of [...bollette].sort((a, b) => (a.al || "").localeCompare(b.al || ""))) {
+    for (const x of b.storico || []) {
+      if (!(x.consumo >= 0)) continue;
+      for (const [k, v] of Object.entries(consumoPerMese(x.dal, x.al, x.consumo))) {
+        if (!(k in daStorico) || daStorico[k].src !== x) daStorico[k] = { v: (daStorico[k]?.src === x ? daStorico[k].v : 0) + v, src: x };
+      }
+    }
+  }
+  for (const [k, { v }] of Object.entries(daStorico)) if (!(k in perMese)) perMese[k] = v;
   const chiavi = Object.keys(perMese).sort();
   if (!chiavi.length) return null;
   const ultimi = {};
@@ -123,4 +143,37 @@ export function consumiDaBollette(bollette) {
   const mesi = {}, mancanti = [];
   for (let m = 1; m <= 12; m++) { if (ultimi[m]) mesi[m] = Math.round(ultimi[m].v * 10) / 10; else mancanti.push(m); }
   return { mesi, coperti: 12 - mancanti.length, mancanti };
+}
+
+const MESI3 = ["gen", "feb", "mar", "apr", "mag", "giu", "lug", "ago", "set", "ott", "nov", "dic"];
+const ultimoGiorno = (y, m) => new Date(Date.UTC(y, m, 0)).getUTCDate();
+/**
+ * Storico dei consumi ("Andamento/Storico dei consumi", grafico o tabella): righe "mese anno quantità"
+ * oppure "dal–al quantità". Restituisce [{dal, al, consumo}] ordinati.
+ */
+export function storicoConsumi(t, U = "kWh") {
+  const i = t.search(/(?:storico|andamento|riepilogo)\s+(?:dei\s+)?consumi|consumi\s+(?:degli\s+)?ultimi/i);
+  if (i < 0) return [];
+  const z = t.slice(i, i + 2500);
+  const out = [];
+  const reM = new RegExp(String.raw`\b(gen|feb|mar|apr|mag|giu|lug|ago|set|ott|nov|dic)[a-z]*\.?[\s/'-]*(20\d{2}|\d{2})\s*:?\s*${N}\s*(?:${U})?(?!\s*(?:€|euro|%|\/))`, "gi");
+  let m;
+  while ((m = reM.exec(z))) {
+    const mese = MESI3.indexOf(m[1].toLowerCase()) + 1, anno = m[2].length === 2 ? 2000 + Number(m[2]) : Number(m[2]);
+    const q = num(m[3]);
+    if (q == null || anno < 2015 || anno > 2100) continue;
+    const mm = String(mese).padStart(2, "0");
+    out.push({ dal: `${anno}-${mm}-01`, al: `${anno}-${mm}-${ultimoGiorno(anno, mese)}`, consumo: q });
+  }
+  if (!out.length) {
+    const reP = new RegExp(String.raw`(\d{2}[/.-]\d{2}[/.-]\d{4})\s*(?:-|–|al)\s*(\d{2}[/.-]\d{2}[/.-]\d{4})[^0-9€]{0,20}?${N}\s*(?:${U})?(?!\s*(?:€|euro|%|\/))`, "gi");
+    while ((m = reP.exec(z))) {
+      const q = num(m[3]), dal = data(m[1]), al = data(m[2]);
+      if (q != null && dal && al && al > dal) out.push({ dal, al, consumo: q });
+    }
+  }
+  // tieni un valore per periodo, in ordine
+  const visti = new Map();
+  for (const x of out) visti.set(x.dal + x.al, x);
+  return [...visti.values()].sort((a, b) => a.dal.localeCompare(b.dal));
 }

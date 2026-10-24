@@ -60,3 +60,21 @@ test("consumi mensili ricostruiti dalle bollette", () => {
   assert.equal(r.coperti, 3);
   assert.equal(r.mesi[3], 250);
 });
+
+test("storico dei consumi e consumo medio dalla bolletta", async () => {
+  const { analizzaBolletta, storicoConsumi, consumiDaBollette } = await import("../src/bolletta-pdf.js");
+  const t = `POD IT001E12345678 Periodo di fatturazione: 01/07/2026 - 31/08/2026 Consumo fatturato 19,82 kWh
+    Consumo medio giornaliero 0,32 kWh
+    Storico dei consumi: Set 2025 310 kWh Ott 2025 295 kWh Nov 2025 330 kWh Dic 2025 380 kWh Gen 2026 400 kWh Feb 2026 350 kWh
+    Mar 2026 320 kWh Apr 2026 280 kWh Mag 2026 260 kWh Giu 2026 240 kWh Lug 2026 10 kWh Ago 2026 9,82 kWh`;
+  const st = storicoConsumi(t);
+  assert.equal(st.length, 12);
+  assert.deepEqual(st[0], { dal: "2025-09-01", al: "2025-09-30", consumo: 310 });
+  const a = analizzaBolletta(t, []);
+  assert.equal(a.campi.consumoMedio.valore.q, 0.32);
+  assert.equal(a.campi.consumoAnnuo.valore, 3185); // somma dello storico (senza la voce «consumo annuo»)
+  // una sola bolletta di 2 mesi + storico: i mesi della bolletta vincono, gli altri dallo storico
+  const r = consumiDaBollette([{ dal: "2026-07-01", al: "2026-08-31", consumo: 19.82, storico: st }]);
+  assert.equal(r.coperti, 12);
+  assert.equal(r.mesi[1], 400);
+});

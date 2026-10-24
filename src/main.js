@@ -366,7 +366,7 @@ async function vistaOfferte() {
   if (!cache.has(chiave(S.forn))) { v.innerHTML = `<div class="empty"><span class="spin"></span><p>Calcolo le bollette di ogni offerta…</p></div>`; await attendi(); }
   const R = calcolaClassifica(S.forn);
   const unita = S.forn === "LUCE" ? "kWh" : "Smc";
-  const consumo = S.forn === "LUCE" ? `${nf(u.luce.annuo, 0)} kWh` : `${nf(u.gas.annuo, 0)} Smc`;
+  const consumo = S.forn === "LUCE" ? `${nf(consumoAnnuoU("LUCE"), 0)} kWh` : `${nf(consumoAnnuoU("GAS"), 0)} Smc`;
   let lista = R.lista.filter(passaFiltri);
   if (S.cerca) { const q = S.cerca.toLowerCase(); lista = lista.filter((r) => `${r.offerta.venditore} ${r.offerta.nome}`.toLowerCase().includes(q)); }
   const migliore = lista.find((r) => !r.offerta.mia) || lista[0];
@@ -729,6 +729,7 @@ $("#fileBolletta").addEventListener("change", async (e) => {
         fasce: an.tipo === "LUCE" && v("F1") != null ? { F1: v("F1"), F2: v("F2") || 0, F3: v("F3") || 0 } : null,
         annuo: v("consumoAnnuo"), potenza: v("potenza"), residente: v("residente"), comune: v("comune"), canone: v("canoneRai") != null,
         uso: v("uso"), totale: v("totale"), spesaAnnua: v("spesaAnnua"), codice: v("codiceOfferta"), nomeOfferta: v("nomeOfferta"), pod: v("pod"),
+        storico: v("storico") || [], medio: v("consumoMedio") || null,
         stg: /tutel[ae]\s+graduali|\bSTG\b/i.test(testo) };
       esitiBollette.push({ file: f.name, b, campi: c, avvisi: an.avvisi, offerta: cercaOffertaDaBolletta(b) });
     } catch (err) { console.error(err); esitiBollette.push({ file: f.name, illeggibile: true, avvisi: [err.message] }); }
@@ -736,12 +737,14 @@ $("#fileBolletta").addEventListener("change", async (e) => {
   vistaBolletteLette();
 });
 
-const ETICH_CAMPI = { consumoAnnuo: "Consumo annuo", periodo: "Periodo", consumoPeriodo: "Consumo nel periodo", F1: "F1", F2: "F2", F3: "F3",
+const ETICH_CAMPI = { consumoAnnuo: "Consumo annuo", periodo: "Periodo", consumoPeriodo: "Consumo nel periodo", consumoMedio: "Consumo medio", storico: "Storico dei consumi", F1: "F1", F2: "F2", F3: "F3",
   potenza: "Potenza impegnata", residente: "Residenza", comune: "Comune di fornitura", canoneRai: "Canone RAI", uso: "Uso del gas",
   totale: "Totale bolletta", spesaAnnua: "Spesa degli ultimi 12 mesi", codiceOfferta: "Codice offerta", nomeOfferta: "Offerta", pod: "POD / PDR" };
 function valoreCampo(k, v, forn) {
   const un = forn === "LUCE" ? "kWh" : "Smc";
   if (k === "periodo") return `${dataIt(v.dal)} – ${dataIt(v.al)}`;
+  if (k === "consumoMedio") return `${nf(v.q, 2)} ${un} al ${v.per}`;
+  if (k === "storico") return `${v.length} periodi (${v.length ? `${meseIt(v[0].dal.slice(0, 7))} – ${meseIt(v.at(-1).al.slice(0, 7))}` : ""})`;
   if (k === "comune") return `${v.nome} (${v.sigla})`;
   if (k === "residente") return v ? "residente" : "non residente";
   if (k === "canoneRai") return v === true ? "presente" : eur(v);
@@ -768,6 +771,17 @@ function vistaBolletteLette() {
     </section>`;
   }
   const valide = esitiBollette.filter((x) => !x.illeggibile);
+  for (const forn of ["LUCE", "GAS"]) {
+    const nuove = valide.filter((x) => x.b.forn === forn).map((x) => x.b);
+    if (!nuove.length) continue;
+    const prev = anteprimaConsumo(forn, nuove);
+    html += `<section class="sez"><h3>${forn === "LUCE" ? "💡" : "🔥"} Consumo che userò per i confronti</h3>
+      <div class="big-tot" style="font-size:22px">${nf(prev.annuo, 0)} ${forn === "LUCE" ? "kWh" : "Smc"}<span> all'anno</span></div>
+      <p class="small">${h(prev.come)}</p>
+      ${prev.periodo ? `<p class="small mut">Il consumo della bolletta (${nf(prev.periodo.q, 0)} ${forn === "LUCE" ? "kWh" : "Smc"} dal ${dataIt(prev.periodo.dal)} al ${dataIt(prev.periodo.al)}) riguarda solo quel periodo: non lo uso come consumo annuo${prev.mesi ? ", ma per i mesi che copre" : ""}.</p>` : ""}
+      ${prev.mesi ? `<p class="small mut">Mesi presi dalle bollette: ${prev.mesi}. Gli altri sono stimati con il profilo tipico ARERA.</p>` : ""}
+      ${prev.medio ? `<p class="small mut">Consumo medio indicato in bolletta: ${nf(prev.medio.q, 2)} al ${prev.medio.per}.</p>` : ""}</section>`;
+  }
   if (valide.length) html += `<label class="sw card"><span><b>Aggiorna il mio profilo</b> con consumi, potenza, comune e residenza letti</span><input type="checkbox" id="bApplica" checked></label>`;
   html += `<button class="btn full" id="bFine">Salva e confronta</button>`;
   $("#vista").innerHTML = html;
@@ -791,6 +805,21 @@ function vistaBolletteLette() {
   $("#bFine").onclick = () => { salvaTutto(); toast("Bollette salvate"); vai("offerte"); };
 }
 
+/** Cosa userò come consumo annuo con queste bollette (senza modificare il profilo). */
+function anteprimaConsumo(forn, nuove) {
+  const tutte = [...S.bollette.filter((b) => b.forn === forn && !nuove.some((n) => n.dal === b.dal && n.al === b.al)), ...nuove]
+    .sort((a, b) => (a.al || "").localeCompare(b.al || ""));
+  const ult = tutte.at(-1), s = forn === "LUCE" ? S.utenza.luce : S.utenza.gas;
+  const conAnnuo = [...tutte].reverse().find((b) => b.annuo > 0);
+  const r = consumiDaBollette(tutte);
+  const out = { periodo: ult.consumo > 0 && ult.dal ? { q: ult.consumo, dal: ult.dal, al: ult.al } : null, medio: ult.medio };
+  if (r && r.coperti === 12) { out.annuo = Object.values(r.mesi).reduce((a, b) => a + b, 0); out.come = "Somma dei 12 mesi coperti dalle bollette e dal loro storico dei consumi."; }
+  else if (conAnnuo) { out.annuo = conAnnuo.annuo; out.come = `Dalla voce «consumo annuo» della bolletta ${conAnnuo.file || ""}${conAnnuo.al ? ` (al ${dataIt(conAnnuo.al)})` : ""}: è il consumo degli ultimi 12 mesi calcolato dal venditore.`; }
+  else { out.annuo = s.annuo; out.come = "La bolletta non riporta il consumo annuo: resta quello del tuo profilo. Correggilo in «Consumi» o carica più bollette (o il file del Portale Consumi)."; }
+  if (r && r.coperti >= 3) out.mesi = MESI_NOMI.filter((_, i) => !r.mancanti.includes(i + 1)).map((m) => m.slice(0, 3)).join(", ");
+  return out;
+}
+
 /** Porta nel profilo i dati delle bollette (le più recenti hanno la precedenza). */
 function applicaBolletteAlProfilo() {
   const u = S.utenza;
@@ -799,8 +828,8 @@ function applicaBolletteAlProfilo() {
     if (!bb.length) continue;
     const ult = bb.at(-1), s = forn === "LUCE" ? u.luce : u.gas;
     s.attiva = true;
-    const annuo = [...bb].reverse().find((b) => b.annuo > 0)?.annuo;
-    if (annuo) s.annuo = annuo;
+    const prev = anteprimaConsumo(forn, []);
+    s.annuo = prev.annuo; s.fonte = prev.come;
     const com = [...bb].reverse().find((b) => b.comune)?.comune;
     if (com) { u.comune = com; if (forn === "GAS" || !u.gas.zona) u.gas.zona = S.dati.regolate.regioni[com.regione]?.zona_climatica_capoluogo || u.gas.zona; }
     if (forn === "LUCE") {
@@ -822,6 +851,7 @@ function applicaBolletteAlProfilo() {
       for (let m = 1; m <= 12; m++) mesi[m] = r.mesi[m] ?? Math.round(stima[m] * 10) / 10;
       s.mesi = mesi;
       if (r.coperti === 12) s.annuo = Object.values(mesi).reduce((a, b) => a + b, 0);
+      s.fonte += ` Mesi da bolletta: ${r.coperti} su 12.`;
     }
   }
 }
@@ -1084,6 +1114,7 @@ function editor(o) {
 }
 
 // ------------------------------------------------------------------ PROFILO
+const consumoAnnuoU = (f) => Object.values(consumiMensili(U(), f, S.dati.regolate)).reduce((a, b) => a + b, 0);
 function vistaProfilo() {
   const u = structuredClone(S.utenza), R = S.dati.regolate;
   const ing = U().ingresso;
@@ -1099,6 +1130,10 @@ function vistaProfilo() {
       Vanno bene anche i file di e-distribuzione e del distributore gas. Il file resta sul telefono.</p>
     <div class="row"><button class="btn sec" data-csv="LUCE">💡 File consumi luce</button><button class="btn sec" data-csv="GAS">🔥 File consumi gas</button></div>
     <div class="small mut" style="margin-top:6px">Oppure carica le bollette in «La mia offerta»: ricostruisco i consumi dai periodi fatturati.</div>
+  </section>
+  <section class="sez"><h3>Consumi usati nei confronti</h3>
+    ${u.luce.attiva ? `<p class="small">💡 <b>${nf(consumoAnnuoU("LUCE"), 0)} kWh all'anno</b> — ${h(u.luce.fonte || "valore del profilo (non ancora da bolletta o file)")}</p>` : ""}
+    ${u.gas.attiva ? `<p class="small">🔥 <b>${nf(consumoAnnuoU("GAS"), 0)} Smc all'anno</b> — ${h(u.gas.fonte || "valore del profilo (non ancora da bolletta o file)")}</p>` : ""}
   </section>
   <div class="card"><h3>Dove e quando</h3>
     <label>Comune della fornitura</label><input id="pComune" value="${h(u.comune ? `${u.comune.nome} (${u.comune.sigla})` : "")}" autocomplete="off" placeholder="Scrivi il nome del comune">
@@ -1184,6 +1219,7 @@ function vistaProfilo() {
     if (err.length) { err.forEach((s) => $$(s).forEach((i) => i.classList.add("err"))); toast("Controlla i campi evidenziati"); return; }
     if (n.luce.mesi) n.luce.annuo = Object.values(n.luce.mesi).reduce((a, b) => a + b, 0);
     if (n.gas.mesi) n.gas.annuo = Object.values(n.gas.mesi).reduce((a, b) => a + b, 0);
+    for (const k of ["luce", "gas"]) n[k].fonte = Math.abs((n[k].annuo || 0) - (S.utenza[k].annuo || 0)) < 0.5 ? S.utenza[k].fonte : "Inserito a mano nel profilo.";
     S.utenza = n; salva(); cache.clear(); toast("Profilo salvato"); vai("offerte");
   };
 }
@@ -1217,6 +1253,7 @@ $("#fileCsv").addEventListener("change", async (e) => {
     const stima = consumiMensili({ ...U(), luce: { ...S.utenza.luce, mesi: null }, gas: { ...S.utenza.gas, mesi: null } }, forn, S.dati.regolate);
     s.mesi = Object.fromEntries(Array.from({ length: 12 }, (_, i) => [i + 1, x.mesi[i + 1] ?? Math.round(stima[i + 1] * 10) / 10]));
     s.annuo = Object.values(s.mesi).reduce((a, b) => a + b, 0);
+    s.fonte = `Dal file dei consumi (${x.mancanti.length ? `${12 - x.mancanti.length} mesi reali, gli altri stimati` : "12 mesi reali"}).`;
     s.attiva = true;
     if (forn === "LUCE" && x.ripartizione) s.ripartizione = x.ripartizione;
     salva(); cache.clear(); toast("Consumi aggiornati"); vai("offerte");
