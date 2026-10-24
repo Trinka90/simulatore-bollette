@@ -47,8 +47,10 @@ L'app contiene un elenco iniziale (06/10/2026) che viene sostituito dal primo ag
 - **Luce/gas + internet**: le offerte energia riservate a chi attiva anche la fibra (Plenitude «Fibra», Enel «Luce e Giga»,
   Iren/SEV «Connettività», Newtec) escono dalla classifica luce/gas, perché il loro prezzo non comprende internet, e vengono
   confrontate qui come pacchetto completo contro la miglior energia + il miglior internet presi separatamente.
-- Non esiste un open data delle offerte telefoniche: il catalogo `data/internet.json` è raccolto a mano (pagine degli operatori,
-  sintesi contrattuali, comparatori) e va aggiornato; l'app lo riceve con gli aggiornamenti automatici.
+- Non esiste un open data delle offerte telefoniche: il catalogo `data/internet.json` è preso dalle **sintesi contrattuali**, dalle
+  schede di trasparenza tariffaria e dalle pagine ufficiali degli operatori (22 offerte su 25; le altre da comparatore, segnalate).
+  Per ogni offerta: listino, sconti con condizione e durata (mobile, luce/gas, domiciliazione, promo con scadenza), rate di attivazione
+  e modem mese per mese, costi una tantum, costi di uscita (disattivazione, migrazione, rate residue), penale modem, dubbi da verificare.
 
 ## Fornitori e recensioni
 Tutti i venditori sul Portale sono autorizzati, ma la qualità del servizio cambia. L'app indica se un fornitore è un grande

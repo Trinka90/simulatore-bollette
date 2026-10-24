@@ -9,7 +9,7 @@ import { eur, nf, dataIt, meseIt, MESI_NOMI, descrizionePrezzo, TIPI, CANALI, PA
   VALIDITA_SCONTO, NOMI_REGOLATE, CONDIZIONI_SCONTO, durata, descrUtenza } from "./testi.js";
 import { DATI_URL } from "./config.js";
 import { condizioniParticolari, richiedeInternet } from "./condizioni.js";
-import { costoInternet, costoUscita, classificaInternet, offertaMia, migliore as miglioreNet, incerta, analizzaSintesi, TECNO } from "./internet.js";
+import { costoInternet, costoUscita, classificaInternet, offertaMia, migliore as miglioreNet, incerta, descriviFasi, analizzaSintesi, TECNO } from "./internet.js";
 import catalogoInternet from "../data/internet.json";
 import { categoria, nomeFornitore, ETICHETTE, recensioni } from "./fornitori.js";
 import { confermaAvvio, controllaAggiornamento, VERSIONE_WEB } from "./aggiorna-app.js";
@@ -1173,7 +1173,7 @@ function sitiEnergia() {
   if (S.net.energia) return S.net.energia;
   return [...new Set(["LUCE", "GAS"].map((f) => offertaAttuale(f)?.sito).filter(Boolean))];
 }
-const profiloNet = (extra = {}) => ({ ...S.net, energia: sitiEnergia(), ...extra });
+const profiloNet = (extra = {}) => ({ ...S.net, energia: sitiEnergia(), dueForniture: S.utenza.luce.attiva && S.utenza.gas.attiva, domiciliazione: S.utenza.domiciliazione !== false, ...extra });
 const vel = (m) => (m == null ? "?" : m >= 1000 ? `${nf(m / 1000, m % 1000 ? 1 : 0)} Gbit/s` : `${m} Mbit/s`);
 const tecnoTxt = (o) => o.tecnologie.map((t) => TECNO[t]?.breve || t).join(" / ");
 
@@ -1181,7 +1181,7 @@ function classificaNet() {
   const p = profiloNet(), N = S.net.orizzonte;
   const lista = classificaInternet(offerteNet(), p, N, oggiIso());
   let mia = null;
-  if (S.net.mia?.canone > 0) { const o = offertaMia(S.net.mia); mia = { offerta: o, ...costoInternet(o, p, N) }; }
+  if (S.net.mia?.canone > 0) { const o = offertaMia(S.net.mia); mia = { offerta: o, ...costoInternet(o, p, N, oggiIso()) }; }
   return { lista, mia, p, N };
 }
 
@@ -1191,7 +1191,7 @@ function pacchettiEnergiaInternet(N) {
   const u = U(), forn = ["LUCE", "GAS"].filter((f) => (f === "LUCE" ? u.luce.attiva : u.gas.attiva));
   const R = Object.fromEntries(forn.map((f) => [f, calcolaClassifica(f)]));
   const bestSep = Object.fromEntries(forn.map((f) => [f, R[f].lista.find((r) => !r.offerta.mia)]));
-  const netSep = miglioreNet(classificaInternet(offerteNet(), profiloNet({ cambioEnergia: false }), N, oggiIso()), N);
+  const netSep = miglioreNet(classificaInternet(offerteNet(), profiloNet({ cambioEnergia: false }), N, oggiIso()));
   const out = [];
   for (const [sito, nome] of FORN_ENERGIA_NET) {
     const ener = {};
@@ -1201,8 +1201,8 @@ function pacchettiEnergiaInternet(N) {
       ener[f] = cand.sort((a, b) => a.centrale - b.centrale)[0] || null;
     }
     if (!forn.some((f) => ener[f])) continue;
-    const pi = profiloNet({ energia: [...new Set([...sitiEnergia(), sito])], cambioEnergia: true });
-    const nets = classificaInternet(offerteNet().filter((o) => o.sito === sito && (!o.energia?.entrambe || forn.length === 2 && ener.LUCE && ener.GAS)), pi, N, oggiIso());
+    const pi = profiloNet({ energia: [...new Set([...sitiEnergia(), sito])], cambioEnergia: true, dueForniture: forn.length === 2 && !!ener.LUCE && !!ener.GAS });
+    const nets = classificaInternet(offerteNet().filter((o) => o.sito === sito), pi, N, oggiIso());
     const net = nets[0];
     if (!net) continue;
     // per le forniture che il fornitore non copre, resta la migliore separata
@@ -1218,25 +1218,25 @@ function pacchettiEnergiaInternet(N) {
 function cardNet(r, best, extra = "") {
   const o = r.offerta;
   const pills = [];
-  if (r.promoOk && o.promo) pills.push(`<span class="pill att">${eur(o.promo.canone - (r.scontoMobile || 0))}/mese per ${o.promo.mesi} mesi, poi ${eur((o.canone ?? o.promo.canone) - (r.scontoMobile || 0))}</span>`);
-  if (r.scontoMobile) pills.push(`<span class="pill save">✓ −${eur(r.scontoMobile, 0)}/mese col mobile</span>`);
-  if (o.energia) pills.push(`<span class="pill ${o.energia.obbligatoria ? "att" : "neutral"}">${o.energia.obbligatoria ? "Richiede" : "Sconto con"} luce/gas ${h(o.operatore)}</span>`);
+  if (r.fasi.length > 1) pills.push(`<span class="pill att">${h(descriviFasi(r.fasi))}</span>`);
+  for (const x of r.applicati.filter((x) => x.richiede === "mobile" || x.richiede === "energia" || x.richiede === "energia2")) pills.push(`<span class="pill save">✓ −${eur(x.importo, 0)} ${x.richiede === "mobile" ? "col mobile" : "con luce/gas"}</span>`);
+  if (o.energia?.obbligatoria) pills.push(`<span class="pill att">Richiede luce/gas ${h(o.operatore)}</span>`);
   if (o.vincolo > 0) pills.push(`<span class="pill bad">Vincolo ${o.vincolo} mesi</span>`);
-  if (o.modem?.nel_canone) pills.push(`<span class="pill bad">Modem a rate ${o.modem.mesi} mesi</span>`);
-  if (r.incognite.length) pills.push(`<span class="pill neutral">${r.incognite.length} dato non pubblicato</span>`);
-  if (r.scaduta) pills.push(`<span class="pill bad">Promo scaduta il ${dataIt(o.scade)}</span>`);
+  if ((o.rate || []).some((x) => x.a > 24)) pills.push(`<span class="pill bad">Rate fino a ${Math.max(...o.rate.map((x) => x.a))} mesi</span>`);
+  if (o.fonteTipo === "comparatore") pills.push(`<span class="pill neutral">Fonte non ufficiale</span>`);
+  if (r.scaduta) pills.push(`<span class="pill bad">Scaduta il ${dataIt(o.scade)}</span>`);
   else if (o.scade) pills.push(`<span class="pill neutral">Fino al ${dataIt(o.scade)}</span>`);
   return `<article class="offer ${o.mia ? "mia" : ""}" data-net="${h(o.id)}" role="button">
     <div class="row sp testa"><div class="min0"><div class="vend">${h(o.operatore)} ${o.mia ? badge("IL TUO ABBONAMENTO", "mia") : ""}</div><div class="nome">${h(o.nome)}</div></div>
       <div class="price"><div class="tot">${eur(r.medio, 2)}</div><div class="sub">al mese in media · ${eur(r.totale, 0)} in ${S.net.orizzonte} mesi</div></div></div>
     <div class="riga small mut">${tecnoTxt(o)} · ${vel(o.down)} · ${o.chiamate ? h(o.chiamate.replace(/\s*\(.*\)/, "")) : "chiamate: non indicato"}${best != null && !o.mia ? ` · ${r.totale > best ? "+" + eur(r.totale - best, 0) : "la più economica"}` : ""}</div>
-    ${pills.length ? `<div class="pills">${pills.slice(0, 4).join("")}</div>` : ""}${extra}</article>`;
+    ${pills.length ? `<div class="pills">${pills.slice(0, 5).join("")}</div>` : ""}${extra}</article>`;
 }
 
 function vistaInternet() {
   const v = $("#vista");
   const { lista, mia, N } = classificaNet();
-  const best = miglioreNet(lista, N);
+  const best = miglioreNet(lista);
   const pk = pacchettiEnergiaInternet(N);
   const T = S.net.tecnologia;
   let html = `<div class="intest"><div class="seg big" id="nTec">${Object.keys(TECNO).map((t) => `<button data-v="${t}" class="${T === t ? "on" : ""}">${t === "FTTH" ? "Fibra FTTH" : t === "FTTC" ? "Fibra FTTC" : "FWA (radio)"}</button>`).join("")}</div>
@@ -1284,9 +1284,9 @@ function vistaInternet() {
       <p class="small mut">L'energia è calcolata sui tuoi consumi con le regole ARERA (12 bollette, ripetute per ${N} mesi: oltre il primo anno è una stima). Tocca una riga per i dettagli.</p></section>`;
   }
 
-  const incerte = lista.filter((r) => incerta(r, N) && !r.scaduta);
-  if (incerte.length) html += `<div class="avviso small">${incerte.map((r) => h(r.offerta.nome)).join(", ")}: il prezzo dopo la promozione non è pubblicato, quindi il totale in ${N} mesi è sottostimato. Non le metto in testa alla classifica.</div>`;
-  html += `<div class="small mut conta">${lista.length} offerte · ordinate per costo totale in ${N} mesi (canoni, promo, attivazione, modem)</div>`;
+  const incerte = lista.filter((r) => incerta(r) && !r.scaduta);
+  if (incerte.length) html += `<div class="avviso small">${incerte.map((r) => h(r.offerta.nome)).join(", ")}: dati presi da un comparatore perché il documento ufficiale non era leggibile. Restano in classifica ma non in testa.</div>`;
+  html += `<div class="small mut conta">${lista.length} offerte · ordinate per costo totale in ${N} mesi (canoni, sconti, attivazione, rate) · fonti: sintesi contrattuali e pagine ufficiali</div>`;
   for (const r of lista) if (r !== best) html += cardNet(r, best?.totale);
   if (!lista.length) html += `<div class="empty">Nessuna offerta con questi filtri.</div>`;
   html += `<div class="card small"><b>Da dove vengono questi prezzi</b>
@@ -1358,14 +1358,14 @@ function vistaDettaglioInternet(id) {
   const p = profiloNet(), N = S.net.orizzonte;
   const o = id === "MIA" ? offertaMia(S.net.mia) : offerteNet().find((x) => x.id === id);
   if (!o) { toast("Offerta non trovata"); return; }
-  const r = costoInternet(o, p, N);
-  const lista = classificaInternet(offerteNet(), p, N, oggiIso()), best = miglioreNet(lista, N);
-  const mia = S.net.mia?.canone > 0 ? costoInternet(offertaMia(S.net.mia), p, N) : null;
+  const r = costoInternet(o, p, N, oggiIso());
+  const lista = classificaInternet(offerteNet(), p, N, oggiIso()), best = miglioreNet(lista);
+  const mia = S.net.mia?.canone > 0 ? costoInternet(offertaMia(S.net.mia), p, N, oggiIso()) : null;
   $("#titolo").textContent = "Dettaglio internet";
   // mesi raggruppati per importo
-  const gruppi = [];
-  r.mesi.forEach((v, i) => { const g = gruppi.at(-1); if (g && Math.abs(g.v - v) < 0.005) g.a = i + 1; else gruppi.push({ da: i + 1, a: i + 1, v }); });
-  const usc = [12, 24].map((m) => [m, costoUscita(o, m)]);
+  const gruppi = r.fasi;
+  const COND = { mobile: `hai il mobile ${o.operatore}`, energia: `hai luce o gas ${o.operatore}`, energia2: `hai luce e gas ${o.operatore}`, domiciliazione: "paghi con domiciliazione", altro: "condizione particolare" };
+  const usc = [6, 12, 24].map((m) => [m, costoUscita(o, m)]);
   let html = `<button class="btn ghost" id="indietro">‹ Indietro</button>
     <section class="hero"><div class="vend">${h(o.operatore)}</div><h2>${h(o.nome)}</h2>
       <div class="big-tot">${eur(r.totale, 0)}<span> in ${N} mesi · ${eur(r.medio, 2)} al mese in media</span></div>
@@ -1374,21 +1374,26 @@ function vistaDettaglioInternet(id) {
       ${mia && !o.mia ? `<div class="conf"><span>rispetto al tuo abbonamento</span><b class="${mia.totale > r.totale ? "ok" : ""}">${mia.totale > r.totale ? "risparmi " + eur(mia.totale - r.totale, 0) : "costa " + eur(r.totale - mia.totale, 0) + " in più"}</b></div>` : ""}
     </section>
     <section class="sez"><h3>In breve</h3><ul class="breve">
-      ${r.condizioni.map((c) => `<li class="${/non applicato|Si attiva solo|rate per/.test(c) ? "attenzione" : "piu"}"><span class="ic">${/non applicato|Si attiva solo|rate per/.test(c) ? "⚠" : "✓"}</span><div><b>${h(c)}</b></div></li>`).join("")}
-      <li class="${o.vincolo > 0 ? "attenzione" : "info"}"><span class="ic">${o.vincolo > 0 ? "⚠" : "ℹ"}</span><div><b>${o.vincolo > 0 ? `Vincolo di ${o.vincolo} mesi` : o.vincolo === 0 ? "Nessun vincolo di durata" : "Vincolo non indicato nella fonte"}</b></div></li>
+      <li class="info"><span class="ic">€</span><div><b>${h(descriviFasi(r.fasi))}</b>${r.unaTantum ? `<div class="small">più ${eur(r.unaTantum)} una tantum alla prima fattura</div>` : ""}</div></li>
+      ${r.applicati.map((x) => `<li class="piu"><span class="ic">✓</span><div><b>−${eur(x.importo)} al mese${x.mesi ? ` per ${x.mesi} mesi` : ""}</b><div class="small">${h(x.condizione || "sconto")}${x.richiede ? ` — applicato perché ${COND[x.richiede]}` : ""}${x.scade ? ` · per chi attiva entro il ${dataIt(x.scade)}` : ""}</div></div></li>`).join("")}
+      ${r.esclusi.map((x) => `<li class="attenzione"><span class="ic">✕</span><div><b>−${eur(x.importo)} al mese non applicato</b><div class="small">${h(x.condizione || "")}${x.scade && x.scade < oggiIso() ? ` · promo scaduta il ${dataIt(x.scade)}` : x.richiede ? ` — vale solo se ${COND[x.richiede]}` : ""}</div></div></li>`).join("")}
+      ${(o.rate || []).map((x) => `<li class="attenzione"><span class="ic">⏱</span><div><b>${h(x.voce)}: ${eur(x.importo)} al mese dal ${x.da}° al ${x.a}° mese</b><div class="small">Già nel prezzo sopra. Se lasci prima, le rate rimaste vanno pagate.</div></div></li>`).join("")}
+      ${o.energia?.obbligatoria ? `<li class="attenzione"><span class="ic">⚠</span><div><b>Si attiva solo con la luce o il gas ${h(o.operatore)}</b></div></li>` : ""}
+      <li class="${o.vincolo > 0 ? "attenzione" : "info"}"><span class="ic">${o.vincolo > 0 ? "⚠" : "ℹ"}</span><div><b>${o.vincolo > 0 ? `Durata minima ${o.vincolo} mesi` : o.vincolo === 0 ? "Nessun vincolo di durata" : "Durata minima non indicata"}</b></div></li>
+      ${o.penaleModem ? `<li class="attenzione"><span class="ic">⚠</span><div><b>Modem da restituire: ${eur(o.penaleModem)} se non lo riconsegni</b></div></li>` : ""}
       <li class="info"><span class="ic">☎</span><div><b>Chiamate: ${h(o.chiamate || "non indicato")}</b></div></li>
       ${(o.note || []).map((n) => `<li class="info"><span class="ic">ℹ</span><div><div class="small">${h(n)}</div></div></li>`).join("")}
-      ${r.incognite.map((n) => `<li class="attenzione"><span class="ic">?</span><div><b>Dato non pubblicato</b><div class="small">${h(n)}</div></div></li>`).join("")}
+      ${r.dubbi.map((n) => `<li class="attenzione"><span class="ic">?</span><div><b>Da verificare</b><div class="small">${h(n)}</div></div></li>`).join("")}
     </ul></section>
     <section class="sez"><h3>Quanto paghi in ${N} mesi</h3><table class="lista">${r.voci.map((x) => `<tr><td>${h(x.t)}</td><td class="r num">${eur(x.v)}</td></tr>`).join("")}
       <tr class="t"><td>Totale</td><td class="r num">${eur(r.totale)}</td></tr></table>
-      <div class="sub-h">Mese per mese</div><table class="lista">${gruppi.map((g) => `<tr><td>${g.da === g.a ? `Mese ${g.da}` : `Mesi ${g.da}–${g.a}`}</td><td class="r num">${eur(g.v)}${g.da !== g.a ? " al mese" : ""}</td></tr>`).join("")}</table></section>
+      <div class="sub-h">Mese per mese</div><table class="lista">${r.unaTantum ? `<tr><td>Prima fattura: una tantum</td><td class="r num">${eur(r.unaTantum)}</td></tr>` : ""}${gruppi.map((g) => `<tr><td>${g.da === g.a ? `Mese ${g.da}` : `Mesi ${g.da}–${g.a}`}</td><td class="r num">${eur(g.v)}${g.da !== g.a ? " al mese" : ""}</td></tr>`).join("")}</table></section>
     <section class="sez"><h3>Se vuoi cambiare prima</h3><table class="kv small">${usc.map(([m, u]) => `<tr><td>Dopo ${m} mesi</td><td>${u.importo != null ? `<b>${eur(u.importo)}</b> — ` : ""}${h(u.testo)}</td></tr>`).join("")}</table>
       <p class="small mut">Per legge puoi recedere in ogni momento con 30 giorni di preavviso: l'operatore può chiedere solo i costi di disattivazione e, se c'era una promozione o un vincolo, la restituzione degli sconti o le rate residue. Gli importi esatti sono nella sintesi contrattuale.</p></section>
     ${o.mia ? "" : `<section class="sez"><h3>Prima di firmare</h3>
       <div class="row"><a class="btn sec" href="${URL_COPERTURA}" target="_blank" rel="noopener">Copertura (AGCOM)</a><a class="btn sec" href="https://${h(o.sito)}" target="_blank" rel="noopener">Sito ${h(o.operatore)}</a></div>
       <div class="row" style="margin-top:8px"><a class="btn sec" href="https://it.trustpilot.com/search?query=${encodeURIComponent(o.sito)}" target="_blank" rel="noopener">★ Trustpilot</a><a class="btn sec" href="https://www.google.com/search?q=${encodeURIComponent(o.operatore + " fibra recensioni")}" target="_blank" rel="noopener">Recensioni Google</a></div>
-      <table class="kv small" style="margin-top:8px"><tr><td>Fonte</td><td><a href="${h(o.fonte)}" target="_blank" rel="noopener">${h(o.fonte.replace(/^https?:\/\/(www\.)?/, "").slice(0, 60))}</a></td></tr><tr><td>Verificato il</td><td>${dataIt(o.verificato)}</td></tr></table></section>`}`;
+      <table class="kv small" style="margin-top:8px"><tr><td>Fonte</td><td><a href="${h(o.fonte)}" target="_blank" rel="noopener">${h(o.fonte.replace(/^https?:\/\/(www\.)?/, "").slice(0, 60))}</a></td></tr><tr><td>Tipo di fonte</td><td>${o.fonteTipo === "ufficiale" ? "documento o pagina ufficiale dell'operatore" : "comparatore (il documento ufficiale non era leggibile)"}</td></tr><tr><td>Verificato il</td><td>${dataIt(o.verificato)}</td></tr></table></section>`}`;
   $("#vista").innerHTML = html;
   window.scrollTo(0, 0);
   $("#indietro").onclick = () => vai("internet");

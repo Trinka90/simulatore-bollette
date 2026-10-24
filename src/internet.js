@@ -9,71 +9,83 @@ export const TECNO = {
   FWA: { nome: "Senza fili (FWA)", breve: "FWA" },
 };
 
-/**
- * Profilo: { tecnologia: "FTTH"|"FTTC"|"FWA", mobile: "TIM"|..., energia: [siti luce/gas che hai o attiveresti], voce: bool }
- * Ritorna { totale, medio, mesi:[importo], voci:[{t, v}], incognite:[testo], condizioni:[testo] }
- */
-export function costoInternet(o, p = {}, orizzonte = 24) {
-  const voci = [], incognite = [], condizioni = [];
-  const mesi = [];
-  const haMobile = p.mobile && p.mobile === o.operatore;
-  const haEnergia = o.energia ? (p.energia || []).includes(o.energia.sito) : false;
-  let promoOk = !!o.promo;
-  if (o.promo?.richiede === "mobile" && !haMobile) promoOk = false;
-  if (o.promo?.richiede === "energia" && !haEnergia) promoOk = false;
-  if (o.promo && !promoOk) condizioni.push(`Prezzo ${eu(o.promo.canone)} solo ${o.promo.condizione || "con una condizione"}: non applicato`);
-  if (o.promo && promoOk && o.promo.richiede) condizioni.push(`Prezzo ${eu(o.promo.canone)} ${o.promo.condizione}: applicato`);
-  if (o.energia?.obbligatoria) condizioni.push(`Si attiva solo insieme alla luce o al gas ${o.operatore}`);
-
-  const pieno = o.canone ?? o.promo?.canone;
-  if (o.canone == null && o.promo) incognite.push(`Prezzo dopo i primi ${o.promo.mesi} mesi non pubblicato: considerato uguale (${eu(o.promo.canone)})`);
-  const scontoMobile = haMobile && o.sconto_mobile ? o.sconto_mobile : 0;
-  if (o.sconto_mobile && !haMobile) condizioni.push(`−${eu(o.sconto_mobile)} al mese se hai anche il mobile ${o.operatore}: non applicato`);
-  if (scontoMobile) condizioni.push(`−${eu(scontoMobile)} al mese perché hai il mobile ${o.operatore}`);
-
-  let canoni = 0, nPromo = 0;
-  for (let m = 1; m <= orizzonte; m++) {
-    const promo = promoOk && m <= o.promo.mesi;
-    if (promo) nPromo++;
-    const c = Math.max(0, (promo ? o.promo.canone : pieno) - scontoMobile);
-    mesi.push(c); canoni += c;
+/** Lo sconto vale per questo profilo? */
+export function scontoValido(o, x, p = {}, oggiIso = "") {
+  if (x.scade && oggiIso && x.scade < oggiIso) return false;
+  switch (x.richiede) {
+    case "mobile": return p.mobile === o.operatore;
+    case "energia": return !!o.energia && (p.energia || []).includes(o.energia.sito);
+    case "energia2": return !!o.energia && (p.energia || []).includes(o.energia.sito) && !!p.dueForniture;
+    case "domiciliazione": return p.domiciliazione !== false;
+    case "altro": return false;
+    default: return true;
   }
-  if (nPromo && nPromo < orizzonte) voci.push({ t: `Canone ${eu(o.promo.canone - scontoMobile)} × ${nPromo} mesi, poi ${eu(pieno - scontoMobile)} × ${orizzonte - nPromo}`, v: canoni });
-  else voci.push({ t: `Canone ${eu(mesi[0])} × ${orizzonte} mesi`, v: canoni });
-
-  let att = o.attivazione;
-  if (att == null) { incognite.push("Costo di attivazione non pubblicato nella fonte: considerato 0 €"); att = 0; }
-  if (att > 0) { voci.push({ t: "Attivazione (una volta)", v: att }); mesi[0] += att; }
-
-  const md = o.modem || {};
-  if (md.rata > 0 && !md.nel_canone) {
-    const n = Math.min(md.mesi || orizzonte, orizzonte);
-    voci.push({ t: `Modem ${eu(md.rata)} × ${n} rate`, v: md.rata * n });
-    for (let m = 0; m < n; m++) mesi[m] += md.rata;
-  }
-  if (md.nel_canone && md.mesi > orizzonte) condizioni.push(`Il modem è pagato a rate per ${md.mesi} mesi: se lasci prima, paghi le rate residue`);
-
-  const totale = mesi.reduce((a, b) => a + b, 0);
-  return { totale, medio: totale / orizzonte, mesi, voci, incognite, condizioni, promoOk, scontoMobile };
 }
 
-/** Costo per lasciare dopo `dopoMesi` mesi (se noto). */
-export function costoUscita(o, dopoMesi) {
-  const r = o.recesso;
-  if (o.modem?.nel_canone && o.modem.mesi > dopoMesi) {
-    const residue = (o.modem.mesi - dopoMesi) * o.modem.rata;
-    return { importo: residue + (r?.importo || 0), noto: true, testo: `${eu(residue)} di rate del modem residue${r?.testo ? "; " + r.testo : ""}` };
+/**
+ * Costo mese per mese su `orizzonte` mesi.
+ * Profilo: { tecnologia, mobile: operatore della SIM, energia: [siti luce/gas], dueForniture, domiciliazione, voce, minDown }
+ * Ritorna { totale, medio, mesi:[importo], fasi:[{da,a,v}], voci:[{t,v}], applicati, esclusi, dubbi }
+ */
+export function costoInternet(o, p = {}, orizzonte = 24, oggiIso = "") {
+  const applicati = [], esclusi = [];
+  for (const x of o.sconti || []) (scontoValido(o, x, p, oggiIso) ? applicati : esclusi).push(x);
+  const mesi = [];
+  let canoni = 0, sconti = 0;
+  const rate = {};
+  for (let m = 1; m <= orizzonte; m++) {
+    let v = o.listino; canoni += o.listino;
+    for (const x of applicati) if (!x.mesi || m <= x.mesi) { v -= x.importo; sconti += x.importo; }
+    for (const r of o.rate || []) if (m >= r.da && m <= r.a) { v += r.importo; rate[r.voce] = (rate[r.voce] || 0) + r.importo; }
+    mesi.push(Math.max(0, v));
   }
-  if (r?.importo != null) return { importo: r.entro_mesi == null || dopoMesi < r.entro_mesi ? r.importo : 0, noto: true, testo: r.testo };
-  if (r?.testo) return { importo: null, noto: false, testo: r.testo };
-  if (o.vincolo === 0) return { importo: null, noto: false, testo: "Nessun vincolo; il costo di disattivazione non è indicato nella fonte" };
-  return { importo: null, noto: false, testo: "Non indicato: controlla la sintesi contrattuale" };
+  const voci = [{ t: `Canone di listino ${eu(o.listino)} × ${orizzonte} mesi`, v: canoni }];
+  if (sconti) voci.push({ t: "Sconti applicati", v: -sconti });
+  for (const [k, v] of Object.entries(rate)) voci.push({ t: `${k} (rate mensili)`, v });
+  for (const u of o.unaTantum || []) { voci.push({ t: `${u.voce} (una volta)${u.dubbio ? " *" : ""}`, v: u.importo }); mesi[0] += u.importo; }
+  const totale = mesi.reduce((a, b) => a + b, 0);
+  const fasi = [];
+  mesi.forEach((v, i) => { const f = fasi.at(-1); if (i > 0 && f && Math.abs(f.v - v) < 0.005) f.a = i + 1; else fasi.push({ da: i + 1, a: i + 1, v }); });
+  // la prima fase può includere i costi una tantum: la fase "tipica" la ricalcolo senza
+  const una = (o.unaTantum || []).reduce((a, u) => a + u.importo, 0);
+  const mensili = mesi.map((v, i) => (i === 0 ? v - una : v));
+  const fasiM = [];
+  mensili.forEach((v, i) => { const f = fasiM.at(-1); if (f && Math.abs(f.v - v) < 0.005) f.a = i + 1; else fasiM.push({ da: i + 1, a: i + 1, v }); });
+  return { totale, medio: totale / orizzonte, mesi, fasi: fasiM, unaTantum: una, voci, applicati, esclusi, dubbi: o.dubbi || [] };
+}
+
+/** Prezzo in parole: "19,90 € per 12 mesi, poi 21,90 € fino al 24°, poi 29,90 €". */
+export function descriviFasi(fasi) {
+  return fasi.map((f, i) => i === 0 ? (fasi.length > 1 ? `${eu(f.v)} per ${f.a} mesi` : `${eu(f.v)} al mese`)
+    : i < fasi.length - 1 ? `poi ${eu(f.v)} fino al ${f.a}° mese` : `poi ${eu(f.v)}`).join(", ");
+}
+
+/** Costo per lasciare dopo `dopoMesi` mesi. */
+export function costoUscita(o, dopoMesi) {
+  const u = o.uscita;
+  if (!u) return { importo: null, noto: false, testo: "Non indicato: controlla la sintesi contrattuale" };
+  const parti = [];
+  let tot = 0, noto = u.importo != null;
+  const dovuto = u.importo != null && (u.entro_mesi == null || dopoMesi < u.entro_mesi);
+  if (dovuto) { tot += u.importo; parti.push(`${eu(u.importo)} di disattivazione${u.migrazione != null ? ` (${eu(u.migrazione)} se passi a un altro operatore)` : ""}`); }
+  else if (u.importo != null) parti.push("nessun costo di disattivazione");
+  if (u.rateResidue) {
+    let res = 0;
+    for (const r of o.rate || []) for (let m = dopoMesi + 1; m <= r.a; m++) if (m >= r.da) res += r.importo;
+    if (res > 0) { tot += res; parti.push(`${eu(res)} di rate residue (attivazione/modem)`); }
+  }
+  if (u.rataResidua && dopoMesi < u.rataResidua.mesi) {
+    const res = u.rataResidua.importo * (u.rataResidua.mesi - dopoMesi);
+    tot += res; noto = true; parti.push(`${eu(res)} di rate di attivazione residue`);
+  }
+  if (!noto) parti.push("costo di disattivazione non indicato");
+  return { importo: noto ? tot : null, noto, testo: parti.join(" + ") };
 }
 
 /** Offerte compatibili con la tecnologia disponibile all'indirizzo. */
 export function compatibile(o, p) {
   if (!p.tecnologia) return true;
-  if (p.tecnologia === "FTTH") return o.tecnologie.some((t) => t === "FTTH" || t === "FTTC" || t === "FWA");
+  if (p.tecnologia === "FTTH") return true;
   return o.tecnologie.includes(p.tecnologia) || (p.tecnologia === "FTTC" && o.tecnologie.includes("FWA"));
 }
 
@@ -81,28 +93,29 @@ export function classificaInternet(offerte, p, orizzonte = 24, oggiIso = "") {
   const lista = [];
   for (const o of offerte) {
     if (!compatibile(o, p)) continue;
-    if (p.voce && /assenti|^$/.test(o.chiamate || "")) continue;
+    if (p.voce && !o.voce) continue;
+    if (o.soloPer === "mobile" && p.mobile !== o.operatore) continue;
     if (o.energia?.obbligatoria && !(p.energia || []).includes(o.energia.sito) && !p.cambioEnergia) continue;
     if (p.minDown && o.down && o.down < p.minDown) continue;
-    const c = costoInternet(o, p, orizzonte);
+    const c = costoInternet(o, p, orizzonte, oggiIso);
     lista.push({ offerta: o, ...c, scaduta: !!(o.scade && oggiIso && o.scade < oggiIso) });
   }
   return lista.sort((a, b) => a.totale - b.totale);
 }
 
-/** Totale non affidabile: promo scaduta o prezzo dopo la promo non pubblicato entro l'orizzonte. */
-export const incerta = (r, N) => r.scaduta || (r.offerta.canone == null && !!r.offerta.promo && r.offerta.promo.mesi < N);
-export const migliore = (lista, N) => lista.find((r) => !incerta(r, N)) || lista[0];
+/** Totale meno affidabile: offerta scaduta o fonte non ufficiale. */
+export const incerta = (r) => r.scaduta || r.offerta.fonteTipo === "comparatore";
+export const migliore = (lista) => lista.find((r) => !incerta(r)) || lista[0];
 
-/** L'abbonamento attuale inserito dall'utente come offerta del catalogo. */
+/** L'abbonamento attuale inserito dall'utente nel formato del catalogo. */
 export function offertaMia(m) {
-  const promoRest = m.promoMesi > 0 && m.dopo != null && m.dopo !== m.canone;
+  const promo = m.promoMesi > 0 && m.dopo != null && m.dopo > m.canone;
   return {
     id: "MIA", mia: true, operatore: m.operatore || "Il tuo operatore", nome: m.nome || "Il tuo abbonamento attuale", sito: "",
     tecnologie: [m.tecnologia || "FTTH"], down: m.down || null, up: null,
-    canone: promoRest ? m.dopo : m.canone, promo: promoRest ? { canone: m.canone, mesi: m.promoMesi, richiede: null, condizione: null } : null,
-    attivazione: 0, modem: { incluso: true, rata: m.modemRata || 0, mesi: m.modemMesi || null }, vincolo: null, recesso: null,
-    chiamate: m.chiamate || "", sconto_mobile: null, note: [], fonte: "inserito da te", verificato: null,
+    listino: promo ? m.dopo : m.canone, sconti: promo ? [{ importo: m.dopo - m.canone, mesi: m.promoMesi, richiede: null, condizione: "prezzo attuale" }] : [],
+    rate: m.modemRata > 0 ? [{ voce: "Modem", importo: m.modemRata, da: 1, a: m.modemMesi || 999 }] : [], unaTantum: [],
+    vincolo: null, uscita: null, chiamate: m.chiamate || "", voce: true, note: [], dubbi: [], fonte: "inserito da te", fonteTipo: "mio", verificato: null,
   };
 }
 

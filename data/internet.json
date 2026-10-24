@@ -1,255 +1,503 @@
 {
  "aggiornato_al": "2026-10-24",
- "nota": "Non esiste un open data ufficiale delle offerte internet (AGCOM pubblica solo la copertura). Catalogo raccolto a mano dalle pagine degli operatori e dalle sintesi contrattuali; ogni offerta riporta fonte e data. null = dato non pubblicato nella fonte.",
+ "nota": "Non esiste un open data ufficiale delle offerte internet (AGCOM pubblica solo la copertura). Prezzi presi dalle sintesi contrattuali, dalle schede di trasparenza tariffaria e dalle pagine ufficiali degli operatori; dove non è stato possibile, da un comparatore (segnalato). Ogni offerta riporta fonte e data.",
  "offerte": [
   {
-   "id": "tim-premium-base",
+   "id": "tim-wifi-casa",
    "operatore": "TIM",
-   "nome": "TIM Premium Base",
+   "sito": "tim.it",
+   "nome": "TIM WiFi Casa",
    "tecnologie": [
     "FTTH",
     "FTTC"
    ],
-   "down": 1000,
-   "up": 300,
-   "canone": 25.9,
-   "promo": null,
-   "attivazione": 0,
-   "modem": {
-    "incluso": true,
-    "rata": null,
-    "mesi": null
-   },
+   "down": 2500,
+   "up": 1000,
+   "listino": 31.9,
+   "sconti": [
+    {
+     "importo": 5,
+     "mesi": null,
+     "richiede": "domiciliazione",
+     "condizione": "pagando con domiciliazione o carta",
+     "scade": null
+    },
+    {
+     "importo": 4,
+     "mesi": null,
+     "richiede": null,
+     "condizione": "Promo WiFi per nuovi clienti online",
+     "scade": "2026-10-24"
+    }
+   ],
+   "rate": [
+    {
+     "voce": "Attivazione",
+     "importo": 5,
+     "da": 1,
+     "a": 24
+    },
+    {
+     "voce": "Modem TIM HUB",
+     "importo": 5,
+     "da": 25,
+     "a": 48
+    }
+   ],
+   "unaTantum": [
+    {
+     "voce": "Contributo di attivazione",
+     "importo": 39.9,
+     "dubbio": true
+    }
+   ],
    "vincolo": 24,
-   "recesso": null,
-   "chiamate": "a consumo (0,19 €/min + 0,19 € scatto)",
-   "sconto_mobile": null,
-   "scade": null,
+   "uscita": {
+    "importo": 23,
+    "entro_mesi": 24,
+    "rateResidue": true
+   },
+   "penaleModem": null,
+   "chiamate": "illimitate (gratis 48 mesi, poi 5 €/mese)",
+   "voce": true,
    "note": [
-    "Prezzo bloccato 24 mesi",
-    "Disdetta con 30 giorni di preavviso"
+    "In FTTC/FTTE (Mega) fino a 200/20 Mbit/s allo stesso prezzo",
+    "Copia cartacea della fattura 5,99 €"
    ],
-   "fonte": "https://selectra.net/internet/operatori/tim/fibra",
-   "verificato": "2026-10-23",
-   "sito": "tim.it"
+   "dubbi": [
+    "Il documento indica 39,90 € di attivazione una tantum e anche 5 €/mese per 24 mesi: li conto entrambi (caso peggiore)"
+   ],
+   "fonte": "https://www.tim.it/fisso-e-mobile/fibra-e-adsl/fibra-internet-casa",
+   "fonteTipo": "ufficiale",
+   "verificato": "2026-10-24"
   },
   {
-   "id": "tim-wifi-casa",
+   "id": "tim-wifi-casa-mobile",
    "operatore": "TIM",
-   "nome": "TIM WiFi Casa",
+   "sito": "tim.it",
+   "nome": "TIM WiFi Casa (clienti TIM mobile)",
+   "soloPer": "mobile",
    "tecnologie": [
-    "FTTH"
+    "FTTH",
+    "FTTC"
    ],
    "down": 2500,
    "up": 1000,
-   "canone": 29.9,
-   "promo": {
-    "canone": 22.9,
-    "mesi": 24,
-    "condizione": "per clienti TIM Mobile",
-    "richiede": "mobile"
-   },
-   "attivazione": 0,
-   "modem": {
-    "incluso": true,
-    "rata": null,
-    "mesi": null
-   },
-   "vincolo": null,
-   "recesso": null,
-   "chiamate": "illimitate verso fissi e mobili",
-   "sconto_mobile": null,
-   "scade": null,
-   "note": [
-    "Il prezzo promozionale vale per i clienti TIM Mobile"
+   "listino": 31.9,
+   "sconti": [
+    {
+     "importo": 5,
+     "mesi": null,
+     "richiede": "domiciliazione",
+     "condizione": "pagando con domiciliazione o carta",
+     "scade": null
+    },
+    {
+     "importo": 2,
+     "mesi": null,
+     "richiede": null,
+     "condizione": "Promo Limited",
+     "scade": "2026-10-24"
+    },
+    {
+     "importo": 5,
+     "mesi": null,
+     "richiede": "mobile",
+     "condizione": "Bonus Per TE: clienti TIM mobile con offerta dati, finché la SIM resta attiva",
+     "scade": "2026-10-24"
+    }
    ],
-   "fonte": "https://www.komparatore.it/fibra-adsl",
-   "verificato": "2026-10-24",
-   "sito": "tim.it"
+   "rate": [
+    {
+     "voce": "Attivazione",
+     "importo": 5,
+     "da": 1,
+     "a": 24
+    },
+    {
+     "voce": "Modem TIM HUB",
+     "importo": 5,
+     "da": 25,
+     "a": 48
+    }
+   ],
+   "unaTantum": [
+    {
+     "voce": "Contributo di attivazione",
+     "importo": 39.9,
+     "dubbio": true
+    }
+   ],
+   "vincolo": 24,
+   "uscita": {
+    "importo": 23,
+    "entro_mesi": 24,
+    "rateResidue": true
+   },
+   "penaleModem": null,
+   "chiamate": "illimitate (gratis 48 mesi, poi 5 €/mese)",
+   "voce": true,
+   "note": [
+    "Bonus Per TE riservato ai destinatari dell'iniziativa: verifica in MyTIM"
+   ],
+   "dubbi": [
+    "Il documento indica 39,90 € di attivazione una tantum e anche 5 €/mese per 24 mesi: li conto entrambi (caso peggiore)"
+   ],
+   "fonte": "https://www.tim.it/fisso-e-mobile/fibra-e-adsl/fibra-internet-casa",
+   "fonteTipo": "ufficiale",
+   "verificato": "2026-10-24"
   },
   {
-   "id": "tim-wifi-power-tv",
+   "id": "tim-premium-base",
    "operatore": "TIM",
-   "nome": "TIM WiFi Power TV",
+   "sito": "tim.it",
+   "nome": "TIM Premium Base (senza modem)",
    "tecnologie": [
-    "FTTH"
+    "FTTH",
+    "FTTC"
    ],
    "down": 2500,
    "up": 1000,
-   "canone": 29.9,
-   "promo": null,
-   "attivazione": null,
-   "modem": {
-    "incluso": true,
-    "rata": null,
-    "mesi": null
-   },
-   "vincolo": null,
-   "recesso": null,
-   "chiamate": "illimitate (solo attivando online)",
-   "sconto_mobile": null,
-   "scade": null,
-   "note": [
-    "Include TIMVISION con Disney+ o Netflix"
+   "listino": 30.9,
+   "sconti": [
+    {
+     "importo": 5,
+     "mesi": null,
+     "richiede": "domiciliazione",
+     "condizione": "pagando con domiciliazione o carta",
+     "scade": null
+    },
+    {
+     "importo": 10,
+     "mesi": 24,
+     "richiede": null,
+     "condizione": "canone ridotto nei primi 24 mesi",
+     "scade": null
+    },
+    {
+     "importo": 5,
+     "mesi": null,
+     "richiede": null,
+     "condizione": "Promo Limited",
+     "scade": "2026-10-24"
+    }
    ],
-   "fonte": "https://selectra.net/internet/operatori/tim/fibra",
-   "verificato": "2026-10-23",
-   "sito": "tim.it"
+   "rate": [
+    {
+     "voce": "Attivazione (240 € in 24 rate)",
+     "importo": 10,
+     "da": 1,
+     "a": 24
+    }
+   ],
+   "unaTantum": [],
+   "vincolo": 24,
+   "uscita": {
+    "importo": 23,
+    "entro_mesi": 24,
+    "rateResidue": true
+   },
+   "penaleModem": null,
+   "chiamate": "a consumo (0,19 €/min + 0,19 € alla risposta)",
+   "voce": false,
+   "note": [
+    "Modem non incluso: usi il tuo, oppure TIM HUB a 5 €/mese per 48 mesi",
+    "In FTTC fino a 200/20 Mbit/s"
+   ],
+   "dubbi": [],
+   "fonte": "https://www.tim.it/fisso-e-mobile/fibra-e-adsl/fibra-internet-casa/no-modem",
+   "fonteTipo": "ufficiale",
+   "verificato": "2026-10-24"
   },
   {
    "id": "fastweb-casa-start",
    "operatore": "Fastweb",
+   "sito": "fastweb.it",
    "nome": "Fastweb Casa Start",
    "tecnologie": [
     "FTTH",
     "FTTC"
    ],
    "down": 2500,
-   "up": 300,
-   "canone": 27.95,
-   "promo": null,
-   "attivazione": 0,
-   "modem": {
-    "incluso": true,
-    "rata": 0,
-    "mesi": null
-   },
-   "vincolo": 0,
-   "recesso": null,
-   "chiamate": "a consumo (0,15 €/min)",
-   "sconto_mobile": 4,
-   "scade": "2026-10-31",
-   "note": [
-    "Prezzo bloccato",
-    "Senza vincolo: alla disdetta solo i costi di disattivazione (importo non pubblicato)"
+   "up": 1000,
+   "listino": 27.95,
+   "sconti": [
+    {
+     "importo": 4,
+     "mesi": null,
+     "richiede": "mobile",
+     "condizione": "con un'offerta Fastweb Mobile a ricarica automatica",
+     "scade": null
+    }
    ],
-   "fonte": "https://selectra.net/internet/operatori/fastweb/casa",
-   "verificato": "2026-10-24",
-   "sito": "fastweb.it"
+   "rate": [],
+   "unaTantum": [],
+   "vincolo": 0,
+   "uscita": {
+    "importo": 27.95,
+    "entro_mesi": 24,
+    "rateResidue": false
+   },
+   "penaleModem": null,
+   "chiamate": "a consumo (0,15 €/min)",
+   "voce": false,
+   "note": [
+    "Modem NeXXt One Wi-Fi 6 in comodato gratuito",
+    "Prezzo garantito almeno 12 mesi"
+   ],
+   "dubbi": [],
+   "fonte": "https://www.fastweb.it/adsl-fibra-ottica/fastweb-casa-start/",
+   "fonteTipo": "ufficiale",
+   "verificato": "2026-10-24"
   },
   {
    "id": "fastweb-casa-pro",
    "operatore": "Fastweb",
+   "sito": "fastweb.it",
    "nome": "Fastweb Casa Pro",
    "tecnologie": [
     "FTTH",
     "FTTC"
    ],
    "down": 2500,
-   "up": 300,
-   "canone": 29.95,
-   "promo": null,
-   "attivazione": 0,
-   "modem": {
-    "incluso": true,
-    "rata": 0,
-    "mesi": null
-   },
-   "vincolo": 0,
-   "recesso": null,
-   "chiamate": "illimitate verso fissi e mobili",
-   "sconto_mobile": 4,
-   "scade": "2026-10-31",
-   "note": [
-    "Prezzo bloccato"
+   "up": 1000,
+   "listino": 29.95,
+   "sconti": [
+    {
+     "importo": 4,
+     "mesi": null,
+     "richiede": "mobile",
+     "condizione": "con un'offerta Fastweb Mobile a ricarica automatica",
+     "scade": null
+    }
    ],
-   "fonte": "https://selectra.net/internet/operatori/fastweb/casa",
-   "verificato": "2026-10-24",
-   "sito": "fastweb.it"
+   "rate": [],
+   "unaTantum": [],
+   "vincolo": 0,
+   "uscita": {
+    "importo": 29.95,
+    "entro_mesi": 24,
+    "rateResidue": false
+   },
+   "penaleModem": null,
+   "chiamate": "illimitate verso fissi e mobili",
+   "voce": true,
+   "note": [
+    "Modem Seven Wi-Fi 7 in comodato gratuito",
+    "Assicurazione Quixa Assistenza Casa inclusa",
+    "Prezzo garantito almeno 12 mesi"
+   ],
+   "dubbi": [],
+   "fonte": "https://www.fastweb.it/adsl-fibra-ottica/fastweb-casa-pro/",
+   "fonteTipo": "ufficiale",
+   "verificato": "2026-10-24"
+  },
+  {
+   "id": "fastweb-casa-ultra",
+   "operatore": "Fastweb",
+   "sito": "fastweb.it",
+   "nome": "Fastweb Casa Ultra",
+   "tecnologie": [
+    "FTTH",
+    "FTTC"
+   ],
+   "down": 2500,
+   "up": 300,
+   "listino": 36.95,
+   "sconti": [
+    {
+     "importo": 4,
+     "mesi": null,
+     "richiede": "mobile",
+     "condizione": "con un'offerta Fastweb Mobile",
+     "scade": null
+    }
+   ],
+   "rate": [],
+   "unaTantum": [],
+   "vincolo": null,
+   "uscita": {
+    "importo": 36.95,
+    "entro_mesi": 24,
+    "rateResidue": true
+   },
+   "penaleModem": null,
+   "chiamate": "illimitate verso fissi e mobili",
+   "voce": true,
+   "note": [],
+   "dubbi": [
+    "Costo di uscita dedotto dalle altre offerte Fastweb (un canone entro 24 mesi): la pagina dell'operatore non era leggibile"
+   ],
+   "fonte": "https://selectra.net/internet/operatori/fastweb/casa/casa-ultra",
+   "fonteTipo": "comparatore",
+   "verificato": "2026-10-24"
   },
   {
    "id": "fastweb-casa-fwa-light",
    "operatore": "Fastweb",
+   "sito": "fastweb.it",
    "nome": "Fastweb Casa FWA Light",
    "tecnologie": [
     "FWA"
    ],
-   "down": 1000,
-   "up": 100,
-   "canone": 25.95,
-   "promo": null,
-   "attivazione": 0,
-   "modem": {
-    "incluso": true,
-    "rata": 0,
-    "mesi": null
-   },
+   "down": 300,
+   "up": 30,
+   "listino": 25.95,
+   "sconti": [
+    {
+     "importo": 4,
+     "mesi": null,
+     "richiede": "mobile",
+     "condizione": "con un'offerta Fastweb Mobile a ricarica automatica",
+     "scade": null
+    }
+   ],
+   "rate": [],
+   "unaTantum": [],
    "vincolo": 0,
-   "recesso": null,
-   "chiamate": "assenti",
-   "sconto_mobile": null,
-   "scade": "2026-10-31",
-   "note": [],
-   "fonte": "https://selectra.net/internet/operatori/fastweb/casa",
-   "verificato": "2026-10-24",
-   "sito": "fastweb.it"
+   "uscita": {
+    "importo": 25.95,
+    "entro_mesi": 24,
+    "rateResidue": false
+   },
+   "penaleModem": 250,
+   "chiamate": "illimitate (secondo le condizioni generali)",
+   "voce": true,
+   "note": [
+    "Modem e antenna in comodato: da restituire entro 45 giorni, altrimenti 250 €"
+   ],
+   "dubbi": [],
+   "fonte": "https://www.fastweb.it/adsl-fibra-ottica/fastweb-casa-fwa/",
+   "fonteTipo": "ufficiale",
+   "verificato": "2026-10-24"
   },
   {
    "id": "vodafone-casa-start",
    "operatore": "Vodafone",
+   "sito": "vodafone.it",
    "nome": "Vodafone Casa Start",
    "tecnologie": [
     "FTTH",
     "FTTC"
    ],
    "down": 2500,
-   "up": 300,
-   "canone": 27.95,
-   "promo": null,
-   "attivazione": 0,
-   "modem": {
-    "incluso": true,
-    "rata": 0,
-    "mesi": null
-   },
-   "vincolo": null,
-   "recesso": null,
-   "chiamate": "a consumo (0,15 €/min)",
-   "sconto_mobile": 4,
-   "scade": "2026-10-31",
-   "note": [
-    "Attivazione online di norma gratuita",
-    "Modem da restituire alla disdetta"
+   "up": 1000,
+   "listino": 27.95,
+   "sconti": [
+    {
+     "importo": 4,
+     "mesi": null,
+     "richiede": "mobile",
+     "condizione": "con Vodafone Mobile Start, Pro o Ultra, stesso codice fiscale",
+     "scade": null
+    }
    ],
-   "fonte": "https://selectra.net/internet/operatori/vodafone/casa",
-   "verificato": "2026-10-23",
-   "sito": "vodafone.it"
+   "rate": [],
+   "unaTantum": [],
+   "vincolo": 0,
+   "uscita": {
+    "importo": 27.95,
+    "entro_mesi": 24,
+    "rateResidue": false
+   },
+   "penaleModem": null,
+   "chiamate": "a consumo (fissi 0,19 € a chiamata; mobili 0,19 € + 0,19 €/min)",
+   "voce": false,
+   "note": [
+    "Sintesi contrattuale del 14/09/2026"
+   ],
+   "dubbi": [],
+   "fonte": "https://myvfapp-aem.vodafone.it/content/dam/myvf/mva10/cce-pdf/Casa_Start.pdf",
+   "fonteTipo": "ufficiale",
+   "verificato": "2026-10-24"
   },
   {
    "id": "vodafone-casa-pro",
    "operatore": "Vodafone",
+   "sito": "vodafone.it",
    "nome": "Vodafone Casa Pro",
    "tecnologie": [
     "FTTH",
-    "FTTC",
-    "FWA"
+    "FTTC"
    ],
    "down": 2500,
-   "up": 300,
-   "canone": 29.95,
-   "promo": null,
-   "attivazione": 0,
-   "modem": {
-    "incluso": true,
-    "rata": 0,
-    "mesi": null
-   },
-   "vincolo": null,
-   "recesso": null,
-   "chiamate": "illimitate verso fissi e mobili",
-   "sconto_mobile": 4,
-   "scade": "2026-10-31",
-   "note": [
-    "In FWA la velocità scende a 300/50 Mbps"
+   "up": 1000,
+   "listino": 29.95,
+   "sconti": [
+    {
+     "importo": 4,
+     "mesi": null,
+     "richiede": "mobile",
+     "condizione": "con Vodafone Mobile Start, Pro o Ultra, stesso codice fiscale",
+     "scade": null
+    }
    ],
-   "fonte": "https://selectra.net/internet/operatori/vodafone/casa",
-   "verificato": "2026-10-23",
-   "sito": "vodafone.it"
+   "rate": [],
+   "unaTantum": [],
+   "vincolo": 0,
+   "uscita": {
+    "importo": 29.95,
+    "entro_mesi": 24,
+    "rateResidue": false
+   },
+   "penaleModem": null,
+   "chiamate": "illimitate verso fissi e mobili",
+   "voce": true,
+   "note": [
+    "Sintesi contrattuale del 01/10/2026"
+   ],
+   "dubbi": [],
+   "fonte": "https://myvfapp-aem.vodafone.it/content/dam/myvf/mva10/cce-pdf/Casa_Pro.pdf",
+   "fonteTipo": "ufficiale",
+   "verificato": "2026-10-24"
+  },
+  {
+   "id": "vodafone-casa-fwa-start",
+   "operatore": "Vodafone",
+   "sito": "vodafone.it",
+   "nome": "Vodafone Casa FWA Start 5G",
+   "tecnologie": [
+    "FWA"
+   ],
+   "down": 300,
+   "up": 50,
+   "listino": 27.95,
+   "sconti": [
+    {
+     "importo": 4,
+     "mesi": null,
+     "richiede": "mobile",
+     "condizione": "con una linea Vodafone mobile attiva",
+     "scade": null
+    }
+   ],
+   "rate": [],
+   "unaTantum": [],
+   "vincolo": 0,
+   "uscita": {
+    "importo": 24.95,
+    "migrazione": 18,
+    "entro_mesi": 24,
+    "rateResidue": false
+   },
+   "penaleModem": 0,
+   "chiamate": "illimitate verso fissi e mobili",
+   "voce": true,
+   "note": [
+    "Modem FWA gratuito, non va restituito"
+   ],
+   "dubbi": [
+    "Sintesi contrattuale del 04/09/2025: la più recente trovata"
+   ],
+   "fonte": "https://myvfapp-aem.vodafone.it/content/dam/myvf/mva10/cce-pdf/Casa_FWA_Start_5G.pdf",
+   "fonteTipo": "ufficiale",
+   "verificato": "2026-10-24"
   },
   {
    "id": "windtre-super-fibra",
    "operatore": "WINDTRE",
-   "nome": "Super Fibra Unlimited",
+   "sito": "windtre.it",
+   "nome": "Super Fibra Limited Edition (online)",
    "tecnologie": [
     "FTTH",
     "FTTC",
@@ -257,347 +505,490 @@
    ],
    "down": 2500,
    "up": 500,
-   "canone": 29.99,
-   "promo": {
-    "canone": 24.99,
-    "mesi": 12,
-    "condizione": null,
-    "richiede": null
-   },
-   "attivazione": 0,
-   "modem": {
-    "incluso": true,
-    "rata": 5.99,
-    "mesi": 48,
-    "nel_canone": true
-   },
-   "vincolo": 12,
-   "recesso": {
-    "testo": "un mese di canone più le rate residue del modem se lasci prima di 48 mesi"
-   },
-   "chiamate": "illimitate verso fissi e mobili (da verificare: la pagina indica anche chiamate a consumo)",
-   "sconto_mobile": null,
-   "scade": null,
-   "note": [
-    "Il canone comprende 5,99 € al mese di modem per 48 mesi",
-    "Aree bianche: 29,99 €/mese e allaccio 99 € (o 3,99 € al mese per 24 mesi)",
-    "Include Prime per 12 mesi e giga illimitati sulle SIM WINDTRE"
+   "listino": 24,
+   "sconti": [
+    {
+     "importo": 5,
+     "mesi": 12,
+     "richiede": null,
+     "condizione": "promo online primi 12 mesi",
+     "scade": null
+    }
    ],
-   "fonte": "https://selectra.net/internet/operatori/windtre/linea-fissa",
-   "verificato": "2026-10-21",
-   "sito": "windtre.it"
+   "rate": [
+    {
+     "voce": "Modem (48 rate)",
+     "importo": 5.99,
+     "da": 1,
+     "a": 48
+    },
+    {
+     "voce": "Attivazione",
+     "importo": 1.99,
+     "da": 1,
+     "a": 24
+    }
+   ],
+   "unaTantum": [
+    {
+     "voce": "Anticipo modem",
+     "importo": 10
+    }
+   ],
+   "vincolo": 24,
+   "uscita": {
+    "importo": 84.59,
+    "migrazione": 33.1,
+    "entro_mesi": null,
+    "rateResidue": true
+   },
+   "penaleModem": null,
+   "chiamate": "illimitate verso fissi e mobili",
+   "voce": true,
+   "note": [
+    "Prime incluso 12 mesi: poi 4,99 €/mese se non lo disdici",
+    "Giga illimitati sulle SIM WINDTRE dello stesso intestatario",
+    "Dal 48° mese il canone di solo servizio è 29,99 €"
+   ],
+   "dubbi": [
+    "Attivazione 1,99 €/mese per 24 mesi «salvo promozioni»: gratuita solo in alcune aree FTTH, la conto (caso peggiore)",
+    "Costi di uscita dalla tabella WINDTRE (cessazione FTTH 69,34 € + IVA; passaggio ad altro operatore 27,13 € + IVA)"
+   ],
+   "fonte": "https://www.windtre.it/offerte-fibra/super-fibra-internet-a-casa",
+   "fonteTipo": "ufficiale",
+   "verificato": "2026-10-24"
+  },
+  {
+   "id": "windtre-super-fibra-mobile",
+   "operatore": "WINDTRE",
+   "sito": "windtre.it",
+   "nome": "Super Fibra (clienti WINDTRE mobile)",
+   "soloPer": "mobile",
+   "tecnologie": [
+    "FTTH",
+    "FTTC",
+    "FWA"
+   ],
+   "down": 2500,
+   "up": 500,
+   "listino": 19,
+   "sconti": [],
+   "rate": [
+    {
+     "voce": "Modem (48 rate)",
+     "importo": 5.99,
+     "da": 1,
+     "a": 48
+    },
+    {
+     "voce": "Attivazione",
+     "importo": 1.99,
+     "da": 1,
+     "a": 24
+    }
+   ],
+   "unaTantum": [
+    {
+     "voce": "Anticipo modem",
+     "importo": 10
+    }
+   ],
+   "vincolo": 24,
+   "uscita": {
+    "importo": 84.59,
+    "migrazione": 33.1,
+    "entro_mesi": null,
+    "rateResidue": true
+   },
+   "penaleModem": null,
+   "chiamate": "illimitate verso fissi e mobili",
+   "voce": true,
+   "note": [
+    "SIM WINDTRE attiva da almeno un mese, stesso codice fiscale: se la disattivi paghi il prezzo pieno",
+    "Prime incluso 12 mesi: poi 4,99 €/mese se non lo disdici"
+   ],
+   "dubbi": [
+    "Attivazione 1,99 €/mese per 24 mesi «salvo promozioni»: la conto (caso peggiore)"
+   ],
+   "fonte": "https://www.windtre.it/offerte-fibra/super-fibra-per-clienti-windtre",
+   "fonteTipo": "ufficiale",
+   "verificato": "2026-10-24"
   },
   {
    "id": "iliadbox",
    "operatore": "Iliad",
-   "nome": "Iliadbox",
+   "sito": "iliad.it",
+   "nome": "Iliadbox Wi-Fi 7",
    "tecnologie": [
     "FTTH"
    ],
    "down": 5000,
    "up": 700,
-   "canone": 26.99,
-   "promo": null,
-   "attivazione": 39.99,
-   "modem": {
-    "incluso": true,
-    "rata": 0,
-    "mesi": null
-   },
+   "listino": 26.99,
+   "sconti": [
+    {
+     "importo": 4,
+     "mesi": null,
+     "richiede": "mobile",
+     "condizione": "con un'offerta mobile iliad voce + dati e pagamento automatico",
+     "scade": null
+    }
+   ],
+   "rate": [],
+   "unaTantum": [
+    {
+     "voce": "Installazione",
+     "importo": 39.99
+    }
+   ],
    "vincolo": 0,
-   "recesso": {
+   "uscita": {
     "importo": 25.99,
     "entro_mesi": 24,
-    "testo": "25,99 € di disattivazione se lasci entro 24 mesi (21,99 € con iliad mobile)"
+    "rateResidue": false
    },
+   "penaleModem": 179,
    "chiamate": "illimitate verso fissi e mobili",
-   "sconto_mobile": 4,
-   "scade": null,
+   "voce": true,
    "note": [
     "Prezzo per sempre",
-    "Sconto mobile: con offerta iliad da 9,99 o 11,99 € e pagamento automatico"
+    "Uscita 21,99 € con il vantaggio Fibra + Mobile"
    ],
-   "fonte": "https://selectra.net/internet/operatori/iliad/fibra",
-   "verificato": "2026-10-23",
-   "sito": "iliad.it"
+   "dubbi": [
+    "Sintesi ufficiale del 26/02/2026 non leggibile da qui: valori da comparatore, uguali a quelli della sintesi iliadbox super"
+   ],
+   "fonte": "https://www.iliad.it/sintesi-contrattuale-fibra.html",
+   "fonteTipo": "comparatore",
+   "verificato": "2026-10-24"
   },
   {
    "id": "iliadbox-super",
    "operatore": "Iliad",
+   "sito": "iliad.it",
    "nome": "Iliadbox Super",
    "tecnologie": [
     "FTTH"
    ],
    "down": 5000,
    "up": 700,
-   "canone": 34.99,
-   "promo": null,
-   "attivazione": 39.99,
-   "modem": {
-    "incluso": true,
-    "rata": 0,
-    "mesi": null
-   },
+   "listino": 34.99,
+   "sconti": [
+    {
+     "importo": 5,
+     "mesi": null,
+     "richiede": "mobile",
+     "condizione": "con un'offerta mobile iliad voce + dati e pagamento automatico",
+     "scade": null
+    }
+   ],
+   "rate": [],
+   "unaTantum": [
+    {
+     "voce": "Installazione",
+     "importo": 39.99
+    }
+   ],
    "vincolo": 0,
-   "recesso": {
+   "uscita": {
     "importo": 25.99,
     "entro_mesi": 24,
-    "testo": "25,99 € di disattivazione se lasci entro 24 mesi (21,99 € con iliad mobile)"
+    "rateResidue": false
    },
+   "penaleModem": 179,
    "chiamate": "illimitate verso fissi e mobili, anche USA e Canada",
-   "sconto_mobile": 5,
-   "scade": null,
+   "voce": true,
    "note": [
-    "Include hotspot 4G con 350 GB al mese, fino a 2 ripetitori WiFi",
-    "Sintesi contrattuale del 26/02/2026"
+    "Hotspot 4G e ripetitori Wi-Fi inclusi",
+    "Uscita 21,99 € con il vantaggio Fibra + Mobile"
    ],
-   "fonte": "https://fibra.iliad.it/docs/sintesi-contrattuale/sintesi_contrattuale_iliadbox_super_dal_26_02_2026.pdf",
-   "verificato": "2026-10-24",
-   "sito": "iliad.it"
+   "dubbi": [],
+   "fonte": "https://cdn001.iliad.it/strapi/sintesi_contrattuale_iliadbox_super_dal_26_02_2026_47ce71148f.pdf",
+   "fonteTipo": "ufficiale",
+   "verificato": "2026-10-24"
   },
   {
    "id": "iliad-5g-box",
    "operatore": "Iliad",
+   "sito": "iliad.it",
    "nome": "5G Box Casa",
    "tecnologie": [
     "FWA"
    ],
    "down": 300,
    "up": 50,
-   "canone": 26.99,
-   "promo": null,
-   "attivazione": null,
-   "modem": {
-    "incluso": true,
-    "rata": 0,
-    "mesi": null
-   },
+   "listino": 26.99,
+   "sconti": [
+    {
+     "importo": 4,
+     "mesi": null,
+     "richiede": "mobile",
+     "condizione": "per i clienti iliad mobile",
+     "scade": null
+    }
+   ],
+   "rate": [],
+   "unaTantum": [],
    "vincolo": null,
-   "recesso": null,
+   "uscita": null,
+   "penaleModem": null,
    "chiamate": "assenti",
-   "sconto_mobile": 4,
-   "scade": null,
+   "voce": false,
    "note": [
-    "Rete mobile 5G: velocità variabile secondo il segnale"
+    "Rete mobile 5G: la velocità dipende dal segnale"
    ],
-   "fonte": "https://selectra.net/internet/operatori/iliad/fibra",
-   "verificato": "2026-10-23",
-   "sito": "iliad.it"
-  },
-  {
-   "id": "sky-wifi-fibra-100",
-   "operatore": "Sky Wifi",
-   "nome": "Sky WiFi Fibra 100%",
-   "tecnologie": [
-    "FTTH"
+   "dubbi": [
+    "Attivazione e costi di uscita non letti dalla sintesi (04/06/2026)"
    ],
-   "down": 1000,
-   "up": 300,
-   "canone": null,
-   "promo": {
-    "canone": 20.9,
-    "mesi": 18,
-    "condizione": null,
-    "richiede": null
-   },
-   "attivazione": 0,
-   "modem": {
-    "incluso": true,
-    "rata": 0,
-    "mesi": null
-   },
-   "vincolo": null,
-   "recesso": null,
-   "chiamate": "a consumo (0,19 € scatto; mobili 0,19 €/min)",
-   "sconto_mobile": null,
-   "scade": null,
-   "note": [
-    "Prezzo bloccato 18 mesi, poi listino (non pubblicato nella fonte)",
-    "Attivazione gratuita invece di 49 €"
-   ],
-   "fonte": "https://selectra.net/internet/operatori/sky/offerte-wifi",
-   "verificato": "2026-10-24",
-   "sito": "sky.it"
+   "fonte": "https://selectra.net/internet/operatori/iliad/casa/5g-box-casa",
+   "fonteTipo": "comparatore",
+   "verificato": "2026-10-23"
   },
   {
    "id": "sky-wifi",
    "operatore": "Sky Wifi",
-   "nome": "Sky WiFi",
+   "sito": "sky.it",
+   "nome": "Sky Wifi Fibra 100%",
    "tecnologie": [
     "FTTH",
     "FTTC"
    ],
    "down": 1000,
    "up": 300,
-   "canone": null,
-   "promo": {
-    "canone": 22.9,
-    "mesi": 12,
-    "condizione": null,
-    "richiede": null
-   },
-   "attivazione": 0,
-   "modem": {
-    "incluso": true,
-    "rata": 0,
-    "mesi": null
-   },
-   "vincolo": null,
-   "recesso": null,
-   "chiamate": "a consumo (0,19 € scatto; mobili 0,19 €/min)",
-   "sconto_mobile": null,
-   "scade": null,
-   "note": [
-    "Prezzo bloccato 12 mesi, poi listino (non pubblicato nella fonte)",
-    "Attivazione gratuita invece di 49 €"
+   "listino": 29.9,
+   "sconti": [
+    {
+     "importo": 7,
+     "mesi": 12,
+     "richiede": null,
+     "condizione": "promo online nuovi clienti",
+     "scade": "2026-11-01"
+    },
+    {
+     "importo": 9,
+     "mesi": 12,
+     "richiede": "altro",
+     "condizione": "già clienti Sky TV: 20,90 € per 12 mesi (invece di 22,90)",
+     "scade": "2026-11-01"
+    }
    ],
-   "fonte": "https://selectra.net/internet/operatori/sky/offerte-wifi",
-   "verificato": "2026-10-24",
-   "sito": "sky.it"
+   "rate": [],
+   "unaTantum": [],
+   "vincolo": 12,
+   "uscita": {
+    "importo": 29.9,
+    "migrazione": 11.09,
+    "entro_mesi": null,
+    "rateResidue": false
+   },
+   "penaleModem": null,
+   "chiamate": "a consumo (fissi 0,19 € a chiamata; mobili 0,19 € + 0,19 €/min)",
+   "voce": false,
+   "note": [
+    "Attivazione 0 € invece di 49 € (solo online)",
+    "Sky Wifi Hub in comodato gratuito",
+    "Chiamate illimitate +5 €/mese dopo 12 mesi gratis"
+   ],
+   "dubbi": [
+    "Il prezzo 20,90 € per 18 mesi in evidenza sul sito richiede anche l'abbonamento Sky TV"
+   ],
+   "fonte": "https://www.sky.it/sky-wifi-fibra",
+   "fonteTipo": "ufficiale",
+   "verificato": "2026-10-24"
   },
   {
    "id": "tiscali-fibra-power",
    "operatore": "Tiscali",
+   "sito": "tiscali.it",
    "nome": "Casa Fibra Power",
    "tecnologie": [
     "FTTH"
    ],
-   "down": 1000,
-   "up": 300,
-   "canone": 30.9,
-   "promo": null,
-   "attivazione": null,
-   "modem": {
-    "incluso": true,
-    "rata": 0,
-    "mesi": null
-   },
-   "vincolo": 12,
-   "recesso": null,
-   "chiamate": "a consumo (0,05 €/min)",
-   "sconto_mobile": null,
-   "scade": null,
-   "note": [
-    "Prezzo bloccato 12 mesi"
+   "down": 2500,
+   "up": 1000,
+   "listino": 20.9,
+   "sconti": [
+    {
+     "importo": 6,
+     "mesi": 12,
+     "richiede": null,
+     "condizione": "promo primi 12 mesi",
+     "scade": "2026-12-31"
+    }
    ],
-   "fonte": "https://selectra.net/internet/operatori/tiscali/casa",
-   "verificato": "2026-10-20",
-   "sito": "tiscali.it"
+   "rate": [
+    {
+     "voce": "Attivazione",
+     "importo": 5,
+     "da": 1,
+     "a": 24
+    }
+   ],
+   "unaTantum": [
+    {
+     "voce": "Installazione",
+     "importo": 29.9
+    }
+   ],
+   "vincolo": null,
+   "uscita": {
+    "importo": 25.9,
+    "entro_mesi": null,
+    "rateResidue": true
+   },
+   "penaleModem": null,
+   "chiamate": "a consumo (0,05 €/min + 0,20 € alla risposta)",
+   "voce": false,
+   "note": [
+    "Modem in comodato gratuito",
+    "Prezzo 19,90 € per 12 mesi, poi 25,90 €"
+   ],
+   "dubbi": [
+    "Il documento dice che il canone di 25,90 € comprende 5 €/mese di attivazione per 24 mesi: dopo il 24° mese lo considero 20,90 €",
+    "Costo di disattivazione 25,90 € letto da una tabella poco chiara"
+   ],
+   "fonte": "https://casa.tiscali.it/doc/AGCOM/B2C/trasparenza-tariffaria-fisso/CASA_FIBRA_POWER_dedicata_a_te_2.5_GIGA.pdf",
+   "fonteTipo": "ufficiale",
+   "verificato": "2026-10-24"
   },
   {
-   "id": "tiscali-power-home-safe-mobile",
+   "id": "tiscali-home-safe-mobile",
    "operatore": "Tiscali",
-   "nome": "Fibra Power Home Safe + Mobile 200 Pro",
+   "sito": "tiscali.it",
+   "nome": "Fibra Power Home Safe + Mobile 250 5G Pro",
    "tecnologie": [
     "FTTH"
    ],
    "down": 2500,
-   "up": 500,
-   "canone": 23.9,
-   "promo": null,
-   "attivazione": null,
-   "modem": {
-    "incluso": true,
-    "rata": 0,
-    "mesi": null
-   },
-   "vincolo": 12,
-   "recesso": null,
-   "chiamate": "illimitate verso fissi e mobili",
-   "sconto_mobile": null,
-   "scade": null,
-   "note": [
-    "Include una SIM 200 GB (6 €/mese: la fonte non dice se è compresa nei 23,90 €)",
-    "Assicurazione assistenza casa e digitale"
+   "up": 1000,
+   "listino": 34.89,
+   "sconti": [
+    {
+     "importo": 7,
+     "mesi": 12,
+     "richiede": null,
+     "condizione": "promo primi 12 mesi",
+     "scade": "2026-12-31"
+    }
    ],
-   "fonte": "https://selectra.net/internet/operatori/tiscali/casa",
-   "verificato": "2026-10-20",
-   "sito": "tiscali.it"
+   "rate": [],
+   "unaTantum": [
+    {
+     "voce": "Installazione",
+     "importo": 29.9
+    },
+    {
+     "voce": "SIM",
+     "importo": 10
+    }
+   ],
+   "vincolo": null,
+   "uscita": {
+    "importo": 24.9,
+    "entro_mesi": null,
+    "rateResidue": false
+   },
+   "penaleModem": null,
+   "chiamate": "illimitate verso fissi e mobili",
+   "voce": true,
+   "note": [
+    "Comprende una SIM con 250 GB e minuti illimitati",
+    "Assicurazione assistenza casa e digitale",
+    "Se disattivi la SIM la fibra passa a 27,90 €/mese"
+   ],
+   "dubbi": [],
+   "fonte": "https://casa.tiscali.it/doc/AGCOM/B2C/trasparenza-tariffaria-fisso/CASA_FIBRA_POWER_HOME_SAFE_dedicata_a_te_2.5_GIGA_x_Mobile_250_5G_Pro.pdf",
+   "fonteTipo": "ufficiale",
+   "verificato": "2026-10-24"
   },
   {
    "id": "eolo-fibra",
    "operatore": "EOLO",
+   "sito": "eolo.it",
    "nome": "EOLO Fibra",
    "tecnologie": [
     "FTTH"
    ],
    "down": 1000,
    "up": 300,
-   "canone": 24.9,
-   "promo": null,
-   "attivazione": null,
-   "modem": {
-    "incluso": true,
-    "rata": 0,
-    "mesi": null
-   },
-   "vincolo": null,
-   "recesso": null,
-   "chiamate": "assenti (solo internet)",
-   "sconto_mobile": null,
-   "scade": null,
-   "note": [],
-   "fonte": "https://selectra.net/internet/operatori/eolo/casa",
-   "verificato": "2026-10-21",
-   "sito": "eolo.it"
-  },
-  {
-   "id": "eolo-wifi",
-   "operatore": "EOLO",
-   "nome": "EOLO Wi-Fi",
-   "tecnologie": [
-    "FWA"
+   "listino": 24.9,
+   "sconti": [],
+   "rate": [],
+   "unaTantum": [
+    {
+     "voce": "Attivazione",
+     "importo": 19.9
+    }
    ],
-   "down": 100,
-   "up": 20,
-   "canone": 24.9,
-   "promo": null,
-   "attivazione": null,
-   "modem": {
-    "incluso": true,
-    "rata": 0,
-    "mesi": null
+   "vincolo": 24,
+   "uscita": {
+    "importo": 24.9,
+    "entro_mesi": 24,
+    "rataResidua": {
+     "importo": 8.7,
+     "mesi": 24
+    }
    },
-   "vincolo": null,
-   "recesso": null,
-   "chiamate": "assenti (solo internet)",
-   "sconto_mobile": null,
-   "scade": null,
+   "penaleModem": null,
+   "chiamate": "non incluse (opzione chiamate illimitate 3 €/mese)",
+   "voce": false,
    "note": [
-    "Antenna su tetto o balcone"
+    "Il canone comprende 8,70 €/mese di installazione per 24 mesi",
+    "Router Wi-Fi 7 incluso",
+    "Offerta valida fino al 31/10"
    ],
-   "fonte": "https://selectra.net/internet/operatori/eolo/casa",
-   "verificato": "2026-10-21",
-   "sito": "eolo.it"
+   "dubbi": [],
+   "scade": "2026-10-31",
+   "fonte": "https://www.eolo.it/offerte-internet-casa/eolo-fibra",
+   "fonteTipo": "ufficiale",
+   "verificato": "2026-10-24"
   },
   {
    "id": "linkem-5g",
    "operatore": "Linkem",
-   "nome": "5G Senza Limiti",
+   "sito": "linkem.com",
+   "nome": "Casa FWA 5G",
    "tecnologie": [
     "FWA"
    ],
-   "down": 1000,
+   "down": 300,
    "up": null,
-   "canone": 24.9,
-   "promo": null,
-   "attivazione": null,
-   "modem": {
-    "incluso": true,
-    "rata": 0,
-    "mesi": null
-   },
-   "vincolo": 0,
-   "recesso": null,
-   "chiamate": null,
-   "sconto_mobile": null,
-   "scade": null,
-   "note": [
-    "La fonte indica sia 29,90 € di attivazione sia attivazione gratuita: da verificare"
+   "listino": 25.9,
+   "sconti": [
+    {
+     "importo": 6,
+     "mesi": 12,
+     "richiede": null,
+     "condizione": "promo primi 12 mesi",
+     "scade": null
+    }
    ],
-   "fonte": "https://www.komparatore.it/fibra-adsl",
-   "verificato": "2026-10-24",
-   "sito": "linkem.com"
+   "rate": [],
+   "unaTantum": [
+    {
+     "voce": "Installazione",
+     "importo": 29.9
+    }
+   ],
+   "vincolo": null,
+   "uscita": {
+    "importo": null,
+    "rataResidua": {
+     "importo": 5,
+     "mesi": 24
+    }
+   },
+   "penaleModem": null,
+   "chiamate": "non indicate",
+   "voce": false,
+   "note": [
+    "Il canone comprende 5 €/mese di attivazione (120 €) per 24 mesi"
+   ],
+   "dubbi": [
+    "Vincolo e costo di disattivazione non indicati sulla pagina dell'offerta"
+   ],
+   "fonte": "https://www.linkem.com/casa-fwa-5g/",
+   "fonteTipo": "ufficiale",
+   "verificato": "2026-10-24"
   },
   {
    "id": "plenitude-fibra",
@@ -610,152 +1001,156 @@
    ],
    "down": 2500,
    "up": 1000,
-   "canone": 25.9,
-   "promo": {
-    "canone": 19.9,
-    "mesi": 36,
-    "richiede": "energia",
-    "condizione": "con luce o gas Plenitude (nuovi o già clienti) o Acea Energia"
-   },
-   "attivazione": 39,
-   "modem": {
-    "incluso": true,
-    "rata": 0,
-    "mesi": null
-   },
-   "vincolo": 0,
-   "recesso": {
-    "importo": 25.9,
-    "entro_mesi": 24,
-    "testo": "un canone (25,90 €, 16,90 € per i clienti luce/gas) se disdici entro 24 mesi"
-   },
-   "chiamate": "assenti (solo internet, il numero fisso si perde)",
-   "sconto_mobile": null,
-   "scade": null,
+   "listino": 25.9,
+   "sconti": [
+    {
+     "importo": 8,
+     "mesi": 24,
+     "richiede": "energia",
+     "condizione": "con luce o gas Plenitude attiva (nuovi o già clienti)",
+     "scade": "2026-11-02"
+    }
+   ],
+   "rate": [],
+   "unaTantum": [
+    {
+     "voce": "Attivazione",
+     "importo": 39
+    }
+   ],
    "energia": {
     "sito": "eniplenitude.com",
     "obbligatoria": false
    },
-   "note": [
-    "Se chiudi luce o gas Plenitude nei primi 36 mesi il canone torna 25,90 €",
-    "Attivazione congiunta con l’energia solo online",
-    "Modem Wi-Fi 7 installato da un tecnico (85 € se danneggiato)"
-   ],
-   "fonte": "https://www.mondomobileweb.it/325526-plenitude-fibra-nuova-promo-da-1990-euro-al-mese-con-in-regalo-un-tablet-samsung/",
-   "verificato": "2026-08-27"
-  },
-  {
-   "id": "enel-fibra-web",
-   "operatore": "Enel",
-   "sito": "enel.it",
-   "nome": "Enel Fibra Web",
-   "tecnologie": [
-    "FTTH",
-    "FTTC"
-   ],
-   "down": 1000,
-   "up": 300,
-   "canone": 24.9,
-   "promo": null,
-   "attivazione": null,
-   "modem": {
-    "incluso": true,
-    "rata": 0,
-    "mesi": null
+   "vincolo": 0,
+   "uscita": {
+    "importo": 16.9,
+    "entro_mesi": 24,
+    "rateResidue": false
    },
-   "vincolo": null,
-   "recesso": null,
-   "chiamate": "assenti (solo internet)",
-   "sconto_mobile": null,
-   "scade": null,
-   "energia": {
-    "sito": "enel.it",
-    "obbligatoria": false
-   },
+   "penaleModem": null,
+   "chiamate": "assenti (solo internet, il numero fisso si perde)",
+   "voce": false,
    "note": [
-    "Sconti per chi ha o porta luce e gas a Enel (importo non pubblicato nella fonte)"
+    "Se chiudi luce e gas Plenitude il canone torna 25,90 €",
+    "Con Fixa Time Fibra luce/gas anche sconti sulla quota fissa dell'energia (fino a 144 € in 2 anni)",
+    "Modem Wi-Fi 7 installato dal tecnico",
+    "In FTTC fino a 200/20 Mbit/s"
    ],
-   "fonte": "https://selectra.net/internet/operatori/enel-fibra/casa",
+   "dubbi": [
+    "Prezzo dopo 24 mesi non indicato: considerato il listino 25,90 €"
+   ],
+   "fonte": "https://eniplenitude.com/offerta/casa/fibra-internet",
+   "fonteTipo": "ufficiale",
    "verificato": "2026-10-24"
   },
   {
    "id": "enel-fibra-per-te",
    "operatore": "Enel",
    "sito": "enel.it",
-   "nome": "Enel Fibra Per Te Web",
+   "nome": "Enel Fibra Per Te",
    "tecnologie": [
     "FTTH",
     "FTTC"
    ],
    "down": 1000,
    "up": 300,
-   "canone": 24.9,
-   "promo": {
-    "canone": 21.9,
-    "mesi": 24,
-    "richiede": "energia",
-    "condizione": "per chi ha luce o gas Enel"
-   },
-   "attivazione": null,
-   "modem": {
-    "incluso": true,
-    "rata": 0,
-    "mesi": null
-   },
-   "vincolo": 24,
-   "recesso": null,
-   "chiamate": "assenti (solo internet)",
-   "sconto_mobile": null,
-   "scade": null,
+   "listino": 24.9,
+   "sconti": [
+    {
+     "importo": 3,
+     "mesi": 24,
+     "richiede": "energia",
+     "condizione": "Sconto Fedeltà: luce o gas Enel attiva o in attivazione (no PLACET)",
+     "scade": null
+    }
+   ],
+   "rate": [],
+   "unaTantum": [
+    {
+     "voce": "Attivazione",
+     "importo": 29.9
+    }
+   ],
    "energia": {
     "sito": "enel.it",
     "obbligatoria": false
    },
+   "vincolo": 24,
+   "uscita": {
+    "importo": 21.9,
+    "entro_mesi": null,
+    "rateResidue": false
+   },
+   "penaleModem": 50,
+   "chiamate": "assenti (solo internet)",
+   "voce": false,
    "note": [
-    "Prezzo dopo 24 mesi non pubblicato: considerato il listino 24,90 €"
+    "Pagamento solo con addebito su conto (SDD)",
+    "Modem in comodato: 50 € se non restituito",
+    "Sintesi contrattuale del 28/05/2026"
    ],
-   "fonte": "https://selectra.net/internet/operatori/enel-fibra/casa",
+   "dubbi": [],
+   "fonte": "https://www.enel.it/content/dam/asset/documenti/assistenza/fibra/articoli/sintesi-contrattuale-fibra/documenti-di-sintesi-contrattuale/sintesi-contrattuale-enel-fibra-per-te.pdf",
+   "fonteTipo": "ufficiale",
    "verificato": "2026-10-24"
   },
   {
    "id": "enel-fibra-flash-trio",
    "operatore": "Enel",
    "sito": "enel.it",
-   "nome": "Enel Fibra Flash Trio Web",
+   "nome": "Enel Fibra Flash Trio",
    "tecnologie": [
     "FTTH",
     "FTTC"
    ],
    "down": 1000,
    "up": 300,
-   "canone": 24.9,
-   "promo": {
-    "canone": 17.9,
-    "mesi": 36,
-    "richiede": "energia",
-    "condizione": "per chi ha luce e gas Enel"
-   },
-   "attivazione": null,
-   "modem": {
-    "incluso": true,
-    "rata": 0,
-    "mesi": null
-   },
-   "vincolo": 36,
-   "recesso": null,
-   "chiamate": "assenti (solo internet)",
-   "sconto_mobile": null,
-   "scade": null,
+   "listino": 24.9,
+   "sconti": [
+    {
+     "importo": 3,
+     "mesi": 36,
+     "richiede": "energia",
+     "condizione": "Sconto Fedeltà: luce o gas Enel",
+     "scade": null
+    },
+    {
+     "importo": 4,
+     "mesi": 36,
+     "richiede": "energia2",
+     "condizione": "Sconto Campagna: luce e gas entrambe con Enel",
+     "scade": null
+    }
+   ],
+   "rate": [],
+   "unaTantum": [
+    {
+     "voce": "Attivazione",
+     "importo": 29.9
+    }
+   ],
    "energia": {
     "sito": "enel.it",
-    "obbligatoria": false,
-    "entrambe": true
+    "obbligatoria": false
    },
+   "vincolo": 24,
+   "uscita": {
+    "importo": 17.9,
+    "entro_mesi": null,
+    "rateResidue": false
+   },
+   "penaleModem": 50,
+   "chiamate": "assenti (solo internet)",
+   "voce": false,
    "note": [
-    "Serve avere sia la luce sia il gas con Enel",
-    "Prezzo dopo 36 mesi non pubblicato: considerato il listino 24,90 €"
+    "17,90 € per 36 mesi con luce e gas Enel; 21,90 € con una sola fornitura",
+    "Pagamento solo con addebito su conto (SDD)",
+    "Sintesi contrattuale del 22/09/2026"
    ],
-   "fonte": "https://selectra.net/internet/operatori/enel-fibra/casa",
+   "dubbi": [],
+   "fonte": "https://www.enel.it/content/dam/asset/documenti/offerte/casa/fibra/docs/sintesi-contrattuali/sintesi-contrattuale-enel-fibra-flash-trio-star.pdf",
+   "fonteTipo": "ufficiale",
    "verificato": "2026-10-24"
   },
   {
@@ -769,75 +1164,124 @@
    ],
    "down": 1000,
    "up": 300,
-   "canone": 27.99,
-   "promo": {
-    "canone": 18.99,
-    "mesi": 12,
-    "richiede": "energia",
-    "condizione": "con la luce Iren (offerte «Connettività»)"
-   },
-   "attivazione": 49.99,
-   "modem": {
-    "incluso": true,
-    "rata": 0,
-    "mesi": null
-   },
-   "vincolo": 24,
-   "recesso": {
-    "testo": "le rate residue dell’attivazione e i costi di disattivazione se lasci prima di 24 mesi"
-   },
-   "chiamate": "assenti",
-   "sconto_mobile": null,
-   "scade": null,
+   "listino": 29.99,
+   "sconti": [
+    {
+     "importo": 2,
+     "mesi": 12,
+     "richiede": null,
+     "condizione": "prezzo dei primi 12 mesi",
+     "scade": null
+    },
+    {
+     "importo": 9,
+     "mesi": null,
+     "richiede": "energia",
+     "condizione": "con luce o gas Iren Stay Connettività",
+     "scade": null
+    },
+    {
+     "importo": 9,
+     "mesi": null,
+     "richiede": "energia",
+     "condizione": "bonus di 9 €/mese nella bolletta luce/gas finché restano attivi entrambi i contratti",
+     "scade": null
+    }
+   ],
+   "rate": [],
+   "unaTantum": [],
    "energia": {
     "sito": "irenlucegas.it",
     "obbligatoria": true,
     "dedicate": true
    },
+   "vincolo": 24,
+   "uscita": null,
+   "penaleModem": null,
+   "chiamate": "assenti",
+   "voce": false,
    "note": [
-    "Prezzo dal 13° mese: la fonte indica sia 27,99 € sia 20,99 €; qui uso 27,99 € (il caso peggiore)",
-    "Se chiudi la luce Iren lo sconto decade"
+    "18,99 € per 12 mesi, poi 20,99 € con l'energia Iren; senza energia 27,99 € poi 29,99 €",
+    "Attivazione: con la luce 24 rate da 5,99 € scontate; con il solo gas 49,99 €"
    ],
-   "fonte": "https://selectra.net/internet/operatori/iren-fibra/casa/stay-connettivita",
-   "verificato": "2026-10-22"
+   "dubbi": [
+    "Il bonus di 9 € arriva sulla bolletta dell'energia, non su quella internet: lo conto come risparmio",
+    "Costi di uscita non indicati sulla pagina"
+   ],
+   "fonte": "https://www.irenlucegas.it/casa/pacchetti-offerte-luce-e-gas/iren-stay-connettivita",
+   "fonteTipo": "ufficiale",
+   "verificato": "2026-10-24"
   },
   {
    "id": "edison-wifi",
    "operatore": "Edison",
    "sito": "edisonenergia.it",
-   "nome": "Edison WiFi + Luce e Gas",
+   "nome": "Edison Wi-Fi",
    "tecnologie": [
     "FTTH",
     "FTTC"
    ],
-   "down": 2500,
-   "up": null,
-   "canone": 24.9,
-   "promo": {
-    "canone": 22.9,
-    "mesi": 12,
-    "richiede": "energia",
-    "condizione": "con luce o gas Edison"
-   },
-   "attivazione": 0,
-   "modem": {
-    "incluso": true,
-    "rata": 0,
-    "mesi": null
-   },
-   "vincolo": 24,
-   "recesso": null,
-   "chiamate": null,
-   "sconto_mobile": null,
-   "scade": null,
+   "down": 1000,
+   "up": 500,
+   "listino": 29.9,
+   "sconti": [
+    {
+     "importo": 8,
+     "mesi": 24,
+     "richiede": null,
+     "condizione": "sconto primi 24 mesi",
+     "scade": null
+    },
+    {
+     "importo": 2,
+     "mesi": 12,
+     "richiede": null,
+     "condizione": "promo primi 12 mesi",
+     "scade": null
+    },
+    {
+     "importo": 3,
+     "mesi": 24,
+     "richiede": "energia",
+     "condizione": "con luce o gas Edison, stesso intestatario",
+     "scade": null
+    },
+    {
+     "importo": 2,
+     "mesi": 24,
+     "richiede": "energia2",
+     "condizione": "con luce e gas Edison (totale 5 €)",
+     "scade": null
+    }
+   ],
+   "rate": [],
+   "unaTantum": [],
    "energia": {
     "sito": "edisonenergia.it",
-    "obbligatoria": true
+    "obbligatoria": false
    },
+   "vincolo": 0,
+   "uscita": {
+    "importo": 29.9,
+    "entro_mesi": 24,
+    "rataResidua": {
+     "importo": 8,
+     "mesi": 24
+    }
+   },
+   "penaleModem": 61,
+   "chiamate": "non incluse",
+   "voce": false,
    "note": [
-    "Pagamento con domiciliazione o carta di credito"
+    "Attivazione 192 € in 24 rate da 8 €, compensate dallo sconto di 8 €",
+    "Modem Edison o tuo; 50 € + IVA se non restituito",
+    "Sintesi contrattuale del 30/04/2026"
    ],
-   "fonte": "https://www.facile.it/adsl/news/offerte-fibra-ottica-ottobre-2026.html",
+   "dubbi": [
+    "La durata dello sconto per i clienti luce/gas non è indicata: la considero 24 mesi"
+   ],
+   "fonte": "https://documenti.edisonenergia.it/getbusinessdoc.ashx?id=CONDECO_SC_Edison_wifi_FTTH_1000_500",
+   "fonteTipo": "ufficiale",
    "verificato": "2026-10-24"
   }
  ]
