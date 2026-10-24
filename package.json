@@ -11,6 +11,7 @@
     "@capacitor/core": "^7.6.9",
     "@capacitor/filesystem": "^7.1.8",
     "@capacitor/share": "^7.0.4",
+    "@capgo/capacitor-updater": "^7.51.23",
     "jspdf": "^2.5.2",
     "jspdf-autotable": "^3.8.4",
     "pdfjs-dist": "^4.10.38"
@@ -19,5 +20,6 @@
     "@capacitor/android": "^7.6.9",
     "@capacitor/cli": "^7.6.9",
     "esbuild": "^0.28.2"
-  }
+  },
+  "versioneNativa": 2
 }

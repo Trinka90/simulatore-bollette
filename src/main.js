@@ -10,6 +10,7 @@ import { eur, nf, dataIt, meseIt, MESI_NOMI, descrizionePrezzo, TIPI, CANALI, PA
 import { DATI_URL } from "./config.js";
 import { condizioniParticolari } from "./condizioni.js";
 import { categoria, nomeFornitore, ETICHETTE, recensioni } from "./fornitori.js";
+import { confermaAvvio, controllaAggiornamento, VERSIONE_WEB } from "./aggiorna-app.js";
 import datiInclusi from "../data/dati.json";
 import comuniDb from "../data/comuni.json";
 
@@ -104,6 +105,8 @@ async function avviaCatalogo() {
   arricchisci(S.catalogo);
   statoChip();
   VISTE[S.tab]();
+}
+function scaricaSeServe() {
   const giaProvato = LS.get("tentativo", "") === oggiIso();
   if (S.auto === "giorno" && nativo() && S.catalogo?.data < oggiIso() && !giaProvato) aggiorna(false);
 }
@@ -763,6 +766,10 @@ function vistaDati() {
     <div class="seg" id="dAuto"><button data-v="giorno" class="${S.auto === "giorno" ? "on" : ""}">Ogni giorno</button><button data-v="mai" class="${S.auto === "mai" ? "on" : ""}">Solo a mano</button></div>
     <div class="small mut" style="margin-top:6px">Ogni giorno, alla prima apertura, il telefono scarica dal Portale le offerte di tutti i venditori (circa 10 MB) e i parametri ARERA.
       Il Portale non accetta richieste dai server cloud: per questo il download lo fa il telefono.${nativo() ? "" : " Nel browser il download non è possibile: funziona nell'app Android."}</div></div>
+  <div class="card small"><b>Versione dell'app: ${h(VERSIONE_WEB)}</b>
+    <div class="mut">Si aggiorna da sola: all'apertura controlla se c'è una versione nuova e la installa in pochi secondi.</div>
+    ${apkNuovo ? `<div class="avviso">Questa volta serve installare il programma completo. <a class="btn mini" href="${h(apkNuovo)}">Scarica l'APK</a></div>` : ""}
+    <button class="btn sec full" id="dVer" style="margin-top:8px">Controlla aggiornamenti</button></div>
   <h2>PUN ultimi mesi <span class="mut small">€/kWh</span></h2><div class="card"><table><tr><th>Mese</th><th class="r">F0</th><th class="r">F1</th><th class="r">F2</th><th class="r">F3</th></tr>
     ${pun.map(([k, v]) => `<tr><td>${k}</td>${["F0", "F1", "F2", "F3"].map((f) => `<td class="r num">${nf(v[f], 4)}</td>`).join("")}</tr>`).join("")}</table></div>
   <h2>PSV ultimi mesi <span class="mut small">€/Smc</span></h2><div class="card"><table>
@@ -775,9 +782,20 @@ function vistaDati() {
     <li><b>PUN</b>: ${h(met.pun)}</li><li><b>PSV</b>: ${h(met.psv)}</li>
     <li><b>Scenari</b> delle offerte variabili: basso ×${met.scenari.basso}, alto ×${met.scenari.alto} sui soli valori simulati.</li></ul></div>`;
   $("#dAgg") && ($("#dAgg").onclick = () => { if (!nativo()) { toast("Il download funziona nell'app Android"); return; } aggiorna(true); vistaDati(); });
+  $("#dVer") && ($("#dVer").onclick = () => aggiornaApp(true));
   $$("#dAuto button").forEach((b) => (b.onclick = () => { S.auto = b.dataset.v; salva(); vistaDati(); }));
 }
 
 const VISTE = { offerte: vistaOfferte, cte: vistaCte, profilo: vistaProfilo, dati: vistaDati };
 vai("offerte");
-avviaCatalogo();
+// prima mostra le offerte salvate, poi aggiorna l'app (può ricaricarla), infine scarica le offerte del giorno
+confermaAvvio().then(() => avviaCatalogo()).then(() => aggiornaApp(false)).then(() => scaricaSeServe());
+
+let apkNuovo = null;
+async function aggiornaApp(manuale) {
+  try {
+    const r = await controllaAggiornamento((m) => toast(m, 6000));
+    if (r?.apk) { apkNuovo = r.apk; toast("C'è una versione nuova da installare: vai in Info", 5000); if (S.tab === "dati") vistaDati(); }
+    else if (manuale) toast("L'app è già aggiornata");
+  } catch (e) { console.error(e); if (manuale) toast("Controllo aggiornamenti non riuscito: " + e.message, 4000); }
+}

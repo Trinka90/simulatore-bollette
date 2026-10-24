@@ -24,7 +24,7 @@ jobs:
         run: |
           npm ci
           npm test
-          npm run build
+          VERSIONE_WEB=${{ github.run_number }} npm run build
           npx cap sync android
 
       - uses: actions/setup-java@v5
@@ -59,3 +59,28 @@ jobs:
           body: |
             Scarica il file .apk dal telefono e aprilo per installarlo
             (la prima volta Android chiede di consentire l'installazione da questa fonte).
+            Dalla versione 1.0.10 l'app si aggiorna da sola all'apertura.
+
+      - name: Pacchetto per l'aggiornamento automatico
+        run: |
+          (cd www && zip -qr ../web.zip .)
+          NATIVA=$(node -p "require('./package.json').versioneNativa")
+          REPO=https://github.com/${{ github.repository }}/releases/download
+          cat > versione.json <<JSON
+          {"web": "${{ github.run_number }}", "nativa": $NATIVA, "zip": "$REPO/web/web.zip",
+           "apk": "$REPO/v1.0.${{ github.run_number }}/SimulatoreBollette-1.0.${{ github.run_number }}.apk", "data": "$(date -u +%FT%TZ)"}
+          JSON
+          cat versione.json
+
+      - name: Pubblica l'aggiornamento automatico
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: web
+          name: Aggiornamento automatico (non scaricare)
+          make_latest: false
+          prerelease: true
+          overwrite_files: true
+          files: |
+            versione.json
+            web.zip
+          body: File usati dall'app per aggiornarsi da sola. Non servono da scaricare a mano.
