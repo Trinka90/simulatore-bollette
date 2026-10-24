@@ -1,0 +1,33 @@
+name: Scarica fonti ARERA
+
+# Dati ufficiali ARERA sui reclami ai venditori (indice di reclamosità e capacità di risposta).
+# Ogni mese il file viene riscaricato; se cambia, viene salvato in data/fonti/.
+on:
+  schedule:
+    - cron: "17 5 3 * *"
+  push:
+    branches: [main]
+    paths: [".github/workflows/fonti.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  scarica:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Scarica
+        run: |
+          mkdir -p data/fonti
+          B=https://www.arera.it/fileadmin/allegati/dati/monitoraggioretail
+          for f in E-GR-QC-261-262-263-264-265-266-267-268 G-GR-QC-279-280-281-282; do
+            curl -sSL -A "Mozilla/5.0" -m 120 -o "data/fonti/$f.xlsx" "$B/$f.xlsx" -w "$f %{http_code} %{size_download}\n" || true
+            file "data/fonti/$f.xlsx"
+          done
+      - name: Salva se cambiati
+        run: |
+          git config user.name "github-actions"; git config user.email "actions@github.com"
+          git add data/fonti
+          git diff --cached --quiet || (git commit -m "Fonti ARERA: reclami ai venditori" && git push)
