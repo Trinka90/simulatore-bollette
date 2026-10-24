@@ -27,7 +27,14 @@ L'app contiene un elenco iniziale (06/10/2026) che viene sostituito dal primo ag
   senza penali, senza deposito.
 - **Dettaglio**: totale annuo, «In breve» con sconti, prezzi promozionali, penali, deposito e vincoli in parole semplici,
   chi è il fornitore con i link alle recensioni (Trustpilot e Google), poi prezzi, condizioni, bolletta su misura e le 12 bollette.
-- **La mia offerta**: carica la CTE della tua offerta (o di una che ti hanno proposto) per vederla nella stessa classifica.
+- **Luce + Gas**: i pacchetti dual dello stesso fornitore (file `PO_Offerte_D` del Portale) confrontati con la miglior luce + il miglior gas separati.
+- **La mia offerta**: carica le **bollette in PDF** (formato Bolletta 2.0): consumi, potenza, comune, residenza, canone e codice offerta.
+  Dal codice ritrovo la tua offerta nel catalogo ARERA e la metto in classifica come «la tua offerta attuale», con il risparmio vero.
+  Più bollette ricostruiscono i consumi mese per mese. Si possono caricare anche CTE o inserire i prezzi a mano.
+- **Consumi**: oltre ai dati a mano, import del file CSV del **Portale Consumi ARERA** (o e-distribuzione / distributore gas):
+  valori ogni 15 minuti, orari, giornalieri, mensili o letture del contatore; dai dati quartorari calcola la ripartizione F1/F2/F3 reale.
+- **Avvisi**: soglia di risparmio, offerte seguite (prezzo cambiato, scadenza vicina, uscita dal mercato), andamento della migliore offerta.
+  Il controllo avviene all'apertura dell'app, quando si scaricano le offerte del giorno.
 - **Consumi**: comune, data di passaggio, consumi annui o mese per mese, bolletta online e domiciliazione (decidono quali sconti valgono).
 
 ## Fornitori e recensioni
@@ -47,7 +54,9 @@ applicate bolletta per bolletta:
 - **IVA** 10% luce; gas 10% fino a 480 Smc/anno e 22% oltre e sulle quote fisse; **canone RAI** opzionale.
 
 Verifiche (`npm test`): due offerte calcolate dal Portale (luce 1.274,92 €, gas 1.732,03 €) riprodotte entro
-pochi centesimi; tre bollette reali (Hera, Estra, Enel) al centesimo.
+pochi centesimi; tre bollette reali (Hera, Estra, Enel) al centesimo; 528 offerte confrontate con il motore indipendente
+PO_ENGIE_T1 (verificato sul Portale) entro 1 € o 1%. Su tutte le 3.518 offerte del 06/10/2026: luce 98-99% entro 1 €,
+gas 99,8% entro l'1%; le differenze restanti sono motivate (Peak/OffPeak contati due volte dal riferimento, sconti a tempo, sconti %).
 
 ## Dati di mercato (`data/dati.json`)
 PUN e PSV mensili, metodo di simulazione dei mesi futuri, aliquote gas per regione, CCR/PPE e la copia di

@@ -12,6 +12,7 @@ import { condizioniParticolari } from "./condizioni.js";
 import { categoria, nomeFornitore, ETICHETTE, recensioni } from "./fornitori.js";
 import { confermaAvvio, controllaAggiornamento, VERSIONE_WEB } from "./aggiorna-app.js";
 import { analizzaBolletta, consumiDaBollette } from "./bolletta-pdf.js";
+import { leggiConsumiCsv, ultimi12 } from "./consumi-csv.js";
 import datiInclusi from "../data/dati.json";
 import comuniDb from "../data/comuni.json";
 
@@ -970,6 +971,13 @@ function vistaProfilo() {
   const mesiOpt = Array.from({ length: 13 }, (_, i) => { const d = new Date(oggi().getFullYear(), oggi().getMonth() + i, 1); return ymDi(d); });
   const zone = ["B", "C", "D", "E", "F"];
   $("#vista").innerHTML = `
+  <section class="sez"><h3>I tuoi consumi reali</h3>
+    <p class="small mut" style="margin-top:0">Il modo più preciso: scarica il file dei consumi dal <a href="https://www.consumienergia.it" target="_blank" rel="noopener">Portale Consumi ARERA</a>
+      (accesso con SPID, sezione «I miei consumi» → scarica CSV) e caricalo qui. Con la luce a contatore elettronico ricavo anche la tua ripartizione F1/F2/F3 reale.
+      Vanno bene anche i file di e-distribuzione e del distributore gas. Il file resta sul telefono.</p>
+    <div class="row"><button class="btn sec" data-csv="LUCE">💡 File consumi luce</button><button class="btn sec" data-csv="GAS">🔥 File consumi gas</button></div>
+    <div class="small mut" style="margin-top:6px">Oppure carica le bollette in «La mia offerta»: ricostruisco i consumi dai periodi fatturati.</div>
+  </section>
   <div class="card"><h3>Dove e quando</h3>
     <label>Comune della fornitura</label><input id="pComune" value="${h(u.comune ? `${u.comune.nome} (${u.comune.sigla})` : "")}" autocomplete="off" placeholder="Scrivi il nome del comune">
     <div id="pSugg" class="sugg"></div>
@@ -1009,6 +1017,7 @@ function vistaProfilo() {
     <div class="row" style="margin-top:6px"><button class="btn sec mini" id="gReset">${u.gas.mesi ? "Torna alla stima dal consumo annuo" : "Modifica un mese e premi Salva"}</button></div></div>
   <button class="btn full" id="pSalva">Salva e ricalcola</button>`;
 
+  $$("[data-csv]").forEach((b) => (b.onclick = () => { $("#fileCsv").dataset.forn = b.dataset.csv; $("#fileCsv").click(); }));
   let comune = u.comune;
   const sugg = $("#pSugg");
   $("#pComune").oninput = (e) => {
@@ -1056,6 +1065,41 @@ function vistaProfilo() {
     S.utenza = n; salva(); cache.clear(); toast("Profilo salvato"); vai("offerte");
   };
 }
+
+$("#fileCsv").addEventListener("change", async (e) => {
+  const f = e.target.files[0], forn = e.target.dataset.forn || "LUCE";
+  e.target.value = "";
+  if (!f) return;
+  let r;
+  try { r = leggiConsumiCsv(await f.text(), forn); } catch (err) { r = { errore: err.message }; }
+  const un = forn === "LUCE" ? "kWh" : "Smc";
+  if (r.errore) {
+    $("#vista").innerHTML = `<section class="sez"><h3>Non riesco a leggere il file</h3><p class="small">${h(r.errore)}</p>
+      <p class="small mut">Se è il file del Portale Consumi, mandami le prime righe (senza il POD) e adatto il lettore.</p><button class="btn full" id="csvOk">Torna ai consumi</button></section>`;
+    $("#csvOk").onclick = () => vai("profilo");
+    return;
+  }
+  const x = ultimi12(r);
+  const TIPI_CSV = { quartorario: "valori ogni 15 minuti", orario: "valori orari", giornaliero: "consumi giornalieri", mensile: "consumi mensili", letture: "letture del contatore" };
+  $("#titolo").textContent = "Consumi letti";
+  $("#vista").innerHTML = `<section class="sez"><h3>${forn === "LUCE" ? "💡 Luce" : "🔥 Gas"} · ${h(f.name)}</h3>
+    <p class="small">Letti ${nf(r.righe, 0)} righe di ${TIPI_CSV[r.tipo]}, dal ${dataIt(r.dal)} al ${dataIt(r.al)}.</p>
+    <table class="lista">${Object.entries(x.mesi).map(([m, v]) => `<tr><td>${MESI_NOMI[m - 1]}</td><td class="r num">${nf(v, 1)} ${un}</td></tr>`).join("")}
+      <tr class="t"><td>Ultimi 12 mesi${x.mancanti.length ? ` (mancano ${x.mancanti.length})` : ""}</td><td class="r num">${nf(x.annuo, 0)} ${un}</td></tr></table>
+    ${x.ripartizione ? `<p class="small">Ripartizione reale: F1 ${nf(x.ripartizione.F1 * 100, 1)}% · F2 ${nf(x.ripartizione.F2 * 100, 1)}% · F3 ${nf(x.ripartizione.F3 * 100, 1)}%</p>` : ""}
+    ${x.mancanti.length ? `<p class="small mut">I mesi mancanti li stimo dal profilo tipico.</p>` : ""}
+    <button class="btn full" id="csvUsa">Usa questi consumi</button><button class="btn ghost full" id="csvNo">Annulla</button></section>`;
+  $("#csvNo").onclick = () => vai("profilo");
+  $("#csvUsa").onclick = () => {
+    const s = forn === "LUCE" ? S.utenza.luce : S.utenza.gas;
+    const stima = consumiMensili({ ...U(), luce: { ...S.utenza.luce, mesi: null }, gas: { ...S.utenza.gas, mesi: null } }, forn, S.dati.regolate);
+    s.mesi = Object.fromEntries(Array.from({ length: 12 }, (_, i) => [i + 1, x.mesi[i + 1] ?? Math.round(stima[i + 1] * 10) / 10]));
+    s.annuo = Object.values(s.mesi).reduce((a, b) => a + b, 0);
+    s.attiva = true;
+    if (forn === "LUCE" && x.ripartizione) s.ripartizione = x.ripartizione;
+    salva(); cache.clear(); toast("Consumi aggiornati"); vai("offerte");
+  };
+});
 
 // ------------------------------------------------------------------ DATI
 function vistaDati() {
