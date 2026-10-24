@@ -175,3 +175,8 @@ details.small summary{cursor:pointer;color:var(--pri);font-weight:600;margin-top
 .spark div{flex:1;background:var(--pri);opacity:.75;border-radius:2px 2px 0 0;min-width:2px}
 .riga-stg{background:var(--pri-soft);color:var(--pri-ink);border-radius:11px;padding:9px 12px;margin:8px 0;cursor:pointer}
 b.bad,.bad{color:var(--bad)}
+.riga-stg b{display:block;font-size:14.5px}
+.tab-scroll{overflow-x:auto;margin:0 -4px}
+table.stgtab{min-width:520px;font-size:12.5px}
+table.stgtab td:first-child{min-width:170px}
+table.lista tr[data-det]{cursor:pointer}
