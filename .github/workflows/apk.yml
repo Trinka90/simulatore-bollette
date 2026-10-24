@@ -65,9 +65,10 @@ jobs:
         run: |
           (cd www && zip -qr ../web.zip .)
           NATIVA=$(node -p "require('./package.json').versioneNativa")
+          SHA=$(sha256sum web.zip | cut -d' ' -f1)
           REPO=https://github.com/${{ github.repository }}/releases/download
           cat > versione.json <<JSON
-          {"web": "${{ github.run_number }}", "nativa": $NATIVA, "zip": "$REPO/web/web.zip",
+          {"web": "${{ github.run_number }}", "nativa": $NATIVA, "zip": "$REPO/web/web.zip", "checksum": "$SHA",
            "apk": "$REPO/v1.0.${{ github.run_number }}/SimulatoreBollette-1.0.${{ github.run_number }}.apk", "data": "$(date -u +%FT%TZ)"}
           JSON
           cat versione.json

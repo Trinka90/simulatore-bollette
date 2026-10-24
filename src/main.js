@@ -1151,6 +1151,7 @@ function vistaDati() {
       Il Portale non accetta richieste dai server cloud: per questo il download lo fa il telefono.${nativo() ? "" : " Nel browser il download non è possibile: funziona nell'app Android."}</div></div>
   <div class="card small"><b>Versione dell'app: ${h(VERSIONE_WEB)}</b>
     <div class="mut">Si aggiorna da sola: all'apertura controlla se c'è una versione nuova e la installa in pochi secondi.</div>
+    ${LS.get("errAgg", null) ? `<div class="avviso">Ultimo aggiornamento non riuscito (${new Date(LS.get("errAgg").data).toLocaleString("it-IT")}): ${h(LS.get("errAgg").msg)}</div>` : ""}
     ${apkNuovo ? `<div class="avviso">Questa volta serve installare il programma completo. <a class="btn mini" href="${h(apkNuovo)}">Scarica l'APK</a></div>` : ""}
     <button class="btn sec full" id="dVer" style="margin-top:8px">Controlla aggiornamenti</button></div>
   ${sezioneAvvisi()}
@@ -1474,5 +1475,9 @@ async function aggiornaApp(manuale) {
     const r = await controllaAggiornamento((m) => toast(m, 6000));
     if (r?.apk) { apkNuovo = r.apk; toast("C'è una versione nuova da installare: vai in Info", 5000); if (S.tab === "dati") vistaDati(); }
     else if (manuale) toast("L'app è già aggiornata");
-  } catch (e) { console.error(e); if (manuale) toast("Controllo aggiornamenti non riuscito: " + e.message, 4000); }
+    LS.set("errAgg", null);
+  } catch (e) {
+    console.error(e); LS.set("errAgg", { data: new Date().toISOString(), msg: String(e?.message || e) });
+    toast("Aggiornamento non riuscito: " + (e?.message || e), 5000);
+  }
 }

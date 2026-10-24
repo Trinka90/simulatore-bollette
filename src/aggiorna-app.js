@@ -30,7 +30,9 @@ export async function controllaAggiornamento(avviso = () => {}) {
   if (!v.web || String(v.web) === String(VERSIONE_WEB)) return null;
   if ((v.nativa || 0) > VERSIONE_NATIVA) return { apk: v.apk, web: v.web };
   avviso(`Aggiorno l'app alla versione ${v.web}…`);
-  const b = await CapacitorUpdater.download({ url: v.zip, version: String(v.web) });
+  // il plugin rifiuta i pacchetti senza impronta SHA-256 ("Checksum required")
+  if (!v.checksum) throw new Error("versione.json senza checksum");
+  const b = await CapacitorUpdater.download({ url: v.zip, version: String(v.web), checksum: v.checksum });
   await CapacitorUpdater.set({ id: b.id });
   return null;
 }
