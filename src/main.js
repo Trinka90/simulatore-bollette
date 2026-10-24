@@ -8,6 +8,8 @@ import { pdfConfronto, pdfBollette } from "./esporta.js";
 import { eur, nf, dataIt, meseIt, MESI_NOMI, descrizionePrezzo, TIPI, CANALI, PAGAMENTI, ATTIVAZIONI, CONDIZIONI,
   VALIDITA_SCONTO, NOMI_REGOLATE, CONDIZIONI_SCONTO, durata, descrUtenza } from "./testi.js";
 import { DATI_URL } from "./config.js";
+import { condizioniParticolari } from "./condizioni.js";
+import { categoria, nomeFornitore, ETICHETTE, recensioni } from "./fornitori.js";
 import datiInclusi from "../data/dati.json";
 import comuniDb from "../data/comuni.json";
 
@@ -43,7 +45,7 @@ function migraUtenza(v) {
 }
 
 const S = {
-  tab: "offerte", forn: "LUCE", mostraScadute: false, filtroTipo: "tutte", cerca: "", quante: 30,
+  tab: "offerte", forn: "LUCE", mostraScadute: false, filtri: LS.get("filtri", {}), filtroTipo: "tutte", cerca: "", quante: 25,
   utenza: migraUtenza(LS.get("utenza", null)),
   cte: LS.get("cte", LS.get("offerte", [])),
   dati: LS.get("dati", datiInclusi),
@@ -77,7 +79,7 @@ function toast(msg, ms = 2600) {
 const attendi = () => new Promise((r) => setTimeout(r, 30));
 
 // ------------------------------------------------------------------ navigazione
-const TITOLI = { offerte: "Offerte", cte: "Le mie CTE", profilo: "Profilo e consumi", dati: "Dati" };
+const TITOLI = { offerte: "Offerte luce e gas", cte: "La mia offerta", profilo: "I miei consumi", dati: "Info e aggiornamenti" };
 function vai(tab) {
   S.tab = tab;
   $$(".tabs button").forEach((b) => b.classList.toggle("on", b.dataset.tab === tab));
@@ -92,9 +94,14 @@ function statoChip() {
 }
 
 // ------------------------------------------------------------------ catalogo
+function arricchisci(cat) {
+  if (cat) for (const o of cat.offerte) { o.venditore = nomeFornitore(o.sito, o.venditore); o.cat = categoria(o.sito); }
+  return cat;
+}
 async function avviaCatalogo() {
   S.catalogo = await caricaCatalogo();
   if (!S.catalogo) { try { S.catalogo = await catalogoIniziale(); } catch (e) { console.error(e); } }
+  arricchisci(S.catalogo);
   statoChip();
   VISTE[S.tab]();
   const giaProvato = LS.get("tentativo", "") === oggiIso();
@@ -108,7 +115,7 @@ async function aggiorna(manuale) {
   const prog = (m) => { S.avanzamento = m; const el = $("#avanz"); if (el) el.textContent = m; };
   try {
     const nuovo = await aggiornaCatalogo(scaricaTesto, prog);
-    S.catalogo = nuovo; cache.clear();
+    S.catalogo = arricchisci(nuovo); cache.clear();
     await salvaCatalogo(nuovo);
     toast(`Offerte aggiornate: ${nuovo.offerte.length} offerte del ${dataIt(nuovo.data)}`, 3500);
   } catch (e) {
@@ -136,7 +143,7 @@ async function aggiornaIndici() {
 
 // ------------------------------------------------------------------ classifica (con cache)
 const cache = new Map();
-function chiave(forn) { return JSON.stringify([forn, S.mostraScadute, U(), S.catalogo?.data, S.catalogo?.offerte.length, S.dati.aggiornato_al, S.cte.length, S.cte.map((c) => c.id + c.incluso)]); }
+function chiave(forn) { return JSON.stringify([forn, S.mostraScadute, S.catalogo?.scaricato, U(), S.catalogo?.data, S.catalogo?.offerte.length, S.dati.aggiornato_al, S.cte.length, S.cte.map((c) => c.id + c.incluso)]); }
 function offerteCte(forn) {
   return S.cte.filter((o) => o.fornitura === forn && o.incluso !== false && cteCompleta(o)).map(daCte);
 }
@@ -147,89 +154,108 @@ function calcolaClassifica(forn) {
   const f = filtra(S.catalogo?.offerte || [], u, S.dati.regolate, oggiIso(), { scadute: S.mostraScadute });
   const rif = forn === "LUCE" && u.luce.stg ? [offertaSTG(ctx.E, u.luce.stgQuota)] : [];
   const lista = classifica([...f[forn], ...offerteCte(forn), ...rif], u, ctx);
+  for (const r of lista) r.cp = condizioniParticolari(r.offerta, u);
   const out = { lista, escluse: f.escluse[forn], nValide: f[forn].length, scaduteDopo: f.scaduteDopo[forn].filter((o) => o.al >= S.catalogo.data) };
   cache.set(k, out);
   return out;
 }
 
 // ------------------------------------------------------------------ OFFERTE
-const GRANDI = ["Enel Energia", "Plenitude", "Edison Energia", "E.ON", "Engie", "A2A Energia", "Hera Comm", "Iren", "Acea Energia", "Sorgenia", "Estra", "Illumia", "Pulsee", "Dolomiti Energia", "Octopus Energy", "NeN"];
 function venditoriPrincipali(lista) {
   const v = [...new Set(lista.map((o) => o.venditore))];
-  return [...v.filter((x) => GRANDI.includes(x)), ...v.filter((x) => !GRANDI.includes(x))].slice(0, 8).join(", ");
+  const pesi = (x) => lista.find((o) => o.venditore === x)?.cat === "nazionale" ? 0 : 1;
+  return v.sort((a, b) => pesi(a) - pesi(b)).slice(0, 6).join(", ");
 }
+const FILTRI = [
+  ["fisso", "Prezzo fisso"], ["variabile", "Prezzo variabile"], ["grandi", "Fornitori conosciuti"],
+  ["nopenali", "Senza penali"], ["nodeposito", "Senza deposito"],
+];
+function passaFiltri(r) {
+  const o = r.offerta, f = S.filtri, cp = r.cp || [];
+  if (o.mia) return true;
+  if (f.fisso && !f.variabile && eVariabile(o)) return false;
+  if (f.variabile && !f.fisso && !eVariabile(o)) return false;
+  if (f.grandi && o.cat === "piccolo") return false;
+  if (f.nopenali && cp.some((c) => /Penale|pluriennale/.test(c.breve))) return false;
+  if (f.nodeposito && cp.some((c) => c.tipo === "attenzione" && /Deposito/.test(c.breve))) return false;
+  return true;
+}
+function badgeFornitore(o) {
+  if (o.mia) return o.stg ? badge("SERVIZIO ARERA", "mia") : badge("LA TUA CTE", "mia");
+  return `<span class="forn ${o.cat}">${ETICHETTE[o.cat || "piccolo"].breve}</span>`;
+}
+/** Pillole: al massimo 3, prima i vantaggi inclusi, poi le attenzioni. */
+function pillole(r, max = 3) {
+  const cp = r.cp || [], out = [];
+  const inclusi = r.sp?.totApplicati > 0.005 ? [`<span class="pill save">✓ Sconti inclusi −${eur(r.sp.totApplicati, 0)}</span>`] : [];
+  const att = cp.filter((c) => c.tipo === "attenzione").map((c) => `<span class="pill ${/Penale|pluriennale/.test(c.breve) ? "bad" : "att"}">${/Penale/.test(c.breve) ? "⚠ " : ""}${h(c.breve)}</span>`);
+  const info = cp.filter((c) => c.tipo === "info" && /Solo|Servizi/.test(c.breve)).map((c) => `<span class="pill neutral">${h(c.breve)}</span>`);
+  out.push(...inclusi, ...new Set(att), ...new Set(info));
+  const resto = out.length - max;
+  return out.length ? `<div class="pills">${out.slice(0, max).join("")}${resto > 0 ? `<span class="pill neutral">+${resto}</span>` : ""}</div>` : "";
+}
+
 async function vistaOfferte() {
   const v = $("#vista"), u = U();
   if (!S.catalogo) { v.innerHTML = `<div class="empty"><span class="spin"></span><p>Carico le offerte…</p></div>`; return; }
-  const att = S.forn === "LUCE" ? u.luce.attiva : u.gas.attiva;
-  if (!att && (u.luce.attiva || u.gas.attiva)) S.forn = u.luce.attiva ? "LUCE" : "GAS";
-  const k = chiave(S.forn);
-  if (!cache.has(k)) {
-    v.innerHTML = `<div class="empty"><span class="spin"></span><p>Calcolo 12 bollette per ogni offerta…</p></div>`;
-    await attendi();
-  }
+  if (!(S.forn === "LUCE" ? u.luce.attiva : u.gas.attiva) && (u.luce.attiva || u.gas.attiva)) S.forn = u.luce.attiva ? "LUCE" : "GAS";
+  if (!cache.has(chiave(S.forn))) { v.innerHTML = `<div class="empty"><span class="spin"></span><p>Calcolo le bollette di ogni offerta…</p></div>`; await attendi(); }
   const R = calcolaClassifica(S.forn);
-  const vecchio = S.catalogo.data < isoGiorno(new Date(Date.now() - 2 * 86400000));
-  let lista = R.lista;
-  if (S.filtroTipo !== "tutte") lista = lista.filter((r) => (S.filtroTipo === "fisso" ? !eVariabile(r.offerta) : eVariabile(r.offerta)));
+  const unita = S.forn === "LUCE" ? "kWh" : "Smc";
+  const consumo = S.forn === "LUCE" ? `${nf(u.luce.annuo, 0)} kWh` : `${nf(u.gas.annuo, 0)} Smc`;
+  let lista = R.lista.filter(passaFiltri);
   if (S.cerca) { const q = S.cerca.toLowerCase(); lista = lista.filter((r) => `${r.offerta.venditore} ${r.offerta.nome}`.toLowerCase().includes(q)); }
-  const best = R.lista[0]?.centrale ?? 0;
-  const mie = R.lista.filter((r) => r.offerta.mia);
+  const migliore = lista.find((r) => !r.offerta.mia) || lista[0];
+  const rif = R.lista.filter((r) => r.offerta.mia);
+  const vecchio = S.catalogo.data < isoGiorno(new Date(Date.now() - 2 * 86400000));
 
-  let html = `<div class="card small prof" id="vaiProfilo" role="button">
-      <div><b>${h(u.comune?.nome || "Comune?")}</b> · ${u.residente ? "residente" : "non residente"} · passaggio da <b>${meseIt(u.ingresso)}</b></div>
-      <div class="mut">${h(descrUtenza(u, S.forn))}</div><div class="link">Modifica profilo e consumi ›</div></div>
-    <div class="seg" id="sForn"><button data-v="LUCE" class="${S.forn === "LUCE" ? "on" : ""}" ${u.luce.attiva ? "" : "disabled"}>Luce</button>
-      <button data-v="GAS" class="${S.forn === "GAS" ? "on" : ""}" ${u.gas.attiva ? "" : "disabled"}>Gas</button></div>
-    <div class="small mut" style="margin:8px 2px">${R.nValide} offerte disponibili per te tra quelle pubblicate sul Portale Offerte ARERA il ${dataIt(S.catalogo.data)}${S.catalogo.iniziale ? " (elenco iniziale incluso nell'app)" : ""}.</div>
-    ${vecchio ? `<div class="warn small">Le offerte sono del ${dataIt(S.catalogo.data)}. ${S.aggiornando ? `<span id="avanz">${h(S.avanzamento)}</span>` : `<button class="btn sec mini" id="aggOra">Aggiorna ora</button>`}</div>` : ""}
-    ${R.scaduteDopo.length ? `<div class="warn small"><b>${R.scaduteDopo.length} offerte scadute dopo il ${dataIt(S.catalogo.data)}</b>, tra cui
-      ${h(venditoriPrincipali(R.scaduteDopo))}. Molti venditori (Enel, Plenitude, Edison, E.ON…) pubblicano offerte valide
-      un paio di settimane e poi le rinnovano: scarica le offerte di oggi per i prezzi attuali.
-      <div class="sw"><span>Mostra anche queste (prezzi del ${dataIt(S.catalogo.data)})</span><input type="checkbox" id="mScad" ${S.mostraScadute ? "checked" : ""}></div></div>` : ""}
-    <div class="row filtri"><div class="seg" id="sTipo">${["tutte", "fisso", "variabile"].map((t) => `<button data-v="${t}" class="${S.filtroTipo === t ? "on" : ""}">${t === "tutte" ? "Tutte" : t === "fisso" ? "Fisse" : "Variabili"}</button>`).join("")}</div></div>
-    <input id="cerca" placeholder="Cerca fornitore o offerta" value="${h(S.cerca)}" style="margin-top:8px">`;
-  if (mie.length) {
-    html += `<div class="card small"><b>Le tue offerte di riferimento</b>${mie.map((r) => `<div class="row sp" style="margin-top:4px" data-det="${h(r.offerta.id)}" role="button"><span class="link">${h(r.offerta.nome)} ›</span>
-      <span class="r"><b>${R.lista.indexOf(r) + 1}ª</b> su ${R.lista.length} · ${r === R.lista[0] ? "la più conveniente" : "+" + eur(r.centrale - best, 0) + "/anno"}</span></div>`).join("")}</div>`;
+  let html = `<div class="intest"><div class="seg big" id="sForn"><button data-v="LUCE" class="${S.forn === "LUCE" ? "on" : ""}" ${u.luce.attiva ? "" : "disabled"}>💡 Luce</button>
+      <button data-v="GAS" class="${S.forn === "GAS" ? "on" : ""}" ${u.gas.attiva ? "" : "disabled"}>🔥 Gas</button></div>
+    <button class="profilo-btn" id="vaiProfilo"><span>${h(u.comune?.nome || "Comune?")} · ${consumo}/anno · da ${meseIt(u.ingresso)}</span><b>Modifica</b></button></div>`;
+  if (vecchio) html += `<div class="avviso small">Offerte del ${dataIt(S.catalogo.data)}. ${S.aggiornando ? `<span id="avanz">${h(S.avanzamento || "Aggiorno…")}</span>` : `<button class="btn mini" id="aggOra">Scarica quelle di oggi</button>`}</div>`;
+
+  // la migliore
+  if (migliore && !S.cerca) {
+    const o = migliore.offerta;
+    const conf = rif.map((r) => `<div class="conf"><span>rispetto a ${h(r.offerta.stg ? "Tutele Graduali (STG)" : r.offerta.nome)}</span><b class="${r.centrale > migliore.centrale ? "ok" : ""}">${r.centrale > migliore.centrale ? "risparmi " + eur(r.centrale - migliore.centrale, 0) + "/anno" : "costa " + eur(migliore.centrale - r.centrale, 0) + " in più"}</b></div>`).join("");
+    html += `<section class="best" data-det="${h(o.id)}" role="button"><div class="best-l">La più conveniente per te</div>
+      <div class="row sp"><div class="min0"><div class="vend">${h(o.venditore)} ${badgeFornitore(o)}</div><div class="nome">${h(o.nome)}</div></div>
+        <div class="price"><div class="tot">${eur(migliore.centrale, 0)}</div><div class="sub">all'anno · ${eur(migliore.centrale / 12, 0)}/mese</div></div></div>
+      ${pillole(migliore, 4)}${conf}<div class="vedi">Vedi bollette, sconti e condizioni ›</div></section>`;
   }
+
+  // ricerca e filtri
+  html += `<div class="cerca"><input id="cerca" type="search" placeholder="🔍 Cerca un fornitore (es. Enel, Octopus)" value="${h(S.cerca)}"></div>
+    <div class="chips-f">${FILTRI.map(([k, t]) => `<button data-f="${k}" class="${S.filtri[k] ? "on" : ""}">${t}</button>`).join("")}</div>
+    <div class="small mut conta">${lista.length} offerte · ordinate dalla più economica · totale di 12 bollette con tutte le voci</div>`;
+
+  const best = migliore?.centrale ?? 0;
+  for (const r of lista.slice(0, S.quante)) {
+    const o = r.offerta, pos = R.lista.indexOf(r) + 1, sc = scadenza(o, oggiIso());
+    if (r === migliore && !S.cerca) continue;
+    html += `<article class="offer ${o.mia ? "mia" : ""}" data-det="${h(o.id)}" role="button">
+      <div class="row sp testa"><div class="min0"><div class="vend">${h(o.venditore)} ${badgeFornitore(o)}</div><div class="nome">${h(o.nome)}</div></div>
+        <div class="price"><div class="tot">${eur(r.centrale, 0)}</div><div class="sub">${r.centrale >= best ? "+" + eur(r.centrale - best, 0) : "−" + eur(best - r.centrale, 0)} vs migliore</div></div></div>
+      <div class="riga small mut">${eVariabile(o) ? "Variabile" : "Fisso"} · ${nf(r.costoMedio, 3)} €/${unita} tutto compreso · ${pos}° posto${sc ? (sc.giorni < 0 ? ` · <b class="bad">scaduta</b>` : sc.giorni <= 7 ? ` · <b class="bad">firma entro ${dataIt(sc.al)}</b>` : "") : ""}</div>
+      ${pillole(r)}</article>`;
+  }
+  if (lista.length > S.quante) html += `<button class="btn sec full" id="altre">Mostra altre offerte</button>`;
   if (!lista.length) html += `<div class="empty">Nessuna offerta con questi filtri.</div>`;
-  const max = Math.max(...lista.slice(0, S.quante).map((r) => r.alto));
-  lista.slice(0, S.quante).forEach((r) => {
-    const o = r.offerta, pos = R.lista.indexOf(r) + 1, sc = scadenza(o, oggiIso()), variab = eVariabile(o), sp = r.sp;
-    const unita = S.forn === "LUCE" ? "kWh" : "Smc";
-    html += `<article class="offer ${o.mia ? "mia" : ""} ${pos === 1 ? "primo" : ""}" data-det="${h(o.id)}" role="button">
-      <div class="offer-head"><div class="pos">${pos}</div>
-        <div class="who"><div class="vend">${h(o.venditore)}</div><div class="nome">${h(o.nome)}</div></div>
-        <div class="price"><div class="tot">${eur(r.centrale, 0)}</div><div class="sub">${eur(r.centrale / 12)}/mese</div></div></div>
-      <div class="chips">${o.mia ? badge(o.stg ? "TUTELE GRADUALI" : "LA TUA CTE", "mia") : ""}${badge(TIPI[o.tipo] || "PREZZO FISSO", variab ? "var" : "fix")}
-        ${sc ? (sc.giorni < 0 ? `<span class="b urg">SCADUTA il ${dataIt(sc.al)}</span>` : `<span class="b ${sc.giorni <= 7 ? "urg" : "sc"}">firma entro ${dataIt(sc.al)}</span>`) : ""}
-        ${pos === 1 ? badge("PIÙ CONVENIENTE", "best") : ""}</div>
-      <div class="facts"><div><span>Prezzo</span><b>${h(descrizionePrezzo(o)) || "—"}</b></div>
-        <div><span>Costo vero</span><b>${nf(r.costoMedio, 3)} €/${unita}</b></div>
-        <div><span>${pos === 1 ? "Risparmio" : "In più"}</span><b class="${pos === 1 ? "ok" : ""}">${pos === 1 ? "il migliore" : "+" + eur(r.centrale - best, 0) + "/anno"}</b></div></div>
-      ${pillole(sp)}
-      ${variab && r.alto > r.basso ? `<div class="scen small">Scenari PUN/PSV: <b>${eur(r.basso, 0)}</b> – <b>${eur(r.alto, 0)}</b></div>` : ""}
-    </article>`;
-  });
-  if (lista.length > S.quante) html += `<button class="btn sec full" id="altre">Mostra altre ${Math.min(30, lista.length - S.quante)} (di ${lista.length})</button>`;
-  const esc = Object.entries(R.escluse || {});
-  if (esc.length) html += `<details class="card small"><summary><b>${esc.reduce((s, [, n]) => s + n, 0)} offerte escluse</b> perché non valgono per te</summary>
-    <ul>${esc.sort((a, b) => b[1] - a[1]).map(([m, n]) => `<li>${n} — ${h(m)}</li>`).join("")}</ul></details>`;
-  html += `<div class="warn small"><b>Come leggere i totali.</b> Ogni totale è la somma di 12 bollette da ${meseIt(u.ingresso)}, con tutte le voci:
-    materia energia, dispacciamento, trasporto, oneri, accise, IVA${S.forn === "LUCE" && u.luce.canoneRai ? ", canone RAI" : ""} e sconti senza condizioni${u.bollettaWeb ? " o legati alla bolletta online" : ""}.
-    Reti, oneri e accise sono i valori ufficiali ARERA. Per le offerte variabili i mesi futuri usano un indice ${badge("SIMULATO")}.</div>
-    <button class="btn sec full" id="pdfConf">Esporta la classifica in PDF</button>`;
+  if (R.scaduteDopo.length) html += `<div class="avviso small">${R.scaduteDopo.length} offerte, tra cui ${h(venditoriPrincipali(R.scaduteDopo))}, sono scadute dopo il ${dataIt(S.catalogo.data)}.
+      I grandi fornitori rinnovano le offerte ogni 2 settimane: scarica quelle di oggi dalla scheda Info.
+      <label class="sw"><span>Mostrale comunque</span><input type="checkbox" id="mScad" ${S.mostraScadute ? "checked" : ""}></label></div>`;
+  html += `<button class="btn ghost full" id="pdfConf">Esporta la classifica in PDF</button>`;
   v.innerHTML = html;
+
   $("#vaiProfilo").onclick = () => vai("profilo");
-  $$("#sForn button").forEach((b) => (b.onclick = () => { S.forn = b.dataset.v; S.quante = 30; vistaOfferte(); }));
-  $$("#sTipo button").forEach((b) => (b.onclick = () => { S.filtroTipo = b.dataset.v; S.quante = 30; vistaOfferte(); }));
-  $("#cerca").oninput = (e) => { clearTimeout(vistaOfferte._t); vistaOfferte._t = setTimeout(() => { S.cerca = e.target.value.trim(); S.quante = 30; vistaOfferte().then(() => { const c = $("#cerca"); c.focus(); c.setSelectionRange(c.value.length, c.value.length); }); }, 300); };
-  $("#altre") && ($("#altre").onclick = () => { S.quante += 30; vistaOfferte(); });
+  $$("#sForn button").forEach((b) => (b.onclick = () => { S.forn = b.dataset.v; S.quante = 25; vistaOfferte(); }));
+  $$("[data-f]").forEach((b) => (b.onclick = () => { S.filtri[b.dataset.f] = !S.filtri[b.dataset.f]; LS.set("filtri", S.filtri); S.quante = 25; vistaOfferte(); }));
+  $("#cerca").oninput = (e) => { clearTimeout(vistaOfferte._t); vistaOfferte._t = setTimeout(() => { S.cerca = e.target.value.trim(); S.quante = 25; vistaOfferte().then(() => { const c = $("#cerca"); c.focus(); c.setSelectionRange(c.value.length, c.value.length); }); }, 350); };
+  $("#altre") && ($("#altre").onclick = () => { S.quante += 25; vistaOfferte(); });
   $("#aggOra") && ($("#aggOra").onclick = () => aggiorna(true));
   $("#mScad") && ($("#mScad").onchange = (e) => { S.mostraScadute = e.target.checked; vistaOfferte(); });
   $$("[data-det]").forEach((c) => c.addEventListener("click", () => vistaDettaglio(c.dataset.det)));
-  $("#pdfConf").onclick = () => esegui(() => pdfConfronto(R.lista.slice(0, 30), S.forn, u, S.dati, S.catalogo), "classifica");
+  $("#pdfConf").onclick = () => esegui(() => pdfConfronto(lista.slice(0, 30), S.forn, u, S.dati, S.catalogo), "classifica");
 }
 
 // ------------------------------------------------------------------ DETTAGLIO
@@ -256,18 +282,6 @@ function tabellaApplicati(app) {
      <td class="r num">${a.valore == null ? "" : nf(a.valore, 6) + " " + h(a.unita)}</td></tr>`).join("") + "</table>";
 }
 const trovaOfferta = (id) => id === "STG" ? offertaSTG(CTX().E, S.utenza.luce.stgQuota) : (S.catalogo?.offerte || []).find((o) => o.id === id) || offerteCte("LUCE").concat(offerteCte("GAS")).find((o) => o.id === id);
-
-/** Segnali in evidenza: sconti inclusi, sconti esclusi, penali, deposito, condizioni limitanti. */
-function pillole(sp) {
-  if (!sp) return "";
-  const p = [];
-  if (sp.totApplicati > 0.005) p.push(`<span class="pill save">✓ Sconti inclusi −${eur(sp.totApplicati, 0)}</span>`);
-  if (sp.esclusi.length) p.push(`<span class="pill neutral">${sp.esclusi.length} scont${sp.esclusi.length > 1 ? "i" : "o"} non applicat${sp.esclusi.length > 1 ? "i" : "o"}</span>`);
-  if (sp.penali.length) p.push(`<span class="pill bad">⚠ Penale se recedi prima</span>`);
-  if (sp.deposito) p.push(sp.depositoSoloSenzaDom && S.utenza.domiciliazione ? `<span class="pill neutral">Nessun deposito con domiciliazione</span>` : `<span class="pill warn">${sp.depositoSoloSenzaDom ? "Deposito se non domicili" : "Deposito cauzionale"}</span>`);
-  if (sp.vincoli.some((v) => v.limitante)) p.push(`<span class="pill warn">Condizioni limitanti</span>`);
-  return p.length ? `<div class="pills">${p.join("")}</div>` : "";
-}
 
 function sezioneScontiPenali(o, sp) {
   let html = `<section class="sez" id="s-sconti"><h3>Sconti e penali</h3>`;
@@ -329,13 +343,30 @@ function vistaDettaglio(id, scenario = "centrale") {
   const sp = scontiEPenali(o, mesi, u);
   const avvisi = [...new Set(mesi.flatMap((m) => m.risultato.avvisi))].filter((x) => !/^Sconto/.test(x));
   $("#titolo").textContent = "Dettaglio offerta";
+  const cp = condizioniParticolari(o, u);
+  const R = calcolaClassifica(o.forn), pos = R.lista.findIndex((r) => r.offerta.id === o.id), best = R.lista.find((r) => !r.offerta.mia);
+  const rec = recensioni(o);
+  const icona = { piu: "✓", attenzione: "⚠", info: "ℹ" };
   let html = `<button class="btn ghost" id="indietro">‹ Indietro</button>
-    <section class="hero"><div class="vend">${h(o.venditore)}</div><h2>${h(o.nome)}</h2>
-      <div class="chips">${o.mia ? badge(o.stg ? "TUTELE GRADUALI" : "LA TUA CTE", "mia") : ""}${badge(TIPI[o.tipo] || "PREZZO FISSO", eVariabile(o) ? "var" : "fix")}</div>
-      ${scen.length > 1 ? `<div class="seg" style="margin:12px 0 4px">${scen.map((s) => `<button data-sc="${s}" class="${s === scenario ? "on" : ""}">${s}<br><b>${eur(totaleMesi(ris[s]), 0)}</b></button>`).join("")}</div>` : ""}
-      <div class="kpi"><div><span>12 bollette</span><b>${eur(tot)}</b></div><div><span>Al mese</span><b>${eur(tot / 12)}</b></div>
-        <div><span>Costo vero</span><b>${nf((tot - altro) / cons, 4)}</b><span>€/${unita} tutto compreso</span></div></div>
-      ${pillole(sp)}</section>
+    <section class="hero"><div class="vend">${h(o.venditore)} ${badgeFornitore(o)}</div><h2>${h(o.nome)}</h2>
+      <div class="big-tot">${eur(tot, 0)}<span> all'anno · ${eur(tot / 12, 0)} al mese</span></div>
+      <div class="small mut">${eVariabile(o) ? "Prezzo variabile" : "Prezzo fisso"} · ${nf((tot - altro) / cons, 3)} €/${unita} tutto compreso${pos >= 0 ? ` · ${pos + 1}° su ${R.lista.length}` : ""}${best && pos > 0 && !o.mia ? ` · +${eur(R.lista[pos].centrale - best.centrale, 0)} rispetto alla migliore` : ""}</div>
+      ${scen.length > 1 ? `<div class="seg" style="margin:12px 0 4px">${scen.map((s) => `<button data-sc="${s}" class="${s === scenario ? "on" : ""}">${{ basso: "Mercato in calo", centrale: "Prezzi stabili", alto: "Mercato in rialzo" }[s]}<br><b>${eur(totaleMesi(ris[s]), 0)}</b></button>`).join("")}</div>
+        <div class="small mut">Con il prezzo variabile la spesa dipende dal mercato: ecco tre ipotesi.</div>` : ""}
+    </section>
+    <section class="sez"><h3>In breve</h3>
+      ${cp.length ? `<ul class="breve">${cp.map((c) => `<li class="${c.tipo}"><span class="ic">${icona[c.tipo]}</span><div><b>${h(c.breve)}</b><div class="small">${h(c.testo)}</div></div></li>`).join("")}</ul>`
+        : `<p class="small mut">${o.mia ? "Per la tua CTE controlla sconti e penali sul documento." : "Nessuno sconto, vincolo o condizione particolare dichiarati al Portale."}</p>`}
+      ${sp.totApplicati > 0.005 ? `<div class="tot-sconti">Sconti già inclusi nel totale: <b>−${eur(sp.totApplicati)}</b></div>` : ""}
+    </section>
+    ${o.stg ? "" : `<section class="sez"><h3>Chi è il fornitore</h3>
+      <p class="small">${o.mia ? "Offerta inserita da te." : h(ETICHETTE[o.cat || "piccolo"].testo)}</p>
+      ${o.mia ? "" : `<div class="row"><a class="btn sec" href="${rec.trustpilot}" target="_blank" rel="noopener">★ Recensioni Trustpilot</a><a class="btn sec" href="${rec.google}" target="_blank" rel="noopener">Recensioni Google</a></div>
+      <details class="small"><summary>Perché potrei scegliere un fornitore poco conosciuto?</summary>
+        <p>Cambiando venditore non cambiano contatore, rete e qualità della corrente: li gestisce sempre il distributore della tua zona.
+        Hai 14 giorni per ripensarci dopo la firma. Se un venditore smette di operare, la fornitura non si interrompe: passi in automatico a un servizio di ultima istanza finché non scegli un altro fornitore.</p>
+        <p>Quello che cambia è il servizio: assistenza, puntualità e chiarezza delle bollette, gestione dei conguagli e delle nuove condizioni a scadenza. Per questo conviene leggere le recensioni recenti, verificare che il venditore abbia un numero e una sede raggiungibili, e conservare la CTE firmata.</p></details>`}
+    </section>`}
     <nav class="jump"><a href="#s-sconti">Sconti e penali</a><a href="#s-prezzi">Prezzi</a><a href="#s-info">Condizioni</a><a href="#s-calc">Bolletta su misura</a><a href="#s-mesi">12 bollette</a></nav>`;
   if (avvisi.length) html += `<div class="warn small"><b>Da sapere</b><ul>${avvisi.map((x) => `<li>${h(x)}</li>`).join("")}</ul></div>`;
   html += sezioneScontiPenali(o, sp);

@@ -18,8 +18,23 @@ le sue offerte. Il Portale pubblica ogni giorno gli open data (licenza CC-BY):
 - `PO_Parametri_Mercato_Libero_E/G_AAAAMMGG.csv`: reti, oneri di sistema, dispacciamento, accisa luce, IVA.
 
 Il Portale **rifiuta le connessioni dai server cloud** (anche da GitHub), quindi il download lo fa il
-telefono: ogni giorno alla prima apertura, oppure dal pulsante *Scarica le offerte di oggi* (scheda Dati).
+telefono: ogni giorno alla prima apertura, oppure dal pulsante *Scarica le offerte di oggi* (scheda Info).
 L'app contiene un elenco iniziale (06/10/2026) che viene sostituito dal primo aggiornamento.
+
+## Come si usa
+- **Offerte**: scegli Luce o Gas. In alto c'è la più conveniente per te (con il risparmio rispetto alle Tutele Graduali o alla tua offerta),
+  sotto la classifica completa. Cerchi un fornitore per nome e filtri con un tocco: prezzo fisso o variabile, fornitori conosciuti,
+  senza penali, senza deposito.
+- **Dettaglio**: totale annuo, «In breve» con sconti, prezzi promozionali, penali, deposito e vincoli in parole semplici,
+  chi è il fornitore con i link alle recensioni (Trustpilot e Google), poi prezzi, condizioni, bolletta su misura e le 12 bollette.
+- **La mia offerta**: carica la CTE della tua offerta (o di una che ti hanno proposto) per vederla nella stessa classifica.
+- **Consumi**: comune, data di passaggio, consumi annui o mese per mese, bolletta online e domiciliazione (decidono quali sconti valgono).
+
+## Fornitori e recensioni
+Tutti i venditori sul Portale sono autorizzati, ma la qualità del servizio cambia. L'app indica se un fornitore è un grande
+operatore nazionale, una multiutility locale o un piccolo fornitore (classificazione fatta a mano sui principali marchi,
+`src/fornitori.js`) e apre le recensioni aggiornate su Trustpilot e Google. ARERA pubblica i reclami per venditore solo in forma
+anonima, quindi non esiste una valutazione ufficiale per nome.
 
 ## Come calcola
 Le regole sono quelle del Portale Offerte (*Regole per il calcolo della spesa*, v4.0 del 16/02/2026),
