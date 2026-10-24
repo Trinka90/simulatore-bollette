@@ -166,11 +166,11 @@ function calcolaClassifica(forn) {
 // ------------------------------------------------------------------ OFFERTE
 function venditoriPrincipali(lista) {
   const v = [...new Set(lista.map((o) => o.venditore))];
-  const pesi = (x) => lista.find((o) => o.venditore === x)?.cat === "nazionale" ? 0 : 1;
+  const pesi = (x) => ({ grande: 0, nazionale: 1 }[lista.find((o) => o.venditore === x)?.cat] ?? 2);
   return v.sort((a, b) => pesi(a) - pesi(b)).slice(0, 6).join(", ");
 }
 const FILTRI = [
-  ["fisso", "Prezzo fisso"], ["variabile", "Prezzo variabile"], ["grandi", "Fornitori conosciuti"],
+  ["fisso", "Prezzo fisso"], ["variabile", "Prezzo variabile"], ["grandi", "Grandi gruppi e marchi nazionali"],
   ["nopenali", "Senza penali"], ["nodeposito", "Senza deposito"],
 ];
 function passaFiltri(r) {
@@ -178,7 +178,7 @@ function passaFiltri(r) {
   if (o.mia) return true;
   if (f.fisso && !f.variabile && eVariabile(o)) return false;
   if (f.variabile && !f.fisso && !eVariabile(o)) return false;
-  if (f.grandi && o.cat === "piccolo") return false;
+  if (f.grandi && o.cat !== "grande" && o.cat !== "nazionale") return false;
   if (f.nopenali && cp.some((c) => /Penale|pluriennale/.test(c.breve))) return false;
   if (f.nodeposito && cp.some((c) => c.tipo === "attenzione" && /Deposito/.test(c.breve))) return false;
   return true;

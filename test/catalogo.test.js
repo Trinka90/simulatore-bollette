@@ -90,3 +90,18 @@ test("STG: bolletta Hera STG luglio-agosto 2026 = 41,01 € con il nuovo motore"
   const ago = calcolaBolletta(off, Periodo.mese(2026, 8), 1, { F1: 0.526, F2: 1.276, F3: 7.436 }, u, 3175.22, mese(0.018468)).risultato;
   vicino(lug.totale + ago.totale, 41.01, 0.06, "totale STG");
 });
+
+test("sconti a mesi: 'dal quarto al sesto mese' e 'dodicesimo mese' valgono solo in quei mesi", async () => {
+  const { finestraMesi } = await import("../src/bolletta.js");
+  assert.deepEqual(finestraMesi("Sconto dal quarto al sesto mese"), [4, 6]);
+  assert.deepEqual(finestraMesi("Sconto dodicesimo mese"), [12, 12]);
+  assert.equal(finestraMesi("Sconto 24 mesi"), null);
+  const off = { id: "x", forn: "LUCE", tipo: "fisso", fasce: "01", perditeIncluse: true, idx: [], disp: [], reg: [], cond: [],
+    comp: [{ n: "Prezzo", m: "04", p: [{ f: "01", pr: 0.3, u: "03" }] }],
+    sc: [{ n: "Sconto dal quarto al sesto mese", val: "02", iva: true, dur: 3, cond: "00", p: [{ u: "03", pr: 0.1 }] },
+      { n: "Sconto dodicesimo mese", val: "02", iva: true, cond: "00", p: [{ u: "03", pr: 0.2 }] }] };
+  const u = { ...milano, luce: { potenzaKw: 3, annuo: 1200, mesi: Object.fromEntries(Array.from({ length: 12 }, (_, i) => [i + 1, 100])), canoneRai: false } };
+  const mesi = simulaOfferta(off, u, ctx);
+  const sconto = (i) => -mesi[i].risultato.voci.filter((v) => v.descrizione.startsWith("Sconto")).reduce((s, v) => s + v.importo, 0);
+  assert.deepEqual(mesi.map((_, i) => Math.round(sconto(i)) + 0), [0, 0, 0, 10, 10, 10, 0, 0, 0, 0, 0, 20]);
+});

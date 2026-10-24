@@ -149,7 +149,8 @@ details.card>summary{cursor:pointer}
 .riga{margin-top:6px}
 .bad{color:var(--bad)}
 .forn{display:inline-block;font-size:10px;font-weight:700;padding:1px 6px;border-radius:5px;vertical-align:1px;text-transform:none;letter-spacing:0}
-.forn.nazionale{background:var(--ok-soft);color:var(--ok)}
+.forn.grande{background:var(--ok-soft);color:var(--ok)}
+.forn.nazionale{background:#eef6f1;color:#3f7a58}
 .forn.regionale{background:var(--fix-soft);color:var(--fix)}
 .forn.piccolo{background:var(--line2);color:var(--mut)}
 .big-tot{font-size:28px;font-weight:800;margin:8px 0 2px;font-variant-numeric:tabular-nums}

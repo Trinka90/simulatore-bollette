@@ -63,6 +63,21 @@ export const consumoAnnuo = (u, f, R) => Object.values(consumiMensili(u, f, R)).
 // ------------------------------------------------------------------ validità di prezzi e sconti
 const fino = (s) => { const m = /^(\d{1,2})\/(\d{4})$/.exec(s || ""); return m ? Number(m[2]) * 12 + Number(m[1]) : null; };
 /** k = mesi trascorsi dall'attivazione (0 = prima bolletta). */
+// Mesi di fornitura indicati nel nome dello sconto ("primo mese", "dal quarto al sesto mese", "primi 3 mesi"):
+// nei dati spesso manca il periodo, oppure c'è solo la durata senza il mese di partenza.
+const ORD = { primo: 1, secondo: 2, terzo: 3, quarto: 4, quinto: 5, sesto: 6, settimo: 7, ottavo: 8, nono: 9, decimo: 10, undicesimo: 11, dodicesimo: 12,
+  tredicesimo: 13, quattordicesimo: 14, quindicesimo: 15, diciottesimo: 18, ventiquattresimo: 24 };
+const num = (w) => ORD[w] || (/^\d+$/.test(w) ? Number(w) : /^\d+°$/.test(w) ? parseInt(w, 10) : null);
+export function finestraMesi(nome) {
+  const t = (nome || "").toLowerCase().replace(/[º°]/g, "°");
+  let m = /dal\s+(\w+°?)\s+al\s+(\w+°?)\s+mese/.exec(t);
+  if (m && num(m[1]) && num(m[2])) return [num(m[1]), num(m[2])];
+  m = /prim[ie]\s+(\w+)\s+mesi/.exec(t);
+  if (m && num(m[1])) return [1, num(m[1])];
+  m = /(\w+°?)\s+mese\b/.exec(t);
+  if (m && num(m[1])) return [num(m[1]), num(m[1])];
+  return null;
+}
 function valeNelMese(x, k, a, m) {
   if (x.dur && k >= x.dur) return false;
   const f = fino(x.fino);
@@ -132,8 +147,10 @@ function sconti(off, k, a, m, mesi, q, perFascia, u, annuo, baseVendita, regolat
   for (const s of off.sc) {
     const st = statoSconto(s, u);
     if (!st.applicato) { note.add(`Sconto «${s.n}» non conteggiato: ${st.motivo}.`); continue; }
-    if (!valeNelMese(s, k, a, m)) continue;
-    const primo = s.mese ? true : k === 0;
+    const fin = s.mese ? null : finestraMesi(s.n);
+    if (fin) { if (k + 1 < fin[0] || k + 1 > fin[1]) continue; }
+    else if (!valeNelMese(s, k, a, m)) continue;
+    const primo = s.mese ? true : fin ? k + 1 === fin[0] : k === 0;
     for (const p of s.p) {
       let imp = 0, descr = s.n;
       const quota = (val) => {
