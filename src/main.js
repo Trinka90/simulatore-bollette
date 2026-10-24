@@ -11,6 +11,7 @@ import { DATI_URL } from "./config.js";
 import { condizioniParticolari } from "./condizioni.js";
 import { categoria, nomeFornitore, ETICHETTE, recensioni } from "./fornitori.js";
 import { confermaAvvio, controllaAggiornamento, VERSIONE_WEB } from "./aggiorna-app.js";
+import { analizzaBolletta, consumiDaBollette } from "./bolletta-pdf.js";
 import datiInclusi from "../data/dati.json";
 import comuniDb from "../data/comuni.json";
 
@@ -49,12 +50,13 @@ const S = {
   tab: "offerte", forn: "LUCE", mostraScadute: false, filtri: LS.get("filtri", {}), filtroTipo: "tutte", cerca: "", quante: 25,
   utenza: migraUtenza(LS.get("utenza", null)),
   cte: LS.get("cte", LS.get("offerte", [])),
+  bollette: LS.get("bollette", []), attuale: LS.get("attuale", {}),
   dati: LS.get("dati", datiInclusi),
   auto: LS.get("auto", "giorno"),
   catalogo: null, aggiornando: false, avanzamento: "",
 };
 if ((S.dati.versione || 0) < datiInclusi.versione || S.dati.aggiornato_al < datiInclusi.aggiornato_al) S.dati = datiInclusi;
-const salva = () => { LS.set("utenza", S.utenza); LS.set("cte", S.cte); LS.set("dati", S.dati); LS.set("auto", S.auto); };
+const salva = () => { LS.set("bollette", S.bollette); LS.set("attuale", S.attuale); LS.set("utenza", S.utenza); LS.set("cte", S.cte); LS.set("dati", S.dati); LS.set("auto", S.auto); };
 const U = () => ({ ...S.utenza, ingresso: S.utenza.ingresso && S.utenza.ingresso >= ymDi(oggi()) ? S.utenza.ingresso : ingressoTipico() });
 const CTX = () => contesto(S.dati, S.catalogo?.parametri);
 
@@ -146,7 +148,7 @@ async function aggiornaIndici() {
 
 // ------------------------------------------------------------------ classifica (con cache)
 const cache = new Map();
-function chiave(forn) { return JSON.stringify([forn, S.mostraScadute, S.catalogo?.scaricato, U(), S.catalogo?.data, S.catalogo?.offerte.length, S.dati.aggiornato_al, S.cte.length, S.cte.map((c) => c.id + c.incluso)]); }
+function chiave(forn) { return JSON.stringify([forn, S.attuale[forn], S.mostraScadute, S.catalogo?.scaricato, U(), S.catalogo?.data, S.catalogo?.offerte.length, S.dati.aggiornato_al, S.cte.length, S.cte.map((c) => c.id + c.incluso)]); }
 function offerteCte(forn) {
   return S.cte.filter((o) => o.fornitura === forn && o.incluso !== false && cteCompleta(o)).map(daCte);
 }
@@ -155,8 +157,9 @@ function calcolaClassifica(forn) {
   if (cache.has(k)) return cache.get(k);
   const u = U(), ctx = CTX();
   const f = filtra(S.catalogo?.offerte || [], u, S.dati.regolate, oggiIso(), { scadute: S.mostraScadute });
-  const rif = forn === "LUCE" && u.luce.stg ? [offertaSTG(ctx.E, u.luce.stgQuota)] : [];
-  const lista = classifica([...f[forn], ...offerteCte(forn), ...rif], u, ctx);
+  const att = offertaAttuale(forn);
+  const rif = [...(forn === "LUCE" && u.luce.stg && !att?.stg ? [offertaSTG(ctx.E, u.luce.stgQuota)] : []), ...(att ? [att] : [])];
+  const lista = classifica([...f[forn], ...offerteCte(forn).filter((o) => !(S.attuale[forn]?.tipo === "cte" && S.attuale[forn].id === o.id)), ...rif], u, ctx);
   for (const r of lista) r.cp = condizioniParticolari(r.offerta, u);
   const out = { lista, escluse: f.escluse[forn], nValide: f[forn].length, scaduteDopo: f.scaduteDopo[forn].filter((o) => o.al >= S.catalogo.data) };
   cache.set(k, out);
@@ -184,6 +187,7 @@ function passaFiltri(r) {
   return true;
 }
 function badgeFornitore(o) {
+  if (o.attuale) return badge("LA TUA OFFERTA ATTUALE", "mia");
   if (o.mia) return o.stg ? badge("SERVIZIO ARERA", "mia") : badge("LA TUA CTE", "mia");
   return `<span class="forn ${o.cat}">${ETICHETTE[o.cat || "piccolo"].breve}</span>`;
 }
@@ -220,7 +224,7 @@ async function vistaOfferte() {
   // la migliore
   if (migliore && !S.cerca) {
     const o = migliore.offerta;
-    const conf = rif.map((r) => `<div class="conf"><span>rispetto a ${h(r.offerta.stg ? "Tutele Graduali (STG)" : r.offerta.nome)}</span><b class="${r.centrale > migliore.centrale ? "ok" : ""}">${r.centrale > migliore.centrale ? "risparmi " + eur(r.centrale - migliore.centrale, 0) + "/anno" : "costa " + eur(migliore.centrale - r.centrale, 0) + " in più"}</b></div>`).join("");
+    const conf = rif.map((r) => `<div class="conf"><span>${r.offerta.attuale ? "rispetto alla tua offerta attuale" : `rispetto a ${h(r.offerta.stg ? "Tutele Graduali (STG)" : r.offerta.nome)}`}</span><b class="${r.centrale > migliore.centrale ? "ok" : ""}">${r.centrale > migliore.centrale ? "risparmi " + eur(r.centrale - migliore.centrale, 0) + "/anno" : "costa " + eur(migliore.centrale - r.centrale, 0) + " in più"}</b></div>`).join("");
     html += `<section class="best" data-det="${h(o.id)}" role="button"><div class="best-l">La più conveniente per te</div>
       <div class="row sp"><div class="min0"><div class="vend">${h(o.venditore)} ${badgeFornitore(o)}</div><div class="nome">${h(o.nome)}</div></div>
         <div class="price"><div class="tot">${eur(migliore.centrale, 0)}</div><div class="sub">all'anno · ${eur(migliore.centrale / 12, 0)}/mese</div></div></div>
@@ -284,7 +288,7 @@ function tabellaApplicati(app) {
     `<tr><td>${h(a.nome)}<div class="frase">${h(a.nota)}</div></td><td>${badge(a.tipo)}</td>
      <td class="r num">${a.valore == null ? "" : nf(a.valore, 6) + " " + h(a.unita)}</td></tr>`).join("") + "</table>";
 }
-const trovaOfferta = (id) => id === "STG" ? offertaSTG(CTX().E, S.utenza.luce.stgQuota) : (S.catalogo?.offerte || []).find((o) => o.id === id) || offerteCte("LUCE").concat(offerteCte("GAS")).find((o) => o.id === id);
+const trovaOfferta = (id) => id.startsWith("ATTUALE-") ? offertaAttuale(id.slice(8)) : id === "STG" ? offertaSTG(CTX().E, S.utenza.luce.stgQuota) : (S.catalogo?.offerte || []).find((o) => o.id === id) || offerteCte("LUCE").concat(offerteCte("GAS")).find((o) => o.id === id);
 
 function sezioneScontiPenali(o, sp) {
   let html = `<section class="sez" id="s-sconti"><h3>Sconti e penali</h3>`;
@@ -356,6 +360,9 @@ function vistaDettaglio(id, scenario = "centrale") {
       <div class="small mut">${eVariabile(o) ? "Prezzo variabile" : "Prezzo fisso"} · ${nf((tot - altro) / cons, 3)} €/${unita} tutto compreso${pos >= 0 ? ` · ${pos + 1}° su ${R.lista.length}` : ""}${best && pos > 0 && !o.mia ? ` · +${eur(R.lista[pos].centrale - best.centrale, 0)} rispetto alla migliore` : ""}</div>
       ${scen.length > 1 ? `<div class="seg" style="margin:12px 0 4px">${scen.map((s) => `<button data-sc="${s}" class="${s === scenario ? "on" : ""}">${{ basso: "Mercato in calo", centrale: "Prezzi stabili", alto: "Mercato in rialzo" }[s]}<br><b>${eur(totaleMesi(ris[s]), 0)}</b></button>`).join("")}</div>
         <div class="small mut">Con il prezzo variabile la spesa dipende dal mercato: ecco tre ipotesi.</div>` : ""}
+      ${o.attuale ? (() => { const b = [...S.bollette].filter((x) => x.forn === o.forn && x.spesaAnnua).sort((x, y) => (x.al || "").localeCompare(y.al || "")).at(-1);
+        return b ? `<div class="conf"><span>La bolletta del ${dataIt(b.al)} dice: speso negli ultimi 12 mesi</span><b>${eur(b.spesaAnnua, 0)}</b></div>
+          <div class="small mut">Se è molto diverso dalla stima, controlla i consumi nel profilo: la bolletta riguarda consumi e prezzi passati.</div>` : ""; })() : ""}
     </section>
     <section class="sez"><h3>In breve</h3>
       ${cp.length ? `<ul class="breve">${cp.map((c) => `<li class="${c.tipo}"><span class="ic">${icona[c.tipo]}</span><div><b>${h(c.breve)}</b><div class="small">${h(c.testo)}</div></div></li>`).join("")}</ul>`
@@ -417,6 +424,167 @@ async function esegui(fn, nome) {
   try { toast(`Preparo il PDF ${nome}…`); await fn(); } catch (e) { console.error(e); toast("Errore nell'esportazione: " + e.message, 4000); }
 }
 
+// ------------------------------------------------------------------ LA TUA BOLLETTA
+const FORN_NOME = { LUCE: "Luce", GAS: "Gas" };
+/** Offerta attuale dell'utente (dalla bolletta): oggetto offerta pronto per il motore, o null. */
+function offertaAttuale(forn) {
+  const a = S.attuale[forn];
+  if (!a) return null;
+  let o = null;
+  if (a.tipo === "stg") o = offertaSTG(CTX().E, S.utenza.luce.stgQuota);
+  else if (a.tipo === "catalogo") o = a.offerta;
+  else if (a.tipo === "cte") { const c = S.cte.find((x) => x.id === a.id); o = c && cteCompleta(c) ? daCte(c) : null; }
+  return o ? { ...o, id: "ATTUALE-" + forn, mia: true, attuale: true } : null;
+}
+function cercaOffertaDaBolletta(b) {
+  const tutte = S.catalogo?.offerte || [];
+  if (b.codice) { const o = tutte.find((x) => x.id.toUpperCase() === b.codice); if (o) return { tipo: "catalogo", offerta: o, come: "codice offerta" }; }
+  if (b.forn === "LUCE" && b.stg) return { tipo: "stg", come: "bolletta del Servizio a Tutele Graduali" };
+  if (b.nomeOfferta) {
+    const q = b.nomeOfferta.toLowerCase();
+    const o = tutte.find((x) => x.forn === b.forn && x.nome.toLowerCase() === q);
+    if (o) return { tipo: "catalogo", offerta: o, come: "nome dell'offerta" };
+  }
+  return null;
+}
+
+let esitiBollette = [];
+$("#fileBolletta").addEventListener("change", async (e) => {
+  const files = [...e.target.files];
+  e.target.value = "";
+  if (!files.length) return;
+  $("#titolo").textContent = "Lettura bollette";
+  $("#vista").innerHTML = `<div class="empty"><span class="spin"></span><p>Leggo ${files.length} bollett${files.length > 1 ? "e" : "a"}…</p></div>`;
+  esitiBollette = [];
+  for (const f of files) {
+    try {
+      const testo = await testoPdf(f, pdfjs);
+      const an = analizzaBolletta(testo, COMUNI);
+      if (!an.tipo) { esitiBollette.push({ file: f.name, illeggibile: true, avvisi: an.avvisi }); continue; }
+      const c = an.campi, v = (k) => c[k]?.valore;
+      const b = { id: uid(), file: f.name, forn: an.tipo, dal: v("periodo")?.dal, al: v("periodo")?.al, consumo: v("consumoPeriodo"),
+        fasce: an.tipo === "LUCE" && v("F1") != null ? { F1: v("F1"), F2: v("F2") || 0, F3: v("F3") || 0 } : null,
+        annuo: v("consumoAnnuo"), potenza: v("potenza"), residente: v("residente"), comune: v("comune"), canone: v("canoneRai") != null,
+        uso: v("uso"), totale: v("totale"), spesaAnnua: v("spesaAnnua"), codice: v("codiceOfferta"), nomeOfferta: v("nomeOfferta"), pod: v("pod"),
+        stg: /tutel[ae]\s+graduali|\bSTG\b/i.test(testo) };
+      esitiBollette.push({ file: f.name, b, campi: c, avvisi: an.avvisi, offerta: cercaOffertaDaBolletta(b) });
+    } catch (err) { console.error(err); esitiBollette.push({ file: f.name, illeggibile: true, avvisi: [err.message] }); }
+  }
+  vistaBolletteLette();
+});
+
+const ETICH_CAMPI = { consumoAnnuo: "Consumo annuo", periodo: "Periodo", consumoPeriodo: "Consumo nel periodo", F1: "F1", F2: "F2", F3: "F3",
+  potenza: "Potenza impegnata", residente: "Residenza", comune: "Comune di fornitura", canoneRai: "Canone RAI", uso: "Uso del gas",
+  totale: "Totale bolletta", spesaAnnua: "Spesa degli ultimi 12 mesi", codiceOfferta: "Codice offerta", nomeOfferta: "Offerta", pod: "POD / PDR" };
+function valoreCampo(k, v, forn) {
+  const un = forn === "LUCE" ? "kWh" : "Smc";
+  if (k === "periodo") return `${dataIt(v.dal)} – ${dataIt(v.al)}`;
+  if (k === "comune") return `${v.nome} (${v.sigla})`;
+  if (k === "residente") return v ? "residente" : "non residente";
+  if (k === "canoneRai") return v === true ? "presente" : eur(v);
+  if (["totale", "spesaAnnua"].includes(k)) return eur(v);
+  if (["consumoAnnuo", "consumoPeriodo", "F1", "F2", "F3"].includes(k)) return `${nf(v, 2)} ${un}`;
+  if (k === "potenza") return `${nf(v)} kW`;
+  if (k === "uso") return { cottura: "cucina e acqua calda", riscaldamento: "riscaldamento", entrambi: "riscaldamento, cucina e acqua calda" }[v];
+  return String(v);
+}
+
+function vistaBolletteLette() {
+  $("#titolo").textContent = "Bollette lette";
+  let html = `<p class="small mut" style="margin-top:0">Controlla i dati letti: accanto a ognuno c'è la frase della bolletta da cui l'ho preso.</p>`;
+  for (const [i, es] of esitiBollette.entries()) {
+    if (es.illeggibile) { html += `<div class="card"><b>✕ ${h(es.file)}</b><div class="small mut">${h(es.avvisi?.[0] || "Non riesco a leggere questo PDF.")}</div></div>`; continue; }
+    const b = es.b;
+    html += `<section class="sez"><h3>${FORN_NOME[b.forn]} · ${h(es.file)}</h3><table class="lista">${Object.keys(ETICH_CAMPI).filter((k) => es.campi[k]).map((k) =>
+      `<tr><td>${ETICH_CAMPI[k]}<div class="frase">${h(es.campi[k].frase)}</div></td><td class="r num">${h(valoreCampo(k, es.campi[k].valore, b.forn))}</td></tr>`).join("")}</table>
+      ${es.avvisi.length ? `<div class="warn small"><ul>${es.avvisi.map((a) => `<li>${h(a)}</li>`).join("")}</ul></div>` : ""}
+      <div class="sub-h">La tua offerta attuale</div>
+      ${es.offerta ? `<p class="small">✓ Trovata (${h(es.offerta.come)}): <b>${h(es.offerta.tipo === "stg" ? "Servizio a Tutele Graduali" : `${es.offerta.offerta.venditore} — ${es.offerta.offerta.nome}`)}</b>. La metto in classifica come «la tua offerta».</p>`
+        : `<p class="small">Non la trovo nel catalogo di oggi${b.codice ? ` (codice ${h(b.codice)})` : ""}: probabilmente non è più in vendita. Per confrontarla carica la sua CTE o inserisci prezzo e quota fissa.</p>
+          <button class="btn sec mini" data-cte-att="${i}">Inserisci i prezzi della tua offerta</button>`}
+    </section>`;
+  }
+  const valide = esitiBollette.filter((x) => !x.illeggibile);
+  if (valide.length) html += `<label class="sw card"><span><b>Aggiorna il mio profilo</b> con consumi, potenza, comune e residenza letti</span><input type="checkbox" id="bApplica" checked></label>`;
+  html += `<button class="btn full" id="bFine">Salva e confronta</button>`;
+  $("#vista").innerHTML = html;
+  window.scrollTo(0, 0);
+  const salvaTutto = () => {
+    for (const es of valide) {
+      S.bollette = S.bollette.filter((x) => !(x.forn === es.b.forn && x.dal === es.b.dal && x.al === es.b.al));
+      S.bollette.push(es.b);
+      if (es.offerta) S.attuale[es.b.forn] = es.offerta.tipo === "stg" ? { tipo: "stg" } : { tipo: "catalogo", offerta: es.offerta.offerta, codice: es.b.codice };
+    }
+    if ($("#bApplica")?.checked) applicaBolletteAlProfilo();
+    salva(); cache.clear();
+  };
+  $$("[data-cte-att]").forEach((btn) => (btn.onclick = () => {
+    salvaTutto();
+    const es = esitiBollette[Number(btn.dataset.cteAtt)];
+    const o = nuovaCte(es.b.forn);
+    Object.assign(o, { nome: es.b.nomeOfferta || "La mia offerta attuale", fonte: `bolletta ${es.file}`, attuale: true });
+    editor(o);
+  }));
+  $("#bFine").onclick = () => { salvaTutto(); toast("Bollette salvate"); vai("offerte"); };
+}
+
+/** Porta nel profilo i dati delle bollette (le più recenti hanno la precedenza). */
+function applicaBolletteAlProfilo() {
+  const u = S.utenza;
+  for (const forn of ["LUCE", "GAS"]) {
+    const bb = S.bollette.filter((b) => b.forn === forn).sort((a, b) => (a.al || "").localeCompare(b.al || ""));
+    if (!bb.length) continue;
+    const ult = bb.at(-1), s = forn === "LUCE" ? u.luce : u.gas;
+    s.attiva = true;
+    const annuo = [...bb].reverse().find((b) => b.annuo > 0)?.annuo;
+    if (annuo) s.annuo = annuo;
+    const com = [...bb].reverse().find((b) => b.comune)?.comune;
+    if (com) { u.comune = com; if (forn === "GAS" || !u.gas.zona) u.gas.zona = S.dati.regolate.regioni[com.regione]?.zona_climatica_capoluogo || u.gas.zona; }
+    if (forn === "LUCE") {
+      if (ult.potenza) s.potenzaKw = ult.potenza;
+      if (ult.residente != null) u.residente = ult.residente;
+      if (bb.some((b) => b.canone)) s.canoneRai = true;
+      const conF = bb.filter((b) => b.fasce && b.fasce.F1 + b.fasce.F2 + b.fasce.F3 > 0);
+      if (conF.length) {
+        const t = conF.reduce((a, b) => ({ F1: a.F1 + b.fasce.F1, F2: a.F2 + b.fasce.F2, F3: a.F3 + b.fasce.F3 }), { F1: 0, F2: 0, F3: 0 });
+        const tot = t.F1 + t.F2 + t.F3;
+        s.ripartizione = { F1: t.F1 / tot, F2: t.F2 / tot, F3: t.F3 / tot };
+      }
+    } else if (ult.uso) s.uso = ult.uso;
+    // consumi mese per mese: i mesi coperti dalle bollette, gli altri stimati e riproporzionati sul consumo annuo
+    const r = consumiDaBollette(bb);
+    if (r && r.coperti >= 3) {
+      const stima = consumiMensili({ ...U(), luce: { ...u.luce, mesi: null }, gas: { ...u.gas, mesi: null } }, forn, S.dati.regolate);
+      const mesi = {};
+      for (let m = 1; m <= 12; m++) mesi[m] = r.mesi[m] ?? Math.round(stima[m] * 10) / 10;
+      s.mesi = mesi;
+      if (r.coperti === 12) s.annuo = Object.values(mesi).reduce((a, b) => a + b, 0);
+    }
+  }
+}
+
+function sezioneBollette() {
+  const righe = [...S.bollette].sort((a, b) => (b.al || "").localeCompare(a.al || ""));
+  let html = `<section class="sez"><h3>La tua bolletta</h3>
+    <p class="small mut" style="margin-top:0">Carica una o più bollette in PDF: leggo consumi, potenza, comune e la tua offerta attuale, e ti dico quanto risparmi davvero cambiando.</p>
+    <button class="btn full" id="addBoll">📄 Carica bollette (PDF)</button>`;
+  for (const forn of ["LUCE", "GAS"]) {
+    const a = S.attuale[forn], o = offertaAttuale(forn);
+    if (!a) continue;
+    html += `<div class="row sp small" style="margin-top:10px"><span>${FORN_NOME[forn]}: <b>${h(o ? (o.stg ? "Tutele Graduali (STG)" : `${o.venditore} — ${o.nome}`) : "offerta non più disponibile")}</b></span>
+      <button class="btn ghost mini" data-via-att="${forn}">Togli</button></div>`;
+  }
+  if (righe.length) html += `<details class="small" style="margin-top:8px"><summary>${righe.length} bollett${righe.length > 1 ? "e" : "a"} salvat${righe.length > 1 ? "e" : "a"}</summary>
+    <table class="lista">${righe.map((b) => `<tr><td>${FORN_NOME[b.forn]} ${b.dal ? `${dataIt(b.dal)} – ${dataIt(b.al)}` : h(b.file)}<div class="frase">${b.consumo != null ? nf(b.consumo, 1) + (b.forn === "LUCE" ? " kWh" : " Smc") : ""}${b.totale != null ? " · " + eur(b.totale) : ""}</div></td>
+      <td class="r"><button class="btn del mini" data-del-boll="${b.id}">Elimina</button></td></tr>`).join("")}</table></details>`;
+  return html + `</section>`;
+}
+function eventiBollette() {
+  $("#addBoll").onclick = () => $("#fileBolletta").click();
+  $$("[data-via-att]").forEach((b) => (b.onclick = () => { delete S.attuale[b.dataset.viaAtt]; salva(); cache.clear(); vistaCte(); }));
+  $$("[data-del-boll]").forEach((b) => (b.onclick = () => { S.bollette = S.bollette.filter((x) => x.id !== b.dataset.delBoll); salva(); vistaCte(); }));
+}
+
 // ------------------------------------------------------------------ LE MIE CTE
 function cteCompleta(o) {
   const ok = (v) => typeof v === "number" && Number.isFinite(v);
@@ -428,7 +596,7 @@ const descrCte = (o) => descrizionePrezzo(daCte(o));
 
 function vistaCte() {
   const v = $("#vista");
-  let html = `<p class="small mut" style="margin-top:0">Hai una CTE che non trovi nell'elenco, o vuoi confrontare la tua offerta attuale?
+  let html = sezioneBollette() + `<h2>Le CTE</h2><p class="small mut" style="margin-top:0">Hai una CTE che non trovi nell'elenco, o vuoi confrontare la tua offerta attuale?
     Caricala: la confronto con tutte le offerte del Portale, con le stesse regole e gli stessi consumi.</p>
     <div class="row"><button class="btn" id="addPdf">📄 Carica CTE (PDF)</button><button class="btn sec" id="addMan">Inserisci a mano</button></div>
     <p class="small mut">Puoi selezionare più PDF insieme. Il PDF viene letto sul telefono, senza inviarlo a nessuno.</p>`;
@@ -452,6 +620,7 @@ function vistaCte() {
   }
   if (!S.cte.length) html += `<div class="empty">Nessuna CTE caricata.</div>`;
   v.innerHTML = html;
+  eventiBollette();
   $("#addPdf").onclick = () => $("#filePdf").click();
   $("#addMan").onclick = () => editor(nuovaCte("LUCE"));
   $$("[data-inc]").forEach((c) => (c.onchange = () => { S.cte.find((o) => o.id === c.dataset.inc).incluso = c.checked; salva(); cache.clear(); vistaCte(); }));
@@ -644,6 +813,7 @@ function editor(o) {
     const i = S.cte.findIndex((x) => x.id === o.id);
     delete o.esempio;
     if (i >= 0) S.cte[i] = o; else S.cte.push(o);
+    if (o.attuale) { S.attuale[o.fornitura] = { tipo: "cte", id: o.id }; delete o.attuale; }
     salva(); cache.clear();
     toast("Offerta salvata");
     vai("cte");
