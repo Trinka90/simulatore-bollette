@@ -173,3 +173,5 @@ details.small summary{cursor:pointer;color:var(--pri);font-weight:600;margin-top
 .nrow.attenzione::before{content:"⚠ ";color:var(--warn)}
 .spark{display:flex;align-items:flex-end;gap:2px;height:62px;margin:6px 0}
 .spark div{flex:1;background:var(--pri);opacity:.75;border-radius:2px 2px 0 0;min-width:2px}
+.riga-stg{background:var(--pri-soft);color:var(--pri-ink);border-radius:11px;padding:9px 12px;margin:8px 0;cursor:pointer}
+b.bad,.bad{color:var(--bad)}

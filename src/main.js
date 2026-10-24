@@ -40,7 +40,7 @@ const UTENZA_DEF = {
 };
 function migraUtenza(v) {
   if (!v) return structuredClone(UTENZA_DEF);
-  if (v.versione === 3) { if (v.luce.stg === undefined) Object.assign(v.luce, { stg: true, stgQuota: null }); return v; }
+  if (v.versione === 3) { if (v.luce.stgQuota === undefined) v.luce.stgQuota = null; v.luce.stg = true; return v; }
   const n = structuredClone(UTENZA_DEF);
   if (v.luce) Object.assign(n.luce, { attiva: v.luce.attiva, potenzaKw: v.luce.potenzaKw, annuo: v.luce.consumoAnnuoKwh, mesi: v.luce.profilo,
     ripartizione: v.luce.ripartizione || n.luce.ripartizione, canoneRai: v.luce.canoneRai });
@@ -158,13 +158,18 @@ function chiave(forn) { return JSON.stringify([forn, S.attuale[forn], S.mostraSc
 function offerteCte(forn) {
   return S.cte.filter((o) => o.fornitura === forn && o.incluso !== false && cteCompleta(o)).map(daCte);
 }
+function stgUtente(ctx) {
+  const o = offertaSTG(ctx.E, S.utenza.luce.stgQuota);
+  if (gestoreSTG() === "Hera Comm") { o.venditore = "Hera Comm"; o.nome = "Servizio a Tutele Graduali (STG) Hera Comm"; }
+  return o;
+}
 function calcolaClassifica(forn) {
   const k = chiave(forn);
   if (cache.has(k)) return cache.get(k);
   const u = U(), ctx = CTX();
   const f = filtra(S.catalogo?.offerte || [], u, S.dati.regolate, oggiIso(), { scadute: S.mostraScadute });
   const att = offertaAttuale(forn);
-  const rif = [...(forn === "LUCE" && u.luce.stg && !att?.stg ? [offertaSTG(ctx.E, u.luce.stgQuota)] : []), ...(att ? [att] : [])];
+  const rif = [...(forn === "LUCE" && !att?.stg ? [stgUtente(ctx)] : []), ...(att ? [att] : [])];
   const lista = classifica([...f[forn], ...offerteCte(forn).filter((o) => !(S.attuale[forn]?.tipo === "cte" && S.attuale[forn].id === o.id)), ...rif], u, ctx);
   for (const r of lista) r.cp = condizioniParticolari(r.offerta, u);
   const conInternet = lista.filter((r) => !r.offerta.mia && richiedeInternet(r.offerta));
@@ -172,6 +177,14 @@ function calcolaClassifica(forn) {
   cache.set(k, out);
   return out;
 }
+
+// ------------------------------------------------------------------ STG
+// Aste STG 2024 (ARERA, determina 62/2024): province delle 7 aree assegnate a Hera Comm.
+const STG_HERA = new Set("CR GE SP LO LU MS AL AT CN NO PV BG SO UD AN PD PU VE AP BO FM FE MC RO AR CE PG RI TR VT CH FC AQ PE RA RN TE".split(" "));
+const gestoreSTG = (u = S.utenza) => (STG_HERA.has(u.comune?.sigla) ? "Hera Comm" : "il gestore STG della tua area");
+/** Risultato STG luce in classifica (sempre presente). */
+const rifSTG = () => calcolaClassifica("LUCE").lista.find((x) => x.offerta.stg) || null;
+const vsSTG = (tot, stg) => (stg ? (tot <= stg.centrale ? `<b class="ok">−${eur(stg.centrale - tot, 0)} vs STG</b>` : `<b class="bad">+${eur(tot - stg.centrale, 0)} vs STG</b>`) : "");
 
 // ------------------------------------------------------------------ OFFERTE
 function venditoriPrincipali(lista) {
@@ -229,6 +242,7 @@ async function vistaDual() {
   const v = $("#vista"), u = U();
   if (!cache.has("DUAL" + chiave("LUCE") + chiave("GAS"))) { v.innerHTML = `<div class="empty"><span class="spin"></span><p>Calcolo luce e gas insieme…</p></div>`; await attendi(); }
   const R = calcolaDual(), sep = R.separati;
+  const stgD = sep && rifSTG() ? rifSTG().centrale + sep.gas.centrale : null;
   let html = `<div class="intest">${segForn(u)}
     <button class="profilo-btn" id="vaiProfilo"><span>${h(u.comune?.nome || "Comune?")} · ${nf(u.luce.annuo, 0)} kWh + ${nf(u.gas.annuo, 0)} Smc · da ${meseIt(u.ingresso)}</span><b>Modifica</b></button></div>`;
   if (sep) html += `<section class="best"><div class="best-l">Separati: la miglior luce + il miglior gas</div>
@@ -236,13 +250,14 @@ async function vistaDual() {
         <div>🔥 <b>${h(sep.gas.offerta.venditore)}</b> — ${h(sep.gas.offerta.nome)} · ${eur(sep.gas.centrale, 0)}</div></div>
         <div class="price"><div class="tot">${eur(sep.centrale, 0)}</div><div class="sub">all'anno</div></div></div>
       ${R.lista[0] ? `<div class="conf"><span>rispetto al miglior pacchetto luce+gas</span><b class="${R.lista[0].centrale > sep.centrale ? "ok" : ""}">${R.lista[0].centrale > sep.centrale ? "risparmi " + eur(R.lista[0].centrale - sep.centrale, 0) : "costa " + eur(sep.centrale - R.lista[0].centrale, 0) + " in più"}</b></div>` : ""}
+      ${stgD ? `<div class="conf"><span>rispetto a STG ${h(gestoreSTG())} + il miglior gas (${eur(stgD, 0)})</span><b class="${sep.centrale < stgD ? "ok" : "bad"}">${sep.centrale < stgD ? "risparmi " + eur(stgD - sep.centrale, 0) : "costa " + eur(sep.centrale - stgD, 0) + " in più"}</b></div>` : ""}
       <div class="small mut" style="margin-top:6px">Due contratti e due bollette, anche con fornitori diversi.</div></section>`;
   html += `<div class="small mut conta">${R.lista.length} pacchetti luce+gas dello stesso fornitore · totale di 12 bollette luce + 12 gas</div>`;
   for (const [i, x] of R.lista.entries()) {
     html += `<article class="offer">
       <div class="row sp testa"><div class="min0"><div class="vend">${h(x.dual.venditore)} ${badgeFornitore(x.dual)}</div><div class="nome">${h(x.dual.nome)}</div></div>
         <div class="price"><div class="tot">${eur(x.centrale, 0)}</div><div class="sub">${sep ? (x.centrale >= sep.centrale ? "+" + eur(x.centrale - sep.centrale, 0) : "−" + eur(sep.centrale - x.centrale, 0)) + " vs separati" : ""}</div></div></div>
-      <div class="riga small mut">💡 ${eur(x.luce.centrale, 0)} + 🔥 ${eur(x.gas.centrale, 0)}${x.sconto ? ` − sconto pacchetto ${eur(x.sconto, 0)}` : ""} · ${i + 1}° posto</div>
+      <div class="riga small mut">${stgD ? vsSTG(x.centrale, { centrale: stgD }) + " (STG + miglior gas) · " : ""}💡 ${eur(x.luce.centrale, 0)} + 🔥 ${eur(x.gas.centrale, 0)}${x.sconto ? ` − sconto pacchetto ${eur(x.sconto, 0)}` : ""} · ${i + 1}° posto</div>
       ${pillole(x)}
       <div class="row" style="margin-top:8px"><button class="btn sec mini" data-det="${h(x.luce.offerta.id)}">Dettaglio luce</button><button class="btn sec mini" data-det="${h(x.gas.offerta.id)}">Dettaglio gas</button></div></article>`;
   }
@@ -276,7 +291,7 @@ async function vistaOfferte() {
   // la migliore
   if (migliore && !S.cerca) {
     const o = migliore.offerta;
-    const conf = rif.map((r) => `<div class="conf"><span>${r.offerta.attuale ? "rispetto alla tua offerta attuale" : `rispetto a ${h(r.offerta.stg ? "Tutele Graduali (STG)" : r.offerta.nome)}`}</span><b class="${r.centrale > migliore.centrale ? "ok" : ""}">${r.centrale > migliore.centrale ? "risparmi " + eur(r.centrale - migliore.centrale, 0) + "/anno" : "costa " + eur(migliore.centrale - r.centrale, 0) + " in più"}</b></div>`).join("");
+    const conf = rif.map((r) => `<div class="conf"><span>${r.offerta.attuale ? "rispetto alla tua offerta attuale" : `rispetto a ${h(r.offerta.stg ? "STG " + gestoreSTG() : r.offerta.nome)}`}</span><b class="${r.centrale > migliore.centrale ? "ok" : ""}">${r.centrale > migliore.centrale ? "risparmi " + eur(r.centrale - migliore.centrale, 0) + "/anno" : "costa " + eur(migliore.centrale - r.centrale, 0) + " in più"}</b></div>`).join("");
     html += `<section class="best" data-det="${h(o.id)}" role="button"><div class="best-l">La più conveniente per te</div>
       <div class="row sp"><div class="min0"><div class="vend">${h(o.venditore)} ${badgeFornitore(o)}</div><div class="nome">${h(o.nome)}</div></div>
         <div class="price"><div class="tot">${eur(migliore.centrale, 0)}</div><div class="sub">all'anno · ${eur(migliore.centrale / 12, 0)}/mese</div></div></div>
@@ -289,13 +304,16 @@ async function vistaOfferte() {
     <div class="small mut conta">${lista.length} offerte · ordinate dalla più economica · totale di 12 bollette con tutte le voci</div>`;
 
   const best = migliore?.centrale ?? 0;
+  const stgR = S.forn === "LUCE" ? R.lista.find((x) => x.offerta.stg) : null;
+  if (stgR && !S.cerca) html += `<div class="riga-stg small" data-det="STG" role="button">Riferimento: <b>STG ${h(gestoreSTG())}</b> ${eur(stgR.centrale, 0)}/anno · ${R.lista.filter((x) => !x.offerta.mia && x.centrale < stgR.centrale).length} offerte costano meno ›</div>`;
+  if (S.forn === "GAS") html += `<div class="small mut">Per il gas non esiste un servizio a tutele graduali: dal 2024 i clienti non vulnerabili sono tutti sul mercato libero.</div>`;
   for (const r of lista.slice(0, S.quante)) {
     const o = r.offerta, pos = R.lista.indexOf(r) + 1, sc = scadenza(o, oggiIso());
     if (r === migliore && !S.cerca) continue;
     html += `<article class="offer ${o.mia ? "mia" : ""}" data-det="${h(o.id)}" role="button">
       <div class="row sp testa"><div class="min0"><div class="vend">${h(o.venditore)} ${badgeFornitore(o)}</div><div class="nome">${h(o.nome)}</div></div>
         <div class="price"><div class="tot">${eur(r.centrale, 0)}</div><div class="sub">${r.centrale >= best ? "+" + eur(r.centrale - best, 0) : "−" + eur(best - r.centrale, 0)} vs migliore</div></div></div>
-      <div class="riga small mut">${eVariabile(o) ? "Variabile" : "Fisso"} · ${nf(r.costoMedio, 3)} €/${unita} tutto compreso · ${pos}° posto${sc ? (sc.giorni < 0 ? ` · <b class="bad">scaduta</b>` : sc.giorni <= 7 ? ` · <b class="bad">firma entro ${dataIt(sc.al)}</b>` : "") : ""}</div>
+      <div class="riga small mut">${S.forn === "LUCE" && !o.stg && stgR ? vsSTG(r.centrale, stgR) + " · " : ""}${eVariabile(o) ? "Variabile" : "Fisso"} · ${nf(r.costoMedio, 3)} €/${unita} tutto compreso · ${pos}° posto${sc ? (sc.giorni < 0 ? ` · <b class="bad">scaduta</b>` : sc.giorni <= 7 ? ` · <b class="bad">firma entro ${dataIt(sc.al)}</b>` : "") : ""}</div>
       ${pillole(r)}</article>`;
   }
   if (lista.length > S.quante) html += `<button class="btn sec full" id="altre">Mostra altre offerte</button>`;
@@ -344,7 +362,7 @@ function tabellaApplicati(app) {
     `<tr><td>${h(a.nome)}<div class="frase">${h(a.nota)}</div></td><td>${badge(a.tipo)}</td>
      <td class="r num">${a.valore == null ? "" : nf(a.valore, 6) + " " + h(a.unita)}</td></tr>`).join("") + "</table>";
 }
-const trovaOfferta = (id) => id.startsWith("ATTUALE-") ? offertaAttuale(id.slice(8)) : id === "STG" ? offertaSTG(CTX().E, S.utenza.luce.stgQuota) : (S.catalogo?.offerte || []).find((o) => o.id === id) || offerteCte("LUCE").concat(offerteCte("GAS")).find((o) => o.id === id);
+const trovaOfferta = (id) => id.startsWith("ATTUALE-") ? offertaAttuale(id.slice(8)) : id === "STG" ? stgUtente(CTX()) : (S.catalogo?.offerte || []).find((o) => o.id === id) || offerteCte("LUCE").concat(offerteCte("GAS")).find((o) => o.id === id);
 
 function sezioneScontiPenali(o, sp) {
   let html = `<section class="sez" id="s-sconti"><h3>Sconti e penali</h3>`;
@@ -414,6 +432,7 @@ function vistaDettaglio(id, scenario = "centrale") {
     <section class="hero"><div class="vend">${h(o.venditore)} ${badgeFornitore(o)}</div><h2>${h(o.nome)}</h2>
       <div class="big-tot">${eur(tot, 0)}<span> all'anno · ${eur(tot / 12, 0)} al mese</span></div>
       <div class="small mut">${eVariabile(o) ? "Prezzo variabile" : "Prezzo fisso"} · ${nf((tot - altro) / cons, 3)} €/${unita} tutto compreso${pos >= 0 ? ` · ${pos + 1}° su ${R.lista.length}` : ""}${best && pos > 0 && !o.mia ? ` · +${eur(R.lista[pos].centrale - best.centrale, 0)} rispetto alla migliore` : ""}</div>
+      ${o.forn === "LUCE" && !o.stg && rifSTG() ? (() => { const st = rifSTG(); return `<div class="conf"><span>rispetto a STG ${h(gestoreSTG())} (${eur(st.centrale, 0)}/anno)</span><b class="${tot < st.centrale ? "ok" : "bad"}">${tot < st.centrale ? "risparmi " + eur(st.centrale - tot, 0) + "/anno" : "costa " + eur(tot - st.centrale, 0) + " in più"}</b></div>`; })() : ""}
       ${scen.length > 1 ? `<div class="seg" style="margin:12px 0 4px">${scen.map((s) => `<button data-sc="${s}" class="${s === scenario ? "on" : ""}">${{ basso: "Mercato in calo", centrale: "Prezzi stabili", alto: "Mercato in rialzo" }[s]}<br><b>${eur(totaleMesi(ris[s]), 0)}</b></button>`).join("")}</div>
         <div class="small mut">Con il prezzo variabile la spesa dipende dal mercato: ecco tre ipotesi.</div>` : ""}
       ${o.attuale ? (() => { const b = [...S.bollette].filter((x) => x.forn === o.forn && x.spesaAnnua).sort((x, y) => (x.al || "").localeCompare(y.al || "")).at(-1);
@@ -582,7 +601,7 @@ function offertaAttuale(forn) {
   const a = S.attuale[forn];
   if (!a) return null;
   let o = null;
-  if (a.tipo === "stg") o = offertaSTG(CTX().E, S.utenza.luce.stgQuota);
+  if (a.tipo === "stg") o = stgUtente(CTX());
   else if (a.tipo === "catalogo") o = a.offerta;
   else if (a.tipo === "cte") { const c = S.cte.find((x) => x.id === a.id); o = c && cteCompleta(c) ? daCte(c) : null; }
   return o ? { ...o, id: "ATTUALE-" + forn, mia: true, attuale: true } : null;
@@ -1005,9 +1024,9 @@ function vistaProfilo() {
     <div class="small mut">In bolletta: «consumo annuo». Se scrivi i mesi qui sotto, conta la loro somma.</div>
     <label>Potenza impegnata (kW)</label><select id="lKw">${[1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 5.5, 6, 7, 8, 9, 10, 15].map((k) => `<option value="${k}" ${k === u.luce.potenzaKw ? "selected" : ""}>${String(k).replace(".", ",")}</option>`).join("")}</select>
     <div class="sw"><span>Canone RAI in bolletta</span><input type="checkbox" id="lRai" ${u.luce.canoneRai ? "checked" : ""}></div>
-    <div class="sw"><span>Confronta con il Servizio a Tutele Graduali (STG)</span><input type="checkbox" id="lStg" ${u.luce.stg ? "checked" : ""}></div>
-    <label>Quota fissa STG della tua area (€ all'anno, facoltativa)</label><input inputmode="decimal" id="lStgQ" value="${h(nv(u.luce.stgQuota))}" placeholder="vuoto = media nazionale ${nf(CTX().E.gamma, 2)}">
-    <div class="small mut">In una bolletta STG è la quota fissa della vendita (spesso negativa): importo al mese × 12. Dipende dall'area in cui sei stato assegnato.</div>
+    <div class="small mut" style="margin-top:8px">Ogni offerta luce è sempre confrontata con il Servizio a Tutele Graduali di ${h(gestoreSTG(u))}.</div>
+    <label>Quota fissa STG (€ all'anno, facoltativa)</label><input inputmode="decimal" id="lStgQ" value="${h(nv(u.luce.stgQuota))}" placeholder="vuoto = ${nf(CTX().E.gamma, 2)} (valore ARERA in bolletta)">
+    <div class="small mut">Lascia vuoto: il valore ARERA riproduce al centesimo la bolletta STG Hera. Cambialo solo se la tua bolletta STG riporta una quota fissa diversa (importo al mese × 12).</div>
     <label>Consumo per fascia (%)</label>
     <div class="row">${["F1", "F2", "F3"].map((f) => `<div><label style="margin:0">${f}</label><input inputmode="decimal" data-rip="${f}" value="${nf(u.luce.ripartizione[f] * 100, 1)}"></div>`).join("")}</div>
     <label>Consumi mese per mese (kWh) — ${u.luce.mesi ? "<b>i tuoi</b>" : "stimati dal consumo annuo"}</label>
@@ -1064,7 +1083,7 @@ function vistaProfilo() {
       versione: 3, comune, residente: $("#pRes").checked, situazione: $("#pSit").value, ingresso: $("#pIng").value,
       bollettaWeb: $("#pWeb").checked, domiciliazione: $("#pDom").checked,
       luce: { attiva: $("#lAtt").checked, annuo: v("#lKwh", 1), potenzaKw: Number($("#lKw").value), canoneRai: $("#lRai").checked,
-        stg: $("#lStg").checked, stgQuota: (() => { const x = pnum($("#lStgQ").value); return x == null || Number.isNaN(x) ? null : x; })(),
+        stg: true, stgQuota: (() => { const x = pnum($("#lStgQ").value); return x == null || Number.isNaN(x) ? null : x; })(),
         ripartizione: { F1: rip.F1 / sr, F2: rip.F2 / sr, F3: rip.F3 / sr }, mesi: mesi("pl", !!u.luce.mesi) },
       gas: { attiva: $("#gAtt").checked, annuo: v("#gSmc", 0), uso: $("#gUso").value, zona: $("#gZona").value, mesi: mesi("pg", !!u.gas.mesi) },
     };
@@ -1445,7 +1464,12 @@ vai("offerte");
 confermaAvvio().then(() => avviaCatalogo()).then(() => aggiornaApp(false)).then(() => scaricaSeServe());
 
 let apkNuovo = null;
+let ultimoControllo = 0;
+document.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === "visible" && Date.now() - ultimoControllo > 10 * 60 * 1000) aggiornaApp(false);
+});
 async function aggiornaApp(manuale) {
+  ultimoControllo = Date.now();
   try {
     const r = await controllaAggiornamento((m) => toast(m, 6000));
     if (r?.apk) { apkNuovo = r.apk; toast("C'è una versione nuova da installare: vai in Info", 5000); if (S.tab === "dati") vistaDati(); }
