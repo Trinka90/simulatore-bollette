@@ -7,6 +7,8 @@ import { Periodo, Risultato, voce, progressivo, daIso } from "./motore.js";
 import { punMese, psvMese, mesiDa, MESI } from "./simulazione.js";
 
 export const FASCIA = { "01": "F1", "02": "F2", "03": "F3", "07": "F1", "08": "F23", "91": "F23", "92": "F13", "93": "F12" };
+// Codici fascia negli sconti (CODICE_COMPONENTE_FASCIA): 01-10 sono componenti regolate, le fasce partono da 11.
+const FASCIA_SCONTO = { "11": "F1", "12": "F2", "13": "F3", "17": "F1", "18": "F23", "91": "F23", "92": "F13", "93": "F12" };
 const NOMI_DISP = {
   "01": "Dispacciamento TIDE", "02": "Dispacciamento PD", "03": "Corrispettivo MSD", "04": "Modulazione eolico",
   "05": "Unità essenziali", "06": "Funzionamento Terna", "07": "Capacità produttiva", "08": "Interrompibilità",
@@ -101,8 +103,10 @@ function prezziComponente(c, k, a, m, annuo) {
   }
   const out = [];
   for (const lista of perFascia.values()) {
+    // scaglione che contiene il consumo annuo; un intervallo senza limiti vale solo se non ce n'è uno più preciso
     const sc = lista.filter((p) => nelloScaglione(p, annuo));
-    const cand = sc.length ? sc : lista;
+    const precisi = sc.filter((p) => p.da != null || p.a);
+    const cand = precisi.length ? precisi : sc.length ? sc : lista;
     const conPeriodo = cand.filter((p) => haPeriodo(p) && valeNelMese(p, k, a, m));
     const scelto = conPeriodo[0] || cand.find((p) => !haPeriodo(p));
     if (scelto) out.push(scelto);
@@ -163,13 +167,15 @@ function sconti(off, k, a, m, mesi, q, perFascia, u, annuo, baseVendita, regolat
         case "05": imp = primo ? p.pr : 0; descr += " (una tantum)"; break;
         case "02": imp = p.pr * (u.luce?.potenzaKw || 0) * mesi / 12; break;
         case "03": case "04": {
-          const f = FASCIA[s.cod];
+          const f = FASCIA_SCONTO[s.cod];
           const qta = f && perFascia ? (f === "F23" ? perFascia.F2 + perFascia.F3 : f === "F13" ? perFascia.F1 + perFascia.F3 : f === "F12" ? perFascia.F1 + perFascia.F2 : perFascia[f] ?? q) : q;
           imp = p.pr * quota(qta); break;
         }
         case "06": {
           const reg = regolate[NOMI_REGOLATE[s.cod]];
-          imp = (p.pr / 100) * (reg != null ? reg : baseVendita); descr += ` (${p.pr}%)`; break;
+          imp = (p.pr / 100) * (reg != null ? reg : baseVendita); descr += ` (${p.pr}%)`;
+          if (reg == null && eVariabile(off)) note.add(`Sconto «${s.n}» del ${p.pr}%: calcolato su tutto il prezzo dell'energia (indice + spread). Se il venditore lo applica solo allo spread, il risparmio reale è minore.`);
+          break;
         }
         default: note.add(`Sconto «${s.n}»: unità non riconosciuta, non conteggiato.`);
       }

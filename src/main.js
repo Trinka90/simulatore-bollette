@@ -774,6 +774,13 @@ function vistaDati() {
     ${pun.map(([k, v]) => `<tr><td>${k}</td>${["F0", "F1", "F2", "F3"].map((f) => `<td class="r num">${nf(v[f], 4)}</td>`).join("")}</tr>`).join("")}</table></div>
   <h2>PSV ultimi mesi <span class="mut small">€/Smc</span></h2><div class="card"><table>
     ${psv.map(([k, v]) => `<tr><td>${k}</td><td class="r num">${nf(v, 4)}</td></tr>`).join("")}</table></div>
+  <h2>Quanto sono affidabili i calcoli</h2><div class="card small"><ul style="padding-left:18px;margin:0">
+    <li><b>Bollette vere</b>: l'app riproduce al centesimo tre bollette reali (Hera STG, Estra gas, Enel mercato libero).</li>
+    <li><b>Tutte le offerte</b>: confrontata con un motore di calcolo indipendente, a sua volta verificato sul Portale Offerte, su 3.518 offerte:
+      il 98-99% delle offerte luce coincide entro 1 € all'anno, quasi tutte le gas entro l'1%. Il confronto si ripete a ogni aggiornamento dell'app.</li>
+    <li><b>Dove può sbagliare</b>: quando il venditore scrive male i dati sul Portale, o li scrive in modo ambiguo (sconti a tempo, sconti in percentuale):
+      in quei casi l'app lo segnala in «Da sapere». Per le offerte variabili il futuro è una stima: guarda i tre scenari.</li>
+    <li><b>Prima di firmare</b>: confronta prezzo e quota fissa con la CTE del venditore. Se i numeri della CTE sono diversi, conta la CTE.</li></ul></div>
   <h2>Da dove vengono i numeri</h2><div class="card small"><ul style="padding-left:18px;margin:0">
     <li><b>Offerte</b>: open data del Portale Offerte (ARERA e Acquirente Unico, licenza CC-BY), dove ogni venditore deve pubblicare tutte le sue offerte.</li>
     <li><b>Trasporto, oneri di sistema, dispacciamento, accisa luce, IVA</b>: parametri ARERA pubblicati ogni giorno dal Portale Offerte. Nei trimestri non ancora pubblicati restano gli ultimi valori ${badge("SIMULATO")}.</li>

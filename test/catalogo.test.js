@@ -105,3 +105,31 @@ test("sconti a mesi: 'dal quarto al sesto mese' e 'dodicesimo mese' valgono solo
   const sconto = (i) => -mesi[i].risultato.voci.filter((v) => v.descrizione.startsWith("Sconto")).reduce((s, v) => s + v.importo, 0);
   assert.deepEqual(mesi.map((_, i) => Math.round(sconto(i)) + 0), [0, 0, 0, 10, 10, 10, 0, 0, 0, 0, 0, 20]);
 });
+
+test("confronto con il motore indipendente (verificato sul Portale): offerte del campione entro 1 € o 1%", () => {
+  const R = JSON.parse(readFileSync(new URL("./fixtures/riferimento.json", import.meta.url)));
+  // differenze note e motivate: il riferimento conta due volte i prezzi Peak/OffPeak; Sprint ha sconti
+  // che l'app applica solo nei mesi indicati; gli sconti in % l'app li applica a indice + spread
+  const motivate = (o) => o.fasce === "07" || /Sprint/.test(o.nome) || o.sc.some((s) => s.p.some((p) => p.u === "06"));
+  const D2 = JSON.parse(readFileSync(new URL("../data/dati.json", import.meta.url)));
+  const pun = R.pun_stima / 1.1;
+  for (let i = 0; i < 12; i++) {
+    const k = new Date(Date.UTC(2026, 9 + i, 1)).toISOString().slice(0, 7);
+    D2.indici.pun.mesi[k] = { F0: pun, F1: pun, F2: pun, F3: pun, F23: pun };
+    D2.indici.psv.mesi[k] = R.psv_stima;
+  }
+  const c2 = contesto(D2);
+  const u = { ...milano, luce: { potenzaKw: 3, annuo: 2700, mesi: Object.fromEntries(Array.from({ length: 12 }, (_, i) => [i + 1, 225])),
+    ripartizione: { F1: 891 / 2700, F2: 837 / 2700, F3: 972 / 2700 }, canoneRai: false }, gas: { annuo: 1400, mesi: perGiorni(1400), uso: "entrambi", zona: "E" } };
+  let n = 0;
+  const fuori = [];
+  for (const o of [...E, ...G]) {
+    const atteso = R.offerte[o.id];
+    if (atteso == null || motivate(o)) continue;
+    const t = totaleMesi(simulaOfferta(o, u, c2));
+    n++;
+    if (Math.abs(t - atteso) > Math.max(1, 0.01 * atteso)) fuori.push(`${o.nome}: ${t.toFixed(2)} invece di ${atteso}`);
+  }
+  assert.ok(n > 400, `offerte confrontate: ${n}`);
+  assert.deepEqual(fuori, []);
+});
