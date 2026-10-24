@@ -165,3 +165,11 @@ ul.breve li.info .ic{background:var(--pri-soft);color:var(--pri)}
 ul.breve .small{color:var(--mut);margin-top:2px;overflow-wrap:anywhere}
 .tot-sconti{margin-top:8px;padding:8px 10px;border-radius:10px;background:var(--ok-soft);color:var(--ok);font-size:13px}
 details.small summary{cursor:pointer;color:var(--pri);font-weight:600;margin-top:10px}
+
+/* avvisi */
+.notif{background:#fff;border:1.5px solid #f3dfb6;border-radius:14px;padding:10px 12px;margin:10px 0}
+.nrow{font-size:13px;padding:7px 0;border-top:1px solid var(--line2);cursor:pointer}
+.nrow.risparmio::before{content:"€ ";color:var(--ok);font-weight:800}
+.nrow.attenzione::before{content:"⚠ ";color:var(--warn)}
+.spark{display:flex;align-items:flex-end;gap:2px;height:62px;margin:6px 0}
+.spark div{flex:1;background:var(--pri);opacity:.75;border-radius:2px 2px 0 0;min-width:2px}

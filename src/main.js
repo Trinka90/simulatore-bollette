@@ -51,12 +51,13 @@ const S = {
   utenza: migraUtenza(LS.get("utenza", null)),
   cte: LS.get("cte", LS.get("offerte", [])),
   bollette: LS.get("bollette", []), attuale: LS.get("attuale", {}),
+  seguite: LS.get("seguite", []), storico: LS.get("storico", []), notifiche: LS.get("notifiche", []), avvisi: LS.get("avvisi", { attivi: true, soglia: 50 }),
   dati: LS.get("dati", datiInclusi),
   auto: LS.get("auto", "giorno"),
   catalogo: null, aggiornando: false, avanzamento: "",
 };
 if ((S.dati.versione || 0) < datiInclusi.versione || S.dati.aggiornato_al < datiInclusi.aggiornato_al) S.dati = datiInclusi;
-const salva = () => { LS.set("bollette", S.bollette); LS.set("attuale", S.attuale); LS.set("utenza", S.utenza); LS.set("cte", S.cte); LS.set("dati", S.dati); LS.set("auto", S.auto); };
+const salva = () => { LS.set("seguite", S.seguite); LS.set("storico", S.storico); LS.set("notifiche", S.notifiche); LS.set("avvisi", S.avvisi); LS.set("bollette", S.bollette); LS.set("attuale", S.attuale); LS.set("utenza", S.utenza); LS.set("cte", S.cte); LS.set("dati", S.dati); LS.set("auto", S.auto); };
 const U = () => ({ ...S.utenza, ingresso: S.utenza.ingresso && S.utenza.ingresso >= ymDi(oggi()) ? S.utenza.ingresso : ingressoTipico() });
 const CTX = () => contesto(S.dati, S.catalogo?.parametri);
 
@@ -105,6 +106,7 @@ async function avviaCatalogo() {
   S.catalogo = await caricaCatalogo();
   if (!S.catalogo) { try { S.catalogo = await catalogoIniziale(); } catch (e) { console.error(e); } }
   arricchisci(S.catalogo);
+  if (S.catalogo && !S.storico.some((x) => x.data === S.catalogo.data)) setTimeout(() => { try { registraGiorno(); } catch (e) { console.error(e); } }, 1500);
   statoChip();
   VISTE[S.tab]();
 }
@@ -122,6 +124,7 @@ async function aggiorna(manuale) {
     const nuovo = await aggiornaCatalogo(scaricaTesto, prog);
     S.catalogo = arricchisci(nuovo); cache.clear();
     await salvaCatalogo(nuovo);
+    try { registraGiorno(); } catch (e) { console.error(e); }
     toast(`Offerte aggiornate: ${nuovo.offerte.length} offerte del ${dataIt(nuovo.data)}`, 3500);
   } catch (e) {
     console.error(e);
@@ -263,6 +266,7 @@ async function vistaOfferte() {
 
   let html = `<div class="intest">${segForn(u)}
     <button class="profilo-btn" id="vaiProfilo"><span>${h(u.comune?.nome || "Comune?")} · ${consumo}/anno · da ${meseIt(u.ingresso)}</span><b>Modifica</b></button></div>`;
+  html += bannerNotifiche();
   if (vecchio) html += `<div class="avviso small">Offerte del ${dataIt(S.catalogo.data)}. ${S.aggiornando ? `<span id="avanz">${h(S.avanzamento || "Aggiorno…")}</span>` : `<button class="btn mini" id="aggOra">Scarica quelle di oggi</button>`}</div>`;
 
   // la migliore
@@ -304,6 +308,7 @@ async function vistaOfferte() {
   $("#cerca").oninput = (e) => { clearTimeout(vistaOfferte._t); vistaOfferte._t = setTimeout(() => { S.cerca = e.target.value.trim(); S.quante = 25; vistaOfferte().then(() => { const c = $("#cerca"); c.focus(); c.setSelectionRange(c.value.length, c.value.length); }); }, 350); };
   $("#altre") && ($("#altre").onclick = () => { S.quante += 25; vistaOfferte(); });
   $("#aggOra") && ($("#aggOra").onclick = () => aggiorna(true));
+  $("#notLette") && ($("#notLette").onclick = (e) => { e.stopPropagation(); S.notifiche.forEach((x) => (x.letta = true)); salva(); vistaOfferte(); });
   $("#mScad") && ($("#mScad").onchange = (e) => { S.mostraScadute = e.target.checked; vistaOfferte(); });
   $$("[data-det]").forEach((c) => c.addEventListener("click", () => vistaDettaglio(c.dataset.det)));
   $("#pdfConf").onclick = () => esegui(() => pdfConfronto(lista.slice(0, 30), S.forn, u, S.dati, S.catalogo), "classifica");
@@ -421,6 +426,7 @@ function vistaDettaglio(id, scenario = "centrale") {
         Hai 14 giorni per ripensarci dopo la firma. Se un venditore smette di operare, la fornitura non si interrompe: passi in automatico a un servizio di ultima istanza finché non scegli un altro fornitore.</p>
         <p>Quello che cambia è il servizio: assistenza, puntualità e chiarezza delle bollette, gestione dei conguagli e delle nuove condizioni a scadenza. Per questo conviene leggere le recensioni recenti, verificare che il venditore abbia un numero e una sede raggiungibili, e conservare la CTE firmata.</p></details>`}
     </section>`}
+    ${o.mia ? "" : `<button class="btn ${S.seguite.some((x) => x.id === o.id) ? "" : "sec"} full" id="segui">${S.seguite.some((x) => x.id === o.id) ? "★ Segui questa offerta (attivo)" : "☆ Segui questa offerta: avvisami se cambia"}</button>`}
     <nav class="jump"><a href="#s-sconti">Sconti e penali</a><a href="#s-prezzi">Prezzi</a><a href="#s-info">Condizioni</a><a href="#s-calc">Bolletta su misura</a><a href="#s-mesi">12 bollette</a></nav>`;
   if (avvisi.length) html += `<div class="warn small"><b>Da sapere</b><ul>${avvisi.map((x) => `<li>${h(x)}</li>`).join("")}</ul></div>`;
   html += sezioneScontiPenali(o, sp);
@@ -443,6 +449,7 @@ function vistaDettaglio(id, scenario = "centrale") {
   window.scrollTo(0, 0);
   const d = new Date(`${u.ingresso}-01T00:00:00Z`); const f = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0));
   $("#bAl").value = f.toISOString().slice(0, 10);
+  $("#segui") && ($("#segui").onclick = () => { segui(o); toast(S.seguite.some((x) => x.id === o.id) ? "Ti avviso se cambia prezzo o scade" : "Non segui più questa offerta"); vistaDettaglio(id, scenario); });
   $("#indietro").onclick = () => vai(o.mia && !o.stg ? "cte" : "offerte");
   $$(".jump a").forEach((a) => (a.onclick = (e) => { e.preventDefault(); $(a.getAttribute("href")).scrollIntoView({ behavior: "smooth", block: "start" }); }));
   $$(".vaiProf").forEach((a) => (a.onclick = (e) => { e.preventDefault(); vai("profilo"); }));
@@ -466,6 +473,95 @@ function vistaDettaglio(id, scenario = "centrale") {
 
 async function esegui(fn, nome) {
   try { toast(`Preparo il PDF ${nome}…`); await fn(); } catch (e) { console.error(e); toast("Errore nell'esportazione: " + e.message, 4000); }
+}
+
+// ------------------------------------------------------------------ AVVISI E STORICO
+// Dopo ogni aggiornamento delle offerte: registra la migliore del giorno e controlla soglia di risparmio,
+// offerte seguite (prezzo cambiato, scadenza vicina, non più in vendita).
+function notifica(testo, tipo = "info", rif = null) {
+  S.notifiche.unshift({ id: uid(), data: oggiIso(), testo, tipo, rif, letta: false });
+  S.notifiche = S.notifiche.slice(0, 40);
+}
+function registraGiorno() {
+  if (!S.catalogo) return;
+  const giorno = S.catalogo.data, u = U(), voce = { data: giorno };
+  for (const forn of ["LUCE", "GAS"]) {
+    if (!(forn === "LUCE" ? u.luce.attiva : u.gas.attiva)) continue;
+    const R = calcolaClassifica(forn);
+    const best = R.lista.find((x) => !x.offerta.mia);
+    const rif = R.lista.find((x) => x.offerta.attuale) || R.lista.find((x) => x.offerta.stg);
+    if (!best) continue;
+    voce[forn] = { tot: Math.round(best.centrale), id: best.offerta.id, nome: best.offerta.nome, venditore: best.offerta.venditore,
+      rif: rif ? Math.round(rif.centrale) : null };
+    // soglia di risparmio
+    const prec = S.storico.filter((x) => x.data < giorno).at(-1)?.[forn];
+    if (S.avvisi.attivi && rif && rif.centrale - best.centrale >= S.avvisi.soglia &&
+      (!prec || prec.id !== best.offerta.id || (prec.rif ?? 0) - prec.tot + 20 <= rif.centrale - best.centrale)) {
+      notifica(`${forn === "LUCE" ? "Luce" : "Gas"}: ${best.offerta.venditore} — ${best.offerta.nome} ti fa risparmiare ${eur(rif.centrale - best.centrale, 0)} all'anno rispetto ${rif.offerta.attuale ? "alla tua offerta attuale" : "alle Tutele Graduali"}.`, "risparmio", best.offerta.id);
+    }
+  }
+  // offerte seguite
+  const perId = new Map(S.catalogo.offerte.map((o) => [o.id, o]));
+  for (const f of S.seguite) {
+    const o = perId.get(f.id);
+    if (!o) { if (!f.sparita) { notifica(`«${f.nome}» di ${f.venditore} non è più in vendita.`, "attenzione"); f.sparita = true; } continue; }
+    f.sparita = false;
+    const prezzo = descrizionePrezzo(o);
+    let tot = null;
+    try { tot = Math.round(totaleMesi(simulaOfferta(o, u, CTX()))); } catch { /* offerta non calcolabile */ }
+    if (f.prezzo && prezzo !== f.prezzo) notifica(`«${f.nome}» ha cambiato prezzo: prima ${f.prezzo}, ora ${prezzo}${tot && f.tot ? ` (12 bollette: da ${eur(f.tot, 0)} a ${eur(tot, 0)})` : ""}.`, "attenzione", o.id);
+    const sc = scadenza(o, oggiIso());
+    if (sc && sc.giorni >= 0 && sc.giorni <= 3 && f.avvisoScadenza !== o.al) { notifica(`«${f.nome}» si può sottoscrivere solo fino al ${dataIt(o.al)}.`, "attenzione", o.id); f.avvisoScadenza = o.al; }
+    Object.assign(f, { prezzo, tot: tot ?? f.tot, storico: [...(f.storico || []).filter((x) => x.data !== giorno), { data: giorno, tot }].slice(-90) });
+  }
+  S.storico = [...S.storico.filter((x) => x.data !== giorno), voce].sort((a, b) => a.data.localeCompare(b.data)).slice(-180);
+  salva();
+}
+function segui(o) {
+  if (S.seguite.some((x) => x.id === o.id)) S.seguite = S.seguite.filter((x) => x.id !== o.id);
+  else {
+    let tot = null;
+    try { tot = Math.round(totaleMesi(simulaOfferta(o, U(), CTX()))); } catch { /* */ }
+    S.seguite.push({ id: o.id, forn: o.forn, nome: o.nome, venditore: o.venditore, prezzo: descrizionePrezzo(o), tot, storico: [{ data: S.catalogo.data, tot }] });
+  }
+  salva();
+}
+function bannerNotifiche() {
+  const n = S.notifiche.filter((x) => !x.letta);
+  if (!n.length) return "";
+  return `<section class="notif"><div class="row sp"><b>🔔 ${n.length} avvis${n.length > 1 ? "i" : "o"}</b><button class="btn ghost mini" id="notLette">Segna come letti</button></div>
+    ${n.slice(0, 5).map((x) => `<div class="nrow ${x.tipo}" ${x.rif ? `data-det="${h(x.rif)}" role="button"` : ""}>${h(x.testo)}<span class="mut"> · ${dataIt(x.data)}</span></div>`).join("")}</section>`;
+}
+/** Barre semplici: andamento di una serie [{data, valore}]. */
+function andamento(serie, un = "€") {
+  const v = serie.filter((x) => x.valore != null);
+  if (v.length < 2) return `<p class="small mut">Serve almeno un altro giorno di dati: si riempie a ogni aggiornamento delle offerte.</p>`;
+  const max = Math.max(...v.map((x) => x.valore)), min = Math.min(...v.map((x) => x.valore));
+  return `<div class="spark">${v.map((x) => `<div title="${dataIt(x.data)}: ${eur(x.valore, 0)}" style="height:${12 + 48 * (max === min ? 0.5 : (x.valore - min) / (max - min))}px"></div>`).join("")}</div>
+    <div class="row sp small mut"><span>${dataIt(v[0].data)}: ${eur(v[0].valore, 0)}</span><span>${dataIt(v.at(-1).data)}: ${eur(v.at(-1).valore, 0)}</span></div>`;
+}
+function sezioneAvvisi() {
+  const st = S.storico;
+  let html = `<h2>Avvisi</h2><div class="card small">
+    <label class="sw"><span>Avvisami quando un'offerta mi fa risparmiare almeno</span><input type="checkbox" id="avAtt" ${S.avvisi.attivi ? "checked" : ""}></label>
+    <div class="row"><input inputmode="numeric" id="avSoglia" value="${S.avvisi.soglia}" style="max-width:110px"><span>€ all'anno rispetto alla mia offerta attuale (o alle Tutele Graduali, per la luce)</span></div>
+    <p class="mut">Il controllo avviene ogni giorno quando apri l'app e si scaricano le offerte. Per seguire un'offerta tocca ★ nel suo dettaglio: ti avviso se cambia prezzo, se sta per scadere o se esce dal mercato.</p>
+    ${S.seguite.length ? `<div class="sub-h">Offerte che segui</div>${S.seguite.map((f) => `<div class="row sp" style="margin:4px 0"><span>${h(f.venditore)} — ${h(f.nome)}${f.sparita ? " <b class=\"bad\">(non più in vendita)</b>" : ""}</span><span class="num">${f.tot ? eur(f.tot, 0) : ""}</span></div>`).join("")}` : ""}
+  </div>`;
+  if (st.length) {
+    html += `<h2>Andamento della migliore offerta</h2><div class="card small">`;
+    for (const forn of ["LUCE", "GAS"]) {
+      const serie = st.map((x) => ({ data: x.data, valore: x[forn]?.tot }));
+      if (!serie.some((x) => x.valore != null)) continue;
+      html += `<div class="sub-h">${forn === "LUCE" ? "Luce" : "Gas"} — totale 12 bollette</div>${andamento(serie)}`;
+    }
+    html += `</div>`;
+  }
+  return html;
+}
+function eventiAvvisi() {
+  $("#avAtt") && ($("#avAtt").onchange = (e) => { S.avvisi.attivi = e.target.checked; salva(); });
+  $("#avSoglia") && ($("#avSoglia").onchange = (e) => { const v = pnum(e.target.value); if (v > 0) { S.avvisi.soglia = v; salva(); } });
 }
 
 // ------------------------------------------------------------------ LA TUA BOLLETTA
@@ -984,6 +1080,7 @@ function vistaDati() {
     <div class="mut">Si aggiorna da sola: all'apertura controlla se c'è una versione nuova e la installa in pochi secondi.</div>
     ${apkNuovo ? `<div class="avviso">Questa volta serve installare il programma completo. <a class="btn mini" href="${h(apkNuovo)}">Scarica l'APK</a></div>` : ""}
     <button class="btn sec full" id="dVer" style="margin-top:8px">Controlla aggiornamenti</button></div>
+  ${sezioneAvvisi()}
   <h2>PUN ultimi mesi <span class="mut small">€/kWh</span></h2><div class="card"><table><tr><th>Mese</th><th class="r">F0</th><th class="r">F1</th><th class="r">F2</th><th class="r">F3</th></tr>
     ${pun.map(([k, v]) => `<tr><td>${k}</td>${["F0", "F1", "F2", "F3"].map((f) => `<td class="r num">${nf(v[f], 4)}</td>`).join("")}</tr>`).join("")}</table></div>
   <h2>PSV ultimi mesi <span class="mut small">€/Smc</span></h2><div class="card"><table>
@@ -1004,6 +1101,7 @@ function vistaDati() {
     <li><b>Scenari</b> delle offerte variabili: basso ×${met.scenari.basso}, alto ×${met.scenari.alto} sui soli valori simulati.</li></ul></div>`;
   $("#dAgg") && ($("#dAgg").onclick = () => { if (!nativo()) { toast("Il download funziona nell'app Android"); return; } aggiorna(true); vistaDati(); });
   $("#dVer") && ($("#dVer").onclick = () => aggiornaApp(true));
+  eventiAvvisi();
   $$("#dAuto button").forEach((b) => (b.onclick = () => { S.auto = b.dataset.v; salva(); vistaDati(); }));
 }
 
