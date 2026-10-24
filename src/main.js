@@ -1,7 +1,7 @@
 import * as pdfjs from "pdfjs-dist";
 import { analizza, bozzaOfferta, testoPdf } from "./cte.js";
 import { contesto, simulaOfferta, totaleMesi, riepilogoOfferta, bollettaPersonalizzata, consumiMensili, daCte, eVariabile, offertaSTG, scontiEPenali } from "./bolletta.js";
-import { aggiornaCatalogo, filtra, classifica, scadenza, SITUAZIONI } from "./catalogo.js";
+import { aggiornaCatalogo, filtra, classifica, classificaDual, scadenza, SITUAZIONI } from "./catalogo.js";
 import { scaricaTesto, salvaCatalogo, caricaCatalogo, catalogoIniziale, nativo } from "./archivio.js";
 import { isoGiorno } from "./opendata.js";
 import { pdfConfronto, pdfBollette } from "./esporta.js";
@@ -202,9 +202,54 @@ function pillole(r, max = 3) {
   return out.length ? `<div class="pills">${out.slice(0, max).join("")}${resto > 0 ? `<span class="pill neutral">+${resto}</span>` : ""}</div>` : "";
 }
 
+const segForn = (u) => `<div class="seg big" id="sForn"><button data-v="LUCE" class="${S.forn === "LUCE" ? "on" : ""}" ${u.luce.attiva ? "" : "disabled"}>💡 Luce</button>
+      <button data-v="GAS" class="${S.forn === "GAS" ? "on" : ""}" ${u.gas.attiva ? "" : "disabled"}>🔥 Gas</button>
+      <button data-v="DUAL" class="${S.forn === "DUAL" ? "on" : ""}" ${u.luce.attiva && u.gas.attiva ? "" : "disabled"}>Luce + Gas</button></div>`;
+
+function calcolaDual() {
+  const k = "DUAL" + chiave("LUCE") + chiave("GAS");
+  if (cache.has(k)) return cache.get(k);
+  const u = U(), ctx = CTX();
+  const r = classificaDual(S.catalogo.offerte, u, ctx, oggiIso());
+  const L = calcolaClassifica("LUCE").lista.find((x) => !x.offerta.mia), G = calcolaClassifica("GAS").lista.find((x) => !x.offerta.mia);
+  for (const x of r.lista) x.cp = condizioniParticolari(x.luce.offerta, u).concat(condizioniParticolari(x.gas.offerta, u));
+  const out = { ...r, separati: L && G ? { luce: L, gas: G, centrale: L.centrale + G.centrale } : null };
+  cache.set(k, out);
+  return out;
+}
+
+async function vistaDual() {
+  const v = $("#vista"), u = U();
+  if (!cache.has("DUAL" + chiave("LUCE") + chiave("GAS"))) { v.innerHTML = `<div class="empty"><span class="spin"></span><p>Calcolo luce e gas insieme…</p></div>`; await attendi(); }
+  const R = calcolaDual(), sep = R.separati;
+  let html = `<div class="intest">${segForn(u)}
+    <button class="profilo-btn" id="vaiProfilo"><span>${h(u.comune?.nome || "Comune?")} · ${nf(u.luce.annuo, 0)} kWh + ${nf(u.gas.annuo, 0)} Smc · da ${meseIt(u.ingresso)}</span><b>Modifica</b></button></div>`;
+  if (sep) html += `<section class="best"><div class="best-l">Separati: la miglior luce + il miglior gas</div>
+      <div class="row sp"><div class="min0 small"><div>💡 <b>${h(sep.luce.offerta.venditore)}</b> — ${h(sep.luce.offerta.nome)} · ${eur(sep.luce.centrale, 0)}</div>
+        <div>🔥 <b>${h(sep.gas.offerta.venditore)}</b> — ${h(sep.gas.offerta.nome)} · ${eur(sep.gas.centrale, 0)}</div></div>
+        <div class="price"><div class="tot">${eur(sep.centrale, 0)}</div><div class="sub">all'anno</div></div></div>
+      ${R.lista[0] ? `<div class="conf"><span>rispetto al miglior pacchetto luce+gas</span><b class="${R.lista[0].centrale > sep.centrale ? "ok" : ""}">${R.lista[0].centrale > sep.centrale ? "risparmi " + eur(R.lista[0].centrale - sep.centrale, 0) : "costa " + eur(sep.centrale - R.lista[0].centrale, 0) + " in più"}</b></div>` : ""}
+      <div class="small mut" style="margin-top:6px">Due contratti e due bollette, anche con fornitori diversi.</div></section>`;
+  html += `<div class="small mut conta">${R.lista.length} pacchetti luce+gas dello stesso fornitore · totale di 12 bollette luce + 12 gas</div>`;
+  for (const [i, x] of R.lista.entries()) {
+    html += `<article class="offer">
+      <div class="row sp testa"><div class="min0"><div class="vend">${h(x.dual.venditore)} ${badgeFornitore(x.dual)}</div><div class="nome">${h(x.dual.nome)}</div></div>
+        <div class="price"><div class="tot">${eur(x.centrale, 0)}</div><div class="sub">${sep ? (x.centrale >= sep.centrale ? "+" + eur(x.centrale - sep.centrale, 0) : "−" + eur(sep.centrale - x.centrale, 0)) + " vs separati" : ""}</div></div></div>
+      <div class="riga small mut">💡 ${eur(x.luce.centrale, 0)} + 🔥 ${eur(x.gas.centrale, 0)}${x.sconto ? ` − sconto pacchetto ${eur(x.sconto, 0)}` : ""} · ${i + 1}° posto</div>
+      ${pillole(x)}
+      <div class="row" style="margin-top:8px"><button class="btn sec mini" data-det="${h(x.luce.offerta.id)}">Dettaglio luce</button><button class="btn sec mini" data-det="${h(x.gas.offerta.id)}">Dettaglio gas</button></div></article>`;
+  }
+  if (!R.lista.length) html += `<div class="empty">Nessun pacchetto luce+gas disponibile per te.</div>`;
+  v.innerHTML = html;
+  $("#vaiProfilo").onclick = () => vai("profilo");
+  $$("#sForn button").forEach((b) => (b.onclick = () => { S.forn = b.dataset.v; S.quante = 25; vistaOfferte(); }));
+  $$("[data-det]").forEach((c) => c.addEventListener("click", () => vistaDettaglio(c.dataset.det)));
+}
+
 async function vistaOfferte() {
   const v = $("#vista"), u = U();
   if (!S.catalogo) { v.innerHTML = `<div class="empty"><span class="spin"></span><p>Carico le offerte…</p></div>`; return; }
+  if (S.forn === "DUAL") { if (u.luce.attiva && u.gas.attiva) return vistaDual(); S.forn = "LUCE"; }
   if (!(S.forn === "LUCE" ? u.luce.attiva : u.gas.attiva) && (u.luce.attiva || u.gas.attiva)) S.forn = u.luce.attiva ? "LUCE" : "GAS";
   if (!cache.has(chiave(S.forn))) { v.innerHTML = `<div class="empty"><span class="spin"></span><p>Calcolo le bollette di ogni offerta…</p></div>`; await attendi(); }
   const R = calcolaClassifica(S.forn);
@@ -216,8 +261,7 @@ async function vistaOfferte() {
   const rif = R.lista.filter((r) => r.offerta.mia);
   const vecchio = S.catalogo.data < isoGiorno(new Date(Date.now() - 2 * 86400000));
 
-  let html = `<div class="intest"><div class="seg big" id="sForn"><button data-v="LUCE" class="${S.forn === "LUCE" ? "on" : ""}" ${u.luce.attiva ? "" : "disabled"}>💡 Luce</button>
-      <button data-v="GAS" class="${S.forn === "GAS" ? "on" : ""}" ${u.gas.attiva ? "" : "disabled"}>🔥 Gas</button></div>
+  let html = `<div class="intest">${segForn(u)}
     <button class="profilo-btn" id="vaiProfilo"><span>${h(u.comune?.nome || "Comune?")} · ${consumo}/anno · da ${meseIt(u.ingresso)}</span><b>Modifica</b></button></div>`;
   if (vecchio) html += `<div class="avviso small">Offerte del ${dataIt(S.catalogo.data)}. ${S.aggiornando ? `<span id="avanz">${h(S.avanzamento || "Aggiorno…")}</span>` : `<button class="btn mini" id="aggOra">Scarica quelle di oggi</button>`}</div>`;
 

@@ -99,6 +99,9 @@ export function normalizzaOfferta(o, rilevazione) {
     url: testo(det, "Contatti/URL_OFFERTA") || (sito ? `https://${dominio(sito)}` : ""),
     tel: testo(det, "Contatti/TELEFONO"),
     forn: mercato === "02" ? "GAS" : mercato === "01" ? "LUCE" : "DUAL",
+    // pacchetti dual: codici delle offerte luce e gas da sottoscrivere insieme
+    ee: testi(o, "OffertaDual/OFFERTE_CONGIUNTE_EE").concat(testi(o, "OffertaDUAL/OFFERTE_CONGIUNTE_EE")).flatMap((x) => x.split(/[|;,\s]+/)).filter(Boolean),
+    gas: testi(o, "OffertaDual/OFFERTE_CONGIUNTE_GAS").concat(testi(o, "OffertaDUAL/OFFERTE_CONGIUNTE_GAS")).flatMap((x) => x.split(/[|;,\s]+/)).filter(Boolean),
     nome: testo(det, "NOME_OFFERTA") || "Offerta senza nome",
     descr: corto(testo(det, "DESCRIZIONE"), 500),
     cliente: testo(det, "TIPO_CLIENTE"),
@@ -159,7 +162,7 @@ export function leggiOfferte(xml, rilevazione, oggiIso = null) {
   for (const o of elementi(xml, "offerta")) {
     if (!o) continue;
     const n = normalizzaOfferta(o, rilevazione);
-    if (n.cliente !== "01" || n.forn === "DUAL" || (oggiIso && n.al && n.al < oggiIso)) { scartate++; continue; }
+    if (n.cliente !== "01" || (oggiIso && n.al && n.al < oggiIso)) { scartate++; continue; }
     delete n.cliente;
     out.push(n);
   }

@@ -11,12 +11,16 @@ export const SITUAZIONI = { "01": "Cambio fornitore", "04": "Voltura (subentro c
 export async function aggiornaCatalogo(scarica, avanzamento = () => {}, oggi = new Date()) {
   const oggiIso = isoGiorno(oggi);
   const out = { scaricato: new Date().toISOString(), offerte: [], dataOfferte: {}, parametri: {} };
-  for (const [c, nome] of [["E", "luce"], ["G", "gas"]]) {
-    avanzamento(`Scarico i parametri ${nome}…`);
-    const p = await scaricaUltimo(scarica, (d) => urlParametri(c, d), parametriValidi, oggi);
-    out.parametri[c] = { data: p.data, fonte: `Portale Offerte, parametri ${nome} del ${p.data.split("-").reverse().join("/")}`, valori: leggiParametri(p.testo) };
+  for (const [c, nome] of [["E", "luce"], ["G", "gas"], ["D", "luce+gas"]]) {
+    if (c !== "D") {
+      avanzamento(`Scarico i parametri ${nome}…`);
+      const p = await scaricaUltimo(scarica, (d) => urlParametri(c, d), parametriValidi, oggi);
+      out.parametri[c] = { data: p.data, fonte: `Portale Offerte, parametri ${nome} del ${p.data.split("-").reverse().join("/")}`, valori: leggiParametri(p.testo) };
+    }
     avanzamento(`Scarico le offerte ${nome}…`);
-    const x = await scaricaUltimo(scarica, (d) => urlOfferte(c, d), offerteValide, oggi);
+    let x;
+    try { x = await scaricaUltimo(scarica, (d) => urlOfferte(c, d), offerteValide, oggi); }
+    catch (e) { if (c === "D") continue; throw e; }   // senza il file dual si continua con luce e gas
     avanzamento(`Leggo le offerte ${nome}…`);
     const { offerte } = leggiOfferte(x.testo, x.data, oggiIso);
     out.offerte.push(...offerte);
@@ -45,8 +49,8 @@ export function anomalia(o) {
 }
 
 /** Motivo per cui un'offerta non vale per l'utente, oppure null. */
-export function esclusione(o, u, annuo, oggiIso) {
-  if (!o.singola) return "si sottoscrive solo insieme a luce+gas (dual)";
+export function esclusione(o, u, annuo, oggiIso, { dual = false } = {}) {
+  if (!o.singola && !dual) return "si sottoscrive solo insieme a luce+gas (dual)";
   if (o.dal && o.dal > oggiIso) return "non ancora sottoscrivibile";
   if (o.res === "R" && !u.residente) return "solo per residenti";
   if (o.res === "NR" && u.residente) return "solo per non residenti";
@@ -65,6 +69,7 @@ export function filtra(offerte, u, R, oggiIso, { scadute = false } = {}) {
   const annuo = { LUCE: u.luce?.attiva ? consumoAnnuo(u, "LUCE", R) : 0, GAS: u.gas?.attiva ? consumoAnnuo(u, "GAS", R) : 0 };
   for (const o of offerte) {
     const f = o.forn;
+    if (f === "DUAL") continue;
     if (f === "LUCE" && !u.luce?.attiva) continue;
     if (f === "GAS" && !u.gas?.attiva) continue;
     const e = esclusione(o, u, annuo[f], oggiIso);
@@ -94,4 +99,37 @@ export function scadenza(o, oggiIso) {
   if (!o.al || o.al >= "2090") return null;
   const giorni = Math.round((Date.parse(o.al) - Date.parse(oggiIso)) / 86400000);
   return { al: o.al, giorni };
+}
+
+/**
+ * Pacchetti luce+gas dello stesso venditore (file dual del Portale): costo = offerta luce + offerta gas
+ * collegate, calcolate con lo stesso motore, più gli sconti propri del pacchetto (€/anno o una tantum).
+ */
+export function classificaDual(offerte, u, ctx, oggiIso) {
+  const perId = new Map(offerte.filter((o) => o.forn !== "DUAL").map((o) => [o.id, o]));
+  const annuoL = consumoAnnuo(u, "LUCE", ctx.R), annuoG = consumoAnnuo(u, "GAS", ctx.R);
+  const out = [], escluse = {};
+  const conta = (m) => { escluse[m] = (escluse[m] || 0) + 1; };
+  for (const d of offerte.filter((o) => o.forn === "DUAL")) {
+    const e = esclusione({ ...d, singola: true, pot: null, cons: null }, u, 0, oggiIso);
+    if (e) { conta(e); continue; }
+    let migliore = null;
+    for (const idL of d.ee) for (const idG of d.gas) {
+      const L = perId.get(idL), G = perId.get(idG);
+      if (!L || !G) continue;
+      if (esclusione(L, u, annuoL, oggiIso, { dual: true }) || esclusione(G, u, annuoG, oggiIso, { dual: true })) continue;
+      const rl = riepilogoOfferta(L, u, ctx, false), rg = riepilogoOfferta(G, u, ctx, false);
+      let sconto = 0;
+      for (const s of d.sc || []) {
+        if (s.cond && s.cond !== "00" && !(["01", "02"].includes(s.cond) && u.bollettaWeb) && !(s.cond === "03" && u.bollettaWeb && u.domiciliazione)) continue;
+        if (s.val === "03") continue;
+        for (const p of s.p) if (p.u === "01" || p.u === "05") sconto += p.pr * (s.iva ? 1.1 : 1);
+      }
+      const tot = rl.centrale + rg.centrale - sconto;
+      if (!migliore || tot < migliore.centrale) migliore = { dual: d, luce: rl, gas: rg, sconto, centrale: tot };
+    }
+    if (migliore) out.push(migliore); else conta("offerte luce o gas collegate non disponibili per te");
+  }
+  out.sort((a, b) => a.centrale - b.centrale);
+  return { lista: out, escluse };
 }
