@@ -13,12 +13,14 @@
 <main id="vista"></main>
 <nav class="tabs">
   <button data-tab="offerte" class="on"><svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>Offerte</button>
+  <button data-tab="internet"><svg viewBox="0 0 24 24"><path d="M2 9a15 15 0 0 1 20 0M5.5 12.5a10 10 0 0 1 13 0M9 16a5 5 0 0 1 6 0M12 19.5v.01"/></svg>Internet</button>
   <button data-tab="cte"><svg viewBox="0 0 24 24"><path d="M6 2h9l5 5v15H6zM14 2v6h6M9 13h8M9 17h8"/></svg>La mia offerta</button>
   <button data-tab="profilo"><svg viewBox="0 0 24 24"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg>Consumi</button>
   <button data-tab="dati"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.01"/></svg>Info</button>
 </nav>
 <input type="file" id="filePdf" accept="application/pdf,.pdf" multiple hidden>
 <input type="file" id="fileBolletta" accept="application/pdf,.pdf" multiple hidden>
+<input type="file" id="fileSintesi" accept="application/pdf,.pdf" hidden>
 <input type="file" id="fileCsv" accept=".csv,text/csv,.txt,text/plain" hidden>
 <div id="toast" class="toast"></div>
 <script type="module" src="app.js"></script>

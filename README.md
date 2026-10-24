@@ -37,6 +37,19 @@ L'app contiene un elenco iniziale (06/10/2026) che viene sostituito dal primo ag
   Il controllo avviene all'apertura dell'app, quando si scaricano le offerte del giorno.
 - **Consumi**: comune, data di passaggio, consumi annui o mese per mese, bolletta online e domiciliazione (decidono quali sconti valgono).
 
+## Internet casa (fibra, FTTC, FWA)
+- **Scheda Internet**: offerte dei principali operatori (TIM, Fastweb, Vodafone, WINDTRE, Iliad, Sky, Tiscali, EOLO, Linkem) e dei
+  fornitori di energia che vendono la fibra (Plenitude, Enel, Iren, Edison). Classifica per **costo totale in 12, 24 o 36 mesi**:
+  canone promozionale e poi pieno, attivazione, rate del modem, sconti se hai già il mobile o la luce/gas dello stesso operatore.
+- Per ogni offerta: vincolo, costo di uscita dopo 12 e 24 mesi (rate residue del modem comprese), chiamate, fonte e data di verifica,
+  link alla mappa di copertura AGCOM e alle recensioni. I dati non pubblicati dalla fonte sono segnalati, non inventati.
+- **Il tuo abbonamento**: a mano o dal PDF della sintesi contrattuale; il risparmio è calcolato sullo stesso orizzonte.
+- **Luce/gas + internet**: le offerte energia riservate a chi attiva anche la fibra (Plenitude «Fibra», Enel «Luce e Giga»,
+  Iren/SEV «Connettività», Newtec) escono dalla classifica luce/gas, perché il loro prezzo non comprende internet, e vengono
+  confrontate qui come pacchetto completo contro la miglior energia + il miglior internet presi separatamente.
+- Non esiste un open data delle offerte telefoniche: il catalogo `data/internet.json` è raccolto a mano (pagine degli operatori,
+  sintesi contrattuali, comparatori) e va aggiornato; l'app lo riceve con gli aggiornamenti automatici.
+
 ## Fornitori e recensioni
 Tutti i venditori sul Portale sono autorizzati, ma la qualità del servizio cambia. L'app indica se un fornitore è un grande
 operatore nazionale, una multiutility locale o un piccolo fornitore (classificazione fatta a mano sui principali marchi,

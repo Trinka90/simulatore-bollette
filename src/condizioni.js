@@ -37,6 +37,9 @@ export function condizioniParticolari(o, u = {}) {
   }
   // durata del prezzo
   if (o.tipo === "fisso" && o.durata) add("info", `Prezzo fisso ${o.durata} mesi`, `Il prezzo resta bloccato per ${o.durata} mesi, poi il venditore comunica le nuove condizioni.`);
+  // offerte abbinate a internet
+  if (richiedeInternet(o)) add("attenzione", "Richiede anche internet", `Offerta riservata a chi ha o attiva anche la connessione internet di ${o.venditore || "questo fornitore"}. Il costo di internet non è nel totale: il confronto completo è nella scheda Internet.`);
+  else if (sitoInternet(o)) add("info", "Il fornitore vende anche internet", "Lo stesso fornitore offre la fibra con uno sconto per chi ha luce o gas: vedi la scheda Internet.");
   // modalità
   if (o.canali?.length === 1 && o.canali[0] === "01") add("info", "Solo online", "Si attiva solo sul sito del venditore.");
   if (o.pag?.length && o.pag.every((x) => x === "01" || x === "02")) add("attenzione", "Solo domiciliazione", "Si paga solo con addebito sul conto (bancario o postale).");
@@ -106,3 +109,11 @@ function valoreSconto(s) {
   if (tiers.length > 1) return s.p.map((p) => `${n(p.pr)} ${UNITA[p.u] || ""}${p.da != null || p.a ? ` (consumi ${p.da || 0}-${p.a || "oltre"})` : ""}`).join(", ");
   return s.p.map((p) => `${n(p.pr)} ${UNITA[p.u] || ""}`).join(" + ");
 }
+
+/** Offerta luce/gas riservata a chi compra anche la connessione internet dello stesso venditore. */
+export function richiedeInternet(o) {
+  if (/fibra|connettivit|\bgiga\b|\+\s*conn\b/i.test(o.nome || "")) return true;
+  return /(contestualmente|congiuntamente|contratto attivo di)[^.]{0,140}(fibra|connettivit|internet)/i.test(o.descr || "");
+}
+const SITI_INTERNET = ["eniplenitude.com", "enel.it", "irenlucegas.it", "edisonenergia.it"];
+export const sitoInternet = (o) => SITI_INTERNET.includes(o.sito);

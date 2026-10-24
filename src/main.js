@@ -8,7 +8,9 @@ import { pdfConfronto, pdfBollette } from "./esporta.js";
 import { eur, nf, dataIt, meseIt, MESI_NOMI, descrizionePrezzo, TIPI, CANALI, PAGAMENTI, ATTIVAZIONI, CONDIZIONI,
   VALIDITA_SCONTO, NOMI_REGOLATE, CONDIZIONI_SCONTO, durata, descrUtenza } from "./testi.js";
 import { DATI_URL } from "./config.js";
-import { condizioniParticolari } from "./condizioni.js";
+import { condizioniParticolari, richiedeInternet } from "./condizioni.js";
+import { costoInternet, costoUscita, classificaInternet, offertaMia, migliore as miglioreNet, incerta, analizzaSintesi, TECNO } from "./internet.js";
+import catalogoInternet from "../data/internet.json";
 import { categoria, nomeFornitore, ETICHETTE, recensioni } from "./fornitori.js";
 import { confermaAvvio, controllaAggiornamento, VERSIONE_WEB } from "./aggiorna-app.js";
 import { analizzaBolletta, consumiDaBollette } from "./bolletta-pdf.js";
@@ -84,7 +86,7 @@ function toast(msg, ms = 2600) {
 const attendi = () => new Promise((r) => setTimeout(r, 30));
 
 // ------------------------------------------------------------------ navigazione
-const TITOLI = { offerte: "Offerte luce e gas", cte: "La mia offerta", profilo: "I miei consumi", dati: "Info e aggiornamenti" };
+const TITOLI = { internet: "Internet casa", offerte: "Offerte luce e gas", cte: "La mia offerta", profilo: "I miei consumi", dati: "Info e aggiornamenti" };
 function vai(tab) {
   S.tab = tab;
   $$(".tabs button").forEach((b) => b.classList.toggle("on", b.dataset.tab === tab));
@@ -165,7 +167,8 @@ function calcolaClassifica(forn) {
   const rif = [...(forn === "LUCE" && u.luce.stg && !att?.stg ? [offertaSTG(ctx.E, u.luce.stgQuota)] : []), ...(att ? [att] : [])];
   const lista = classifica([...f[forn], ...offerteCte(forn).filter((o) => !(S.attuale[forn]?.tipo === "cte" && S.attuale[forn].id === o.id)), ...rif], u, ctx);
   for (const r of lista) r.cp = condizioniParticolari(r.offerta, u);
-  const out = { lista, escluse: f.escluse[forn], nValide: f[forn].length, scaduteDopo: f.scaduteDopo[forn].filter((o) => o.al >= S.catalogo.data) };
+  const conInternet = lista.filter((r) => !r.offerta.mia && richiedeInternet(r.offerta));
+  const out = { lista: lista.filter((r) => r.offerta.mia || !richiedeInternet(r.offerta)), conInternet, escluse: f.escluse[forn], nValide: f[forn].length, scaduteDopo: f.scaduteDopo[forn].filter((o) => o.al >= S.catalogo.data) };
   cache.set(k, out);
   return out;
 }
@@ -300,9 +303,12 @@ async function vistaOfferte() {
   if (R.scaduteDopo.length) html += `<div class="avviso small">${R.scaduteDopo.length} offerte, tra cui ${h(venditoriPrincipali(R.scaduteDopo))}, sono scadute dopo il ${dataIt(S.catalogo.data)}.
       I grandi fornitori rinnovano le offerte ogni 2 settimane: scarica quelle di oggi dalla scheda Info.
       <label class="sw"><span>Mostrale comunque</span><input type="checkbox" id="mScad" ${S.mostraScadute ? "checked" : ""}></label></div>`;
+  if (R.conInternet.length) html += `<div class="avviso small">${R.conInternet.length} offerte (${h(venditoriPrincipali(R.conInternet.map((r) => r.offerta)))}) richiedono di attivare anche internet con lo stesso fornitore: non sono in classifica perché il loro prezzo non comprende la fibra.
+      <button class="btn mini" id="vaiNet">Confrontale con internet incluso</button></div>`;
   html += `<button class="btn ghost full" id="pdfConf">Esporta la classifica in PDF</button>`;
   v.innerHTML = html;
 
+  $("#vaiNet") && ($("#vaiNet").onclick = () => vai("internet"));
   $("#vaiProfilo").onclick = () => vai("profilo");
   $$("#sForn button").forEach((b) => (b.onclick = () => { S.forn = b.dataset.v; S.quante = 25; vistaOfferte(); }));
   $$("[data-f]").forEach((b) => (b.onclick = () => { S.filtri[b.dataset.f] = !S.filtri[b.dataset.f]; LS.set("filtri", S.filtri); S.quante = 25; vistaOfferte(); }));
@@ -419,6 +425,7 @@ function vistaDettaglio(id, scenario = "centrale") {
         : `<p class="small mut">${o.mia ? "Per la tua CTE controlla sconti e penali sul documento." : "Nessuno sconto, vincolo o condizione particolare dichiarati al Portale."}</p>`}
       ${sp.totApplicati > 0.005 ? `<div class="tot-sconti">Sconti già inclusi nel totale: <b>−${eur(sp.totApplicati)}</b></div>` : ""}
     </section>
+    ${richiedeInternet(o) ? boxInternetEnergia(o, tot) : ""}
     ${o.stg ? "" : `<section class="sez"><h3>Chi è il fornitore</h3>
       <p class="small">${o.mia ? "Offerta inserita da te." : h(ETICHETTE[o.cat || "piccolo"].testo)}</p>
       ${o.mia ? "" : `<div class="row"><a class="btn sec" href="${rec.trustpilot}" target="_blank" rel="noopener">★ Recensioni Trustpilot</a><a class="btn sec" href="${rec.google}" target="_blank" rel="noopener">Recensioni Google</a></div>
@@ -451,7 +458,10 @@ function vistaDettaglio(id, scenario = "centrale") {
   const d = new Date(`${u.ingresso}-01T00:00:00Z`); const f = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0));
   $("#bAl").value = f.toISOString().slice(0, 10);
   $("#segui") && ($("#segui").onclick = () => { segui(o); toast(S.seguite.some((x) => x.id === o.id) ? "Ti avviso se cambia prezzo o scade" : "Non segui più questa offerta"); vistaDettaglio(id, scenario); });
-  $("#indietro").onclick = () => vai(o.mia && !o.stg ? "cte" : "offerte");
+  $("#indietro").onclick = () => vai(o.mia && !o.stg ? "cte" : S.daInternet ? "internet" : "offerte");
+  S.daInternet = false;
+  $("#boxNet") && ($("#boxNet").onclick = () => vai("internet"));
+  $$("[data-net]").forEach((b) => (b.onclick = () => vistaDettaglioInternet(b.dataset.net)));
   $$(".jump a").forEach((a) => (a.onclick = (e) => { e.preventDefault(); $(a.getAttribute("href")).scrollIntoView({ behavior: "smooth", block: "start" }); }));
   $$(".vaiProf").forEach((a) => (a.onclick = (e) => { e.preventDefault(); vai("profilo"); }));
   $$("[data-sc]").forEach((b) => (b.onclick = () => vistaDettaglio(id, b.dataset.sc)));
@@ -1149,7 +1159,282 @@ function vistaDati() {
   $$("#dAuto button").forEach((b) => (b.onclick = () => { S.auto = b.dataset.v; salva(); vistaDati(); }));
 }
 
-const VISTE = { offerte: vistaOfferte, cte: vistaCte, profilo: vistaProfilo, dati: vistaDati };
+// ------------------------------------------------------------------ INTERNET CASA
+// Catalogo curato a mano (data/internet.json, con fonte e data per offerta): non esiste un open data delle offerte telefoniche.
+const NET_DEF = { tecnologia: "FTTH", mobile: "", energia: null, voce: false, cambioEnergia: true, minDown: 0, orizzonte: 24, mia: null };
+S.net = { ...NET_DEF, ...LS.get("net", {}) };
+const salvaNet = () => LS.set("net", S.net);
+const OPERATORI_MOBILE = ["TIM", "Vodafone", "WINDTRE", "Iliad", "Fastweb"];
+const FORN_ENERGIA_NET = [["eniplenitude.com", "Plenitude"], ["enel.it", "Enel"], ["irenlucegas.it", "Iren"], ["edisonenergia.it", "Edison"]];
+const URL_COPERTURA = "https://www.agcom.it/mappatura-delle-reti-di-accesso-ad-internet";
+const offerteNet = () => catalogoInternet.offerte;
+/** Siti dei fornitori luce/gas che hai: dal profilo internet, altrimenti dalla tua offerta attuale. */
+function sitiEnergia() {
+  if (S.net.energia) return S.net.energia;
+  return [...new Set(["LUCE", "GAS"].map((f) => offertaAttuale(f)?.sito).filter(Boolean))];
+}
+const profiloNet = (extra = {}) => ({ ...S.net, energia: sitiEnergia(), ...extra });
+const vel = (m) => (m == null ? "?" : m >= 1000 ? `${nf(m / 1000, m % 1000 ? 1 : 0)} Gbit/s` : `${m} Mbit/s`);
+const tecnoTxt = (o) => o.tecnologie.map((t) => TECNO[t]?.breve || t).join(" / ");
+
+function classificaNet() {
+  const p = profiloNet(), N = S.net.orizzonte;
+  const lista = classificaInternet(offerteNet(), p, N, oggiIso());
+  let mia = null;
+  if (S.net.mia?.canone > 0) { const o = offertaMia(S.net.mia); mia = { offerta: o, ...costoInternet(o, p, N) }; }
+  return { lista, mia, p, N };
+}
+
+/** Pacchetti luce/gas + internet dello stesso fornitore, contro la miglior energia + il miglior internet presi separatamente. */
+function pacchettiEnergiaInternet(N) {
+  if (!S.catalogo) return [];
+  const u = U(), forn = ["LUCE", "GAS"].filter((f) => (f === "LUCE" ? u.luce.attiva : u.gas.attiva));
+  const R = Object.fromEntries(forn.map((f) => [f, calcolaClassifica(f)]));
+  const bestSep = Object.fromEntries(forn.map((f) => [f, R[f].lista.find((r) => !r.offerta.mia)]));
+  const netSep = miglioreNet(classificaInternet(offerteNet(), profiloNet({ cambioEnergia: false }), N, oggiIso()), N);
+  const out = [];
+  for (const [sito, nome] of FORN_ENERGIA_NET) {
+    const ener = {};
+    const dedicate = offerteNet().some((o) => o.sito === sito && o.energia?.dedicate);
+    for (const f of forn) {
+      const cand = (dedicate ? R[f].conInternet : [...R[f].lista, ...R[f].conInternet]).filter((r) => r.offerta.sito === sito && !r.offerta.mia);
+      ener[f] = cand.sort((a, b) => a.centrale - b.centrale)[0] || null;
+    }
+    if (!forn.some((f) => ener[f])) continue;
+    const pi = profiloNet({ energia: [...new Set([...sitiEnergia(), sito])], cambioEnergia: true });
+    const nets = classificaInternet(offerteNet().filter((o) => o.sito === sito && (!o.energia?.entrambe || forn.length === 2 && ener.LUCE && ener.GAS)), pi, N, oggiIso());
+    const net = nets[0];
+    if (!net) continue;
+    // per le forniture che il fornitore non copre, resta la migliore separata
+    const annuoPacchetto = forn.reduce((a, f) => a + ((ener[f] || bestSep[f])?.centrale || 0), 0);
+    const annuoSep = forn.reduce((a, f) => a + (bestSep[f]?.centrale || 0), 0);
+    const pacchetto = annuoPacchetto * N / 12 + net.totale;
+    const separati = annuoSep * N / 12 + (netSep?.totale || 0);
+    out.push({ sito, nome, ener, net, bestSep, netSep, pacchetto, separati, diff: pacchetto - separati, forn });
+  }
+  return out.sort((a, b) => a.diff - b.diff);
+}
+
+function cardNet(r, best, extra = "") {
+  const o = r.offerta;
+  const pills = [];
+  if (r.promoOk && o.promo) pills.push(`<span class="pill att">${eur(o.promo.canone - (r.scontoMobile || 0))}/mese per ${o.promo.mesi} mesi, poi ${eur((o.canone ?? o.promo.canone) - (r.scontoMobile || 0))}</span>`);
+  if (r.scontoMobile) pills.push(`<span class="pill save">✓ −${eur(r.scontoMobile, 0)}/mese col mobile</span>`);
+  if (o.energia) pills.push(`<span class="pill ${o.energia.obbligatoria ? "att" : "neutral"}">${o.energia.obbligatoria ? "Richiede" : "Sconto con"} luce/gas ${h(o.operatore)}</span>`);
+  if (o.vincolo > 0) pills.push(`<span class="pill bad">Vincolo ${o.vincolo} mesi</span>`);
+  if (o.modem?.nel_canone) pills.push(`<span class="pill bad">Modem a rate ${o.modem.mesi} mesi</span>`);
+  if (r.incognite.length) pills.push(`<span class="pill neutral">${r.incognite.length} dato non pubblicato</span>`);
+  if (r.scaduta) pills.push(`<span class="pill bad">Promo scaduta il ${dataIt(o.scade)}</span>`);
+  else if (o.scade) pills.push(`<span class="pill neutral">Fino al ${dataIt(o.scade)}</span>`);
+  return `<article class="offer ${o.mia ? "mia" : ""}" data-net="${h(o.id)}" role="button">
+    <div class="row sp testa"><div class="min0"><div class="vend">${h(o.operatore)} ${o.mia ? badge("IL TUO ABBONAMENTO", "mia") : ""}</div><div class="nome">${h(o.nome)}</div></div>
+      <div class="price"><div class="tot">${eur(r.medio, 2)}</div><div class="sub">al mese in media · ${eur(r.totale, 0)} in ${S.net.orizzonte} mesi</div></div></div>
+    <div class="riga small mut">${tecnoTxt(o)} · ${vel(o.down)} · ${o.chiamate ? h(o.chiamate.replace(/\s*\(.*\)/, "")) : "chiamate: non indicato"}${best != null && !o.mia ? ` · ${r.totale > best ? "+" + eur(r.totale - best, 0) : "la più economica"}` : ""}</div>
+    ${pills.length ? `<div class="pills">${pills.slice(0, 4).join("")}</div>` : ""}${extra}</article>`;
+}
+
+function vistaInternet() {
+  const v = $("#vista");
+  const { lista, mia, N } = classificaNet();
+  const best = miglioreNet(lista, N);
+  const pk = pacchettiEnergiaInternet(N);
+  const T = S.net.tecnologia;
+  let html = `<div class="intest"><div class="seg big" id="nTec">${Object.keys(TECNO).map((t) => `<button data-v="${t}" class="${T === t ? "on" : ""}">${t === "FTTH" ? "Fibra FTTH" : t === "FTTC" ? "Fibra FTTC" : "FWA (radio)"}</button>`).join("")}</div>
+    <div class="small mut">Quale tecnologia arriva a casa tua? <a href="${URL_COPERTURA}" target="_blank" rel="noopener">Controlla l'indirizzo sulla mappa AGCOM</a> o sul sito dell'operatore.</div></div>`;
+  html += `<div class="seg" id="nOr">${[12, 24, 36].map((n) => `<button data-v="${n}" class="${N === n ? "on" : ""}">${n} mesi</button>`).join("")}</div>`;
+
+  if (best) {
+    const o = best.offerta;
+    html += `<section class="best" data-net="${h(o.id)}" role="button"><div class="best-l">La più conveniente in ${N} mesi</div>
+      <div class="row sp"><div class="min0"><div class="vend">${h(o.operatore)}</div><div class="nome">${h(o.nome)}</div></div>
+        <div class="price"><div class="tot">${eur(best.medio, 2)}</div><div class="sub">al mese in media · ${eur(best.totale, 0)} totali</div></div></div>
+      <div class="small mut" style="margin-top:6px">${tecnoTxt(o)} · ${vel(o.down)} · ${h(o.chiamate || "chiamate: non indicato")}</div>
+      ${mia ? `<div class="conf"><span>rispetto al tuo abbonamento</span><b class="${mia.totale > best.totale ? "ok" : ""}">${mia.totale > best.totale ? `risparmi ${eur(mia.totale - best.totale, 0)} in ${N} mesi` : `il tuo costa ${eur(best.totale - mia.totale, 0)} in meno`}</b></div>` : ""}
+      <div class="vedi">Vedi costi mese per mese, vincoli e uscita ›</div></section>`;
+  }
+
+  // filtri
+  html += `<div class="chips-f">
+    <button data-nf="voce" class="${S.net.voce ? "on" : ""}">Con telefono fisso</button>
+    <button data-nf="giga" class="${S.net.minDown >= 1000 ? "on" : ""}">Almeno 1 Giga</button>
+    <button data-nf="cambio" class="${S.net.cambioEnergia ? "on" : ""}">Anche abbinate a luce/gas</button></div>`;
+
+  // profilo: mobile ed energia
+  const en = sitiEnergia();
+  html += `<details class="card small" ${S.net.aperto ? "open" : ""} id="nProf"><summary><b>Sconti che puoi avere</b> <span class="mut">· mobile: ${h(S.net.mobile || "nessuno")} · luce/gas: ${h(en.map((x) => FORN_ENERGIA_NET.find((f) => f[0] === x)?.[1] || nomeFornitore(x, x)).join(", ") || "altro fornitore")}</span></summary>
+    <label>Hai una SIM con</label><select id="nMob"><option value="">nessuno di questi</option>${OPERATORI_MOBILE.map((x) => `<option ${S.net.mobile === x ? "selected" : ""}>${x}</option>`).join("")}</select>
+    <label>Hai luce o gas con</label><div class="chips-f" style="flex-wrap:wrap">${FORN_ENERGIA_NET.map(([s_, n]) => `<button data-en="${s_}" class="${en.includes(s_) ? "on" : ""}">${n}</button>`).join("")}</div>
+    <div class="mut" style="margin-top:6px">Alcuni operatori fanno un prezzo più basso a chi ha già il loro mobile o la loro luce/gas: lo applico solo se lo hai.</div></details>`;
+
+  // il mio abbonamento
+  const m = S.net.mia;
+  html += `<section class="sez"><h3>Il tuo abbonamento attuale</h3>
+    ${m?.canone ? `${cardNet(mia, null)}<div class="row"><button class="btn sec" id="nMiaMod">Modifica</button><button class="btn del" id="nMiaDel">Elimina</button></div>`
+      : `<p class="small mut">Inseriscilo per vedere quanto risparmi davvero. Puoi caricare la sintesi contrattuale (il riepilogo che ogni operatore deve darti prima della firma) o una bolletta in PDF.</p>
+      <div class="row"><button class="btn sec" id="nSint">Carica PDF</button><button class="btn sec" id="nMiaMod">Scrivi i dati</button></div>`}
+    <div id="nForm"></div></section>`;
+
+  // pacchetti energia + internet
+  if (pk.length) {
+    html += `<section class="sez"><h3>Luce/gas + internet dallo stesso fornitore: conviene?</h3>
+      <p class="small mut">Totale di ${N} mesi: la miglior offerta luce${pk[0].forn.length > 1 ? " e gas" : ""} del fornitore + la sua fibra, contro la miglior energia in assoluto + il miglior internet presi separatamente.</p>
+      <table class="lista">${pk.map((x) => `<tr data-pk="${h(x.sito)}" role="button"><td><b>${h(x.nome)}</b><div class="frase">${x.forn.map((f) => x.ener[f] ? `${f === "LUCE" ? "Luce" : "Gas"}: ${h(x.ener[f].offerta.nome)} ${eur(x.ener[f].centrale, 0)}/anno` : `${f === "LUCE" ? "Luce" : "Gas"}: nessuna offerta`).join(" · ")}<br>Internet: ${h(x.net.offerta.nome)} ${eur(x.net.medio, 2)}/mese</div></td>
+        <td class="r num"><b>${eur(x.pacchetto, 0)}</b><div class="frase ${x.diff <= 0 ? "ok" : "bad"}">${x.diff <= 0 ? "risparmi " + eur(-x.diff, 0) : "+" + eur(x.diff, 0)}</div></td></tr>`).join("")}
+        <tr class="t"><td>Separati: ${pk[0].forn.map((f) => h(pk[0].bestSep[f]?.offerta.venditore || "")).join(" + ")} + ${h(pk[0].netSep?.offerta.operatore || "")}</td><td class="r num">${eur(pk[0].separati, 0)}</td></tr></table>
+      <p class="small mut">L'energia è calcolata sui tuoi consumi con le regole ARERA (12 bollette, ripetute per ${N} mesi: oltre il primo anno è una stima). Tocca una riga per i dettagli.</p></section>`;
+  }
+
+  const incerte = lista.filter((r) => incerta(r, N) && !r.scaduta);
+  if (incerte.length) html += `<div class="avviso small">${incerte.map((r) => h(r.offerta.nome)).join(", ")}: il prezzo dopo la promozione non è pubblicato, quindi il totale in ${N} mesi è sottostimato. Non le metto in testa alla classifica.</div>`;
+  html += `<div class="small mut conta">${lista.length} offerte · ordinate per costo totale in ${N} mesi (canoni, promo, attivazione, modem)</div>`;
+  for (const r of lista) if (r !== best) html += cardNet(r, best?.totale);
+  if (!lista.length) html += `<div class="empty">Nessuna offerta con questi filtri.</div>`;
+  html += `<div class="card small"><b>Da dove vengono questi prezzi</b>
+    <p class="mut">${h(catalogoInternet.nota)} Aggiornato al ${dataIt(catalogoInternet.aggiornato_al)}. Le promozioni cambiano spesso: prima di firmare chiedi la <b>sintesi contrattuale</b> e confronta canone, durata della promo, costi di attivazione e di uscita.</p></div>`;
+  v.innerHTML = html;
+
+  $$("#nTec button").forEach((b) => (b.onclick = () => { S.net.tecnologia = b.dataset.v; salvaNet(); vistaInternet(); }));
+  $$("#nOr button").forEach((b) => (b.onclick = () => { S.net.orizzonte = +b.dataset.v; salvaNet(); vistaInternet(); }));
+  $$("[data-nf]").forEach((b) => (b.onclick = () => {
+    const k = b.dataset.nf;
+    if (k === "voce") S.net.voce = !S.net.voce; else if (k === "giga") S.net.minDown = S.net.minDown >= 1000 ? 0 : 1000; else S.net.cambioEnergia = !S.net.cambioEnergia;
+    salvaNet(); vistaInternet();
+  }));
+  $("#nProf").ontoggle = (e) => { S.net.aperto = e.target.open; salvaNet(); };
+  $("#nMob").onchange = (e) => { S.net.mobile = e.target.value; S.net.aperto = true; salvaNet(); vistaInternet(); };
+  $$("[data-en]").forEach((b) => (b.onclick = () => {
+    const cur = new Set(sitiEnergia()); cur.has(b.dataset.en) ? cur.delete(b.dataset.en) : cur.add(b.dataset.en);
+    S.net.energia = [...cur]; S.net.aperto = true; salvaNet(); vistaInternet();
+  }));
+  $$("[data-net]").forEach((c) => (c.onclick = () => vistaDettaglioInternet(c.dataset.net)));
+  $$("[data-pk]").forEach((c) => (c.onclick = () => vistaPacchetto(c.dataset.pk)));
+  $("#nSint") && ($("#nSint").onclick = () => $("#fileSintesi").click());
+  $("#nMiaMod").onclick = () => formMia(S.net.mia || {});
+  $("#nMiaDel") && ($("#nMiaDel").onclick = () => { S.net.mia = null; salvaNet(); vistaInternet(); });
+}
+
+function formMia(m, letti = null) {
+  const f = $("#nForm");
+  const campo = (id, et, val, ph = "") => `<div><label>${et}</label><input id="${id}" inputmode="decimal" value="${val == null ? "" : h(nf(val, 2))}" placeholder="${ph}"></div>`;
+  f.innerHTML = `${letti ? `<div class="avviso small">Dal PDF ho letto: ${Object.keys(letti).length ? h(Object.entries(letti).map(([k, v]) => `${k} ${v}`).join(", ")) : "nessun dato riconosciuto"}. Controlla e correggi.</div>` : ""}
+    <div class="row"><div><label>Operatore</label><input id="mOp" value="${h(m.operatore || "")}" placeholder="es. TIM"></div><div><label>Nome offerta</label><input id="mNome" value="${h(m.nome || "")}"></div></div>
+    <div class="row">${campo("mCan", "Canone attuale €/mese", m.canone, "es. 29,90")}${campo("mProm", "Mesi rimasti a questo prezzo", m.promoMesi, "vuoto = per sempre")}${campo("mDopo", "Poi €/mese", m.dopo)}</div>
+    <div class="row">${campo("mModR", "Rata modem €/mese (se a parte)", m.modemRata)}${campo("mModM", "Rate modem rimaste", m.modemMesi)}</div>
+    <div class="row"><div><label>Tecnologia</label><select id="mTec">${Object.keys(TECNO).map((t) => `<option ${m.tecnologia === t ? "selected" : ""}>${t}</option>`).join("")}</select></div>
+      <div><label>Velocità Mbit/s</label><input id="mDown" inputmode="numeric" value="${h(m.down ?? "")}"></div></div>
+    <button class="btn full" id="mSalva" style="margin-top:10px">Salva il mio abbonamento</button>`;
+  $("#mSalva").onclick = () => {
+    const n = (id) => { const x = pnum($("#" + id).value); return x == null || Number.isNaN(x) ? null : x; };
+    const can = n("mCan");
+    if (!(can > 0)) { toast("Scrivi il canone mensile"); return; }
+    S.net.mia = { operatore: $("#mOp").value.trim(), nome: $("#mNome").value.trim(), canone: can, promoMesi: n("mProm"), dopo: n("mDopo"),
+      modemRata: n("mModR"), modemMesi: n("mModM"), tecnologia: $("#mTec").value, down: n("mDown") };
+    salvaNet(); toast("Abbonamento salvato"); vistaInternet();
+  };
+  f.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+$("#fileSintesi").addEventListener("change", async (e) => {
+  const file = e.target.files[0]; e.target.value = "";
+  if (!file) return;
+  try {
+    toast("Leggo il PDF…");
+    const t = await testoPdf(file, pdfjs);
+    const r = analizzaSintesi(t);
+    const letti = {};
+    if (r.operatore) letti.operatore = r.operatore;
+    if (r.canone) letti.canone = eur(r.canone);
+    if (r.promoMesi) letti["mesi promo"] = r.promoMesi;
+    if (r.dopo) letti.poi = eur(r.dopo);
+    if (r.attivazione != null) letti.attivazione = eur(r.attivazione);
+    if (r.recesso) letti.disattivazione = eur(r.recesso);
+    if (r.down) letti.velocità = vel(r.down);
+    if (r.tecnologia) letti.tecnologia = r.tecnologia;
+    formMia({ ...S.net.mia, ...r }, letti);
+  } catch (err) { console.error(err); toast("Non riesco a leggere il PDF: " + err.message, 4000); }
+});
+
+function vistaDettaglioInternet(id) {
+  const p = profiloNet(), N = S.net.orizzonte;
+  const o = id === "MIA" ? offertaMia(S.net.mia) : offerteNet().find((x) => x.id === id);
+  if (!o) { toast("Offerta non trovata"); return; }
+  const r = costoInternet(o, p, N);
+  const lista = classificaInternet(offerteNet(), p, N, oggiIso()), best = miglioreNet(lista, N);
+  const mia = S.net.mia?.canone > 0 ? costoInternet(offertaMia(S.net.mia), p, N) : null;
+  $("#titolo").textContent = "Dettaglio internet";
+  // mesi raggruppati per importo
+  const gruppi = [];
+  r.mesi.forEach((v, i) => { const g = gruppi.at(-1); if (g && Math.abs(g.v - v) < 0.005) g.a = i + 1; else gruppi.push({ da: i + 1, a: i + 1, v }); });
+  const usc = [12, 24].map((m) => [m, costoUscita(o, m)]);
+  let html = `<button class="btn ghost" id="indietro">‹ Indietro</button>
+    <section class="hero"><div class="vend">${h(o.operatore)}</div><h2>${h(o.nome)}</h2>
+      <div class="big-tot">${eur(r.totale, 0)}<span> in ${N} mesi · ${eur(r.medio, 2)} al mese in media</span></div>
+      <div class="small mut">${tecnoTxt(o)} · fino a ${vel(o.down)} in download${o.up ? `, ${vel(o.up)} in upload` : ""}</div>
+      ${best && best.offerta.id !== o.id ? `<div class="conf"><span>rispetto alla più conveniente (${h(best.offerta.nome)})</span><b>+${eur(r.totale - best.totale, 0)}</b></div>` : ""}
+      ${mia && !o.mia ? `<div class="conf"><span>rispetto al tuo abbonamento</span><b class="${mia.totale > r.totale ? "ok" : ""}">${mia.totale > r.totale ? "risparmi " + eur(mia.totale - r.totale, 0) : "costa " + eur(r.totale - mia.totale, 0) + " in più"}</b></div>` : ""}
+    </section>
+    <section class="sez"><h3>In breve</h3><ul class="breve">
+      ${r.condizioni.map((c) => `<li class="${/non applicato|Si attiva solo|rate per/.test(c) ? "attenzione" : "piu"}"><span class="ic">${/non applicato|Si attiva solo|rate per/.test(c) ? "⚠" : "✓"}</span><div><b>${h(c)}</b></div></li>`).join("")}
+      <li class="${o.vincolo > 0 ? "attenzione" : "info"}"><span class="ic">${o.vincolo > 0 ? "⚠" : "ℹ"}</span><div><b>${o.vincolo > 0 ? `Vincolo di ${o.vincolo} mesi` : o.vincolo === 0 ? "Nessun vincolo di durata" : "Vincolo non indicato nella fonte"}</b></div></li>
+      <li class="info"><span class="ic">☎</span><div><b>Chiamate: ${h(o.chiamate || "non indicato")}</b></div></li>
+      ${(o.note || []).map((n) => `<li class="info"><span class="ic">ℹ</span><div><div class="small">${h(n)}</div></div></li>`).join("")}
+      ${r.incognite.map((n) => `<li class="attenzione"><span class="ic">?</span><div><b>Dato non pubblicato</b><div class="small">${h(n)}</div></div></li>`).join("")}
+    </ul></section>
+    <section class="sez"><h3>Quanto paghi in ${N} mesi</h3><table class="lista">${r.voci.map((x) => `<tr><td>${h(x.t)}</td><td class="r num">${eur(x.v)}</td></tr>`).join("")}
+      <tr class="t"><td>Totale</td><td class="r num">${eur(r.totale)}</td></tr></table>
+      <div class="sub-h">Mese per mese</div><table class="lista">${gruppi.map((g) => `<tr><td>${g.da === g.a ? `Mese ${g.da}` : `Mesi ${g.da}–${g.a}`}</td><td class="r num">${eur(g.v)}${g.da !== g.a ? " al mese" : ""}</td></tr>`).join("")}</table></section>
+    <section class="sez"><h3>Se vuoi cambiare prima</h3><table class="kv small">${usc.map(([m, u]) => `<tr><td>Dopo ${m} mesi</td><td>${u.importo != null ? `<b>${eur(u.importo)}</b> — ` : ""}${h(u.testo)}</td></tr>`).join("")}</table>
+      <p class="small mut">Per legge puoi recedere in ogni momento con 30 giorni di preavviso: l'operatore può chiedere solo i costi di disattivazione e, se c'era una promozione o un vincolo, la restituzione degli sconti o le rate residue. Gli importi esatti sono nella sintesi contrattuale.</p></section>
+    ${o.mia ? "" : `<section class="sez"><h3>Prima di firmare</h3>
+      <div class="row"><a class="btn sec" href="${URL_COPERTURA}" target="_blank" rel="noopener">Copertura (AGCOM)</a><a class="btn sec" href="https://${h(o.sito)}" target="_blank" rel="noopener">Sito ${h(o.operatore)}</a></div>
+      <div class="row" style="margin-top:8px"><a class="btn sec" href="https://it.trustpilot.com/search?query=${encodeURIComponent(o.sito)}" target="_blank" rel="noopener">★ Trustpilot</a><a class="btn sec" href="https://www.google.com/search?q=${encodeURIComponent(o.operatore + " fibra recensioni")}" target="_blank" rel="noopener">Recensioni Google</a></div>
+      <table class="kv small" style="margin-top:8px"><tr><td>Fonte</td><td><a href="${h(o.fonte)}" target="_blank" rel="noopener">${h(o.fonte.replace(/^https?:\/\/(www\.)?/, "").slice(0, 60))}</a></td></tr><tr><td>Verificato il</td><td>${dataIt(o.verificato)}</td></tr></table></section>`}`;
+  $("#vista").innerHTML = html;
+  window.scrollTo(0, 0);
+  $("#indietro").onclick = () => vai("internet");
+}
+
+function vistaPacchetto(sito) {
+  const N = S.net.orizzonte, x = pacchettiEnergiaInternet(N).find((y) => y.sito === sito);
+  if (!x) return;
+  $("#titolo").textContent = `${x.nome}: energia + internet`;
+  const riga = (t, v, id, tipo) => `<tr ${id ? `data-${tipo}="${h(id)}" role="button"` : ""}><td>${t}</td><td class="r num">${eur(v, 0)}</td></tr>`;
+  const blocco = (titolo, ener, net) => `<table class="lista"><tr class="g"><td colspan="2">${titolo}</td></tr>
+    ${x.forn.map((f) => ener[f] ? riga(`${f === "LUCE" ? "Luce" : "Gas"}: ${h(ener[f].offerta.venditore)} — ${h(ener[f].offerta.nome)} <span class="mut">(${eur(ener[f].centrale, 0)}/anno × ${N / 12})</span>`, ener[f].centrale * N / 12, ener[f].offerta.id, "en") : "").join("")}
+    ${net ? riga(`Internet: ${h(net.offerta.operatore)} — ${h(net.offerta.nome)}`, net.totale, net.offerta.id, "net") : ""}</table>`;
+  const enerP = Object.fromEntries(x.forn.map((f) => [f, x.ener[f] || x.bestSep[f]]));
+  $("#vista").innerHTML = `<button class="btn ghost" id="indietro">‹ Indietro</button>
+    <section class="hero"><h2>${h(x.nome)}: tutto insieme</h2>
+      <div class="big-tot">${eur(x.pacchetto, 0)}<span> in ${N} mesi</span></div>
+      <div class="conf"><span>contro la scelta migliore separata (${eur(x.separati, 0)})</span><b class="${x.diff <= 0 ? "ok" : ""}">${x.diff <= 0 ? "risparmi " + eur(-x.diff, 0) : "spendi " + eur(x.diff, 0) + " in più"}</b></div></section>
+    <section class="sez"><h3>Dettaglio</h3>${blocco("Con " + h(x.nome), enerP, x.net)}${blocco("Separati: i migliori per te", x.bestSep, x.netSep)}
+      <p class="small mut">Tocca una riga per vedere bollette o costi mese per mese. ${x.forn.some((f) => !x.ener[f]) ? "Dove il fornitore non ha un'offerta per te uso la migliore separata. " : ""}
+      L'energia oltre i 12 mesi ripete il primo anno: per le offerte a prezzo fisso il prezzo dopo la scadenza non è noto.</p></section>
+    <section class="sez"><h3>Da sapere</h3><ul class="small">
+      <li>Lo sconto sulla fibra di solito decade se chiudi la luce o il gas con lo stesso fornitore: cambiare uno dei due servizi può far salire l'altro.</li>
+      <li>Le offerte luce/gas riservate a chi ha la fibra non sono nella classifica principale: le trovi qui.</li>
+      <li>Conviene solo se entrambi i prezzi restano competitivi: confronta sempre con la riga «Separati».</li></ul></section>`;
+  window.scrollTo(0, 0);
+  $("#indietro").onclick = () => vai("internet");
+  $$("[data-en]").forEach((c) => (c.onclick = () => { S.daInternet = true; vistaDettaglio(c.dataset.en); }));
+  $$("[data-net]").forEach((c) => (c.onclick = () => vistaDettaglioInternet(c.dataset.net)));
+}
+
+/** Nel dettaglio di un'offerta luce/gas che richiede internet: quanto costa la fibra abbinata. */
+function boxInternetEnergia(o, totAnnuo) {
+  const N = S.net.orizzonte;
+  const pi = profiloNet({ energia: [...new Set([...sitiEnergia(), o.sito])], cambioEnergia: true });
+  const net = classificaInternet(offerteNet().filter((x) => x.sito === o.sito), pi, N, oggiIso())[0];
+  if (!net) return `<section class="sez"><h3>Insieme a internet</h3><p class="small">Questa offerta richiede anche la connessione internet di ${h(o.venditore)}. Il prezzo della fibra di questo fornitore non è nel catalogo dell'app: chiedilo prima di firmare e aggiungilo al totale.</p></section>`;
+  return `<section class="sez"><h3>Insieme a internet</h3>
+    <p class="small">Questa offerta vale solo se attivi anche internet con ${h(o.venditore)}. Il totale sopra comprende solo l'energia.</p>
+    <table class="lista"><tr><td>Energia (${N / 12 === 1 ? "12 mesi" : `12 mesi × ${N / 12}`})</td><td class="r num">${eur(totAnnuo * N / 12, 0)}</td></tr>
+      <tr data-net="${h(net.offerta.id)}" role="button"><td>${h(net.offerta.nome)} <span class="mut">(${eur(net.medio, 2)}/mese)</span></td><td class="r num">${eur(net.totale, 0)}</td></tr>
+      <tr class="t"><td>Totale in ${N} mesi</td><td class="r num">${eur(totAnnuo * N / 12 + net.totale, 0)}</td></tr></table>
+    <button class="btn sec full" id="boxNet">Confronta con energia e internet separati</button></section>`;
+}
+
+const VISTE = { internet: vistaInternet, offerte: vistaOfferte, cte: vistaCte, profilo: vistaProfilo, dati: vistaDati };
 vai("offerte");
 // prima mostra le offerte salvate, poi aggiorna l'app (può ricaricarla), infine scarica le offerte del giorno
 confermaAvvio().then(() => avviaCatalogo()).then(() => aggiornaApp(false)).then(() => scaricaSeServe());
