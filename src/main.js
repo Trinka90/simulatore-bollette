@@ -15,6 +15,7 @@ import { categoria, nomeFornitore, ETICHETTE, recensioni } from "./fornitori.js"
 import { confermaAvvio, controllaAggiornamento, VERSIONE_WEB } from "./aggiorna-app.js";
 import { analizzaBolletta, consumiDaBollette } from "./bolletta-pdf.js";
 import { leggiConsumiCsv, ultimi12 } from "./consumi-csv.js";
+import { dataAttivazione, meseSimulazione } from "./attivazione.js";
 import { areaSTG, curva, soglie, fraseSoglie, restare, GRIGLIA, FINE_STG } from "./stg.js";
 import datiInclusi from "../data/dati.json";
 import comuniDb from "../data/comuni.json";
@@ -29,7 +30,7 @@ const LS = {
 const oggi = () => new Date();
 const oggiIso = () => isoGiorno(oggi());
 const ymDi = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-const ingressoTipico = () => { const d = oggi(); return ymDi(new Date(d.getFullYear(), d.getMonth() + 2, 1)); };
+const ingressoTipico = () => meseSimulazione(dataAttivazione(isoGiorno(oggi()), "LUCE").attivazione);
 const COMUNI = comuniDb.comuni.map(([istat, nome, sigla, provincia, regione]) => ({ istat, nome, sigla, provincia, regione }));
 const trovaComune = (istat) => COMUNI.find((c) => c.istat === istat);
 
@@ -187,6 +188,23 @@ const gestoreSTG = (u = S.utenza) => (STG_HERA.has(u.comune?.sigla) ? "Hera Comm
 /** Risultato STG luce in classifica (sempre presente). */
 const rifSTG = () => calcolaClassifica("LUCE").lista.find((x) => x.offerta.stg) || null;
 const vsSTG = (tot, stg) => (stg ? (tot <= stg.centrale ? `<b class="ok">−${eur(stg.centrale - tot, 0)} vs STG</b>` : `<b class="bad">+${eur(tot - stg.centrale, 0)} vs STG</b>`) : "");
+
+// ------------------------------------------------------------------ DATA DI ATTIVAZIONE
+function boxAttivazione(o, u) {
+  const firma = S.firma || oggiIso();
+  const a = dataAttivazione(firma, o.forn, { anticipata: !!S.anticipata });
+  const mese = meseSimulazione(a.attivazione);
+  const sc = scadenza(o, oggiIso());
+  const scaduta = sc && sc.al < firma;
+  return `<section class="sez"><h3>Se aderisci a questa offerta</h3>
+    <div class="row"><div><label>Firmo il</label><input type="date" id="aFirma" value="${firma}" min="${oggiIso()}"></div>
+      <div><label>Attivazione stimata</label><div class="big-tot" style="font-size:20px;margin:6px 0 0">${dataIt(a.attivazione)}</div></div></div>
+    <label class="sw"><span>Chiedo di attivare subito, senza aspettare i 14 giorni di ripensamento</span><input type="checkbox" id="aAnt" ${S.anticipata ? "checked" : ""}></label>
+    <p class="small mut">Il venditore invia la richiesta il ${dataIt(a.richiesta)}${S.anticipata ? "" : " (dopo i 14 giorni per ripensarci)"}; ${h(a.regola)}. Fino ad allora paghi il fornitore attuale. La data esatta la conferma il venditore.</p>
+    ${scaduta ? `<div class="warn small">Attenzione: l'offerta si può sottoscrivere solo fino al ${dataIt(sc.al)}.</div>` : ""}
+    ${mese !== u.ingresso ? `<button class="btn sec full" id="aUsa" data-mese="${mese}">Simula dal ${meseIt(mese)} (ora: ${meseIt(u.ingresso)})</button>`
+      : `<p class="small ok">✓ Le 12 bollette qui sotto partono da ${meseIt(mese)}.</p>`}</section>`;
+}
 
 // ------------------------------------------------------------------ STG O MERCATO LIBERO
 async function vistaSTG() {
@@ -532,6 +550,7 @@ function vistaDettaglio(id, scenario = "centrale") {
         return b ? `<div class="conf"><span>La bolletta del ${dataIt(b.al)} dice: speso negli ultimi 12 mesi</span><b>${eur(b.spesaAnnua, 0)}</b></div>
           <div class="small mut">Se è molto diverso dalla stima, controlla i consumi nel profilo: la bolletta riguarda consumi e prezzi passati.</div>` : ""; })() : ""}
     </section>
+    ${o.stg ? "" : boxAttivazione(o, u)}
     <section class="sez"><h3>In breve</h3>
       ${cp.length ? `<ul class="breve">${cp.map((c) => `<li class="${c.tipo}"><span class="ic">${icona[c.tipo]}</span><div><b>${h(c.breve)}</b><div class="small">${h(c.testo)}</div></div></li>`).join("")}</ul>`
         : `<p class="small mut">${o.mia ? "Per la tua CTE controlla sconti e penali sul documento." : "Nessuno sconto, vincolo o condizione particolare dichiarati al Portale."}</p>`}
@@ -577,6 +596,9 @@ function vistaDettaglio(id, scenario = "centrale") {
   $$(".jump a").forEach((a) => (a.onclick = (e) => { e.preventDefault(); $(a.getAttribute("href")).scrollIntoView({ behavior: "smooth", block: "start" }); }));
   $$(".vaiProf").forEach((a) => (a.onclick = (e) => { e.preventDefault(); vai("profilo"); }));
   $$("[data-sc]").forEach((b) => (b.onclick = () => vistaDettaglio(id, b.dataset.sc)));
+  $("#aFirma") && ($("#aFirma").onchange = (e) => { S.firma = e.target.value || null; vistaDettaglio(id, scenario); });
+  $("#aAnt") && ($("#aAnt").onchange = (e) => { S.anticipata = e.target.checked; vistaDettaglio(id, scenario); });
+  $("#aUsa") && ($("#aUsa").onclick = () => { S.utenza.ingresso = $("#aUsa").dataset.mese; salva(); cache.clear(); toast(`Simulazione dal ${meseIt(S.utenza.ingresso)}`); vistaDettaglio(id, scenario); });
   $("#pdfBoll").onclick = () => esegui(() => pdfBollette(o, ris, scenario, u, S.dati), "bollette");
   $("#bCalc").onclick = () => {
     const dal = $("#bDal").value, al = $("#bAl").value;
