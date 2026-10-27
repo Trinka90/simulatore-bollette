@@ -3,7 +3,7 @@ import { analizza, bozzaOfferta, testoPdf } from "./cte.js";
 import { contesto, simulaOfferta, totaleMesi, riepilogoOfferta, bollettaPersonalizzata, consumiMensili, daCte, eVariabile, offertaSTG, scontiEPenali } from "./bolletta.js";
 import { aggiornaCatalogo, filtra, classifica, classificaDual, scadenza, SITUAZIONI } from "./catalogo.js";
 import { scaricaTesto, salvaCatalogo, caricaCatalogo, catalogoIniziale, nativo } from "./archivio.js";
-import { isoGiorno } from "./opendata.js";
+import { isoGiorno, urlCompleto } from "./opendata.js";
 import { pdfConfronto, pdfBollette } from "./esporta.js";
 import { eur, nf, dataIt, meseIt, MESI_NOMI, descrizionePrezzo, TIPI, CANALI, PAGAMENTI, ATTIVAZIONI, CONDIZIONI,
   VALIDITA_SCONTO, NOMI_REGOLATE, CONDIZIONI_SCONTO, durata, descrUtenza } from "./testi.js";
@@ -15,7 +15,7 @@ import { categoria, nomeFornitore, ETICHETTE, recensioni } from "./fornitori.js"
 import { confermaAvvio, controllaAggiornamento, VERSIONE_WEB } from "./aggiorna-app.js";
 import { analizzaBolletta, consumiDaBollette } from "./bolletta-pdf.js";
 import { leggiConsumiCsv, ultimi12 } from "./consumi-csv.js";
-import { dataAttivazione, meseSimulazione } from "./attivazione.js";
+import { dataAttivazione, meseSimulazione, attivazioneDaTesto } from "./attivazione.js";
 import { areaSTG, curva, soglie, fraseSoglie, restare, GRIGLIA, FINE_STG } from "./stg.js";
 import datiInclusi from "../data/dati.json";
 import comuniDb from "../data/comuni.json";
@@ -192,7 +192,8 @@ const vsSTG = (tot, stg) => (stg ? (tot <= stg.centrale ? `<b class="ok">−${eu
 // ------------------------------------------------------------------ DATA DI ATTIVAZIONE
 function boxAttivazione(o, u) {
   const firma = S.firma || oggiIso();
-  const a = dataAttivazione(firma, o.forn, { anticipata: !!S.anticipata });
+  const cte = o.attivazioneCte || attivazioneDaTesto([o.descr, ...(o.cond || []).map((x) => x.d)].join(" "));
+  const a = dataAttivazione(firma, o.forn, { anticipata: !!S.anticipata, cte });
   const mese = meseSimulazione(a.attivazione);
   const sc = scadenza(o, oggiIso());
   const scaduta = sc && sc.al < firma;
@@ -200,7 +201,10 @@ function boxAttivazione(o, u) {
     <div class="row"><div><label>Firmo il</label><input type="date" id="aFirma" value="${firma}" min="${oggiIso()}"></div>
       <div><label>Attivazione stimata</label><div class="big-tot" style="font-size:20px;margin:6px 0 0">${dataIt(a.attivazione)}</div></div></div>
     <label class="sw"><span>Chiedo di attivare subito, senza aspettare i 14 giorni di ripensamento</span><input type="checkbox" id="aAnt" ${S.anticipata ? "checked" : ""}></label>
-    <p class="small mut">Il venditore invia la richiesta il ${dataIt(a.richiesta)}${S.anticipata ? "" : " (dopo i 14 giorni per ripensarci)"}; ${h(a.regola)}. Fino ad allora paghi il fornitore attuale. La data esatta la conferma il venditore.</p>
+    ${a.daCte ? `<p class="small"><b>Dalla ${o.mia ? "CTE" : "descrizione dell'offerta"}:</b> ${h(a.regola)}.</p><div class="frase">${h(a.frase)}</div>`
+      : `<p class="small mut">Il venditore invia la richiesta il ${dataIt(a.richiesta)}${S.anticipata ? "" : " (dopo i 14 giorni per ripensarci)"}; ${h(a.regola)}. ${o.mia ? "La CTE non indica la data di inizio." : "I dati ARERA dell'offerta non indicano la data di inizio: se ce l'hai, carica la CTE in «La mia offerta» e la leggo da lì."}</p>`}
+    ${cte?.tipo === "entro" ? `<p class="small">Il venditore si impegna ad attivare ${h(cte.testo)}.</p><div class="frase">${h(cte.frase)}</div>` : ""}
+    <p class="small mut">Fino all'attivazione paghi il fornitore attuale. La data esatta la conferma il venditore.</p>
     ${scaduta ? `<div class="warn small">Attenzione: l'offerta si può sottoscrivere solo fino al ${dataIt(sc.al)}.</div>` : ""}
     ${mese !== u.ingresso ? `<button class="btn sec full" id="aUsa" data-mese="${mese}">Simula dal ${meseIt(mese)} (ora: ${meseIt(u.ingresso)})</button>`
       : `<p class="small ok">✓ Le 12 bollette qui sotto partono da ${meseIt(mese)}.</p>`}</section>`;
@@ -518,7 +522,7 @@ function schedaOfferta(o) {
       <p class="small mut">Trasporto, oneri di sistema e imposte non dipendono dal venditore: sono uguali per tutti e calcolati con i valori ARERA.</p></section>
     <section class="sez" id="s-info"><h3>Condizioni e contatti</h3><table class="kv">${righe.map(([k, v]) => `<tr><td>${k}</td><td>${v}</td></tr>`).join("")}</table>
       ${o.descr ? `<p class="small mut">${h(o.descr)}</p>` : ""}
-      <div class="row">${o.url ? `<a class="btn sec" href="${h(o.url)}" target="_blank" rel="noopener">Pagina dell'offerta</a>` : ""}${o.tel ? `<a class="btn sec" href="tel:${h(o.tel)}">Chiama</a>` : ""}</div></section>`;
+      <div class="row">${urlCompleto(o.url) ? `<a class="btn sec" href="${h(urlCompleto(o.url))}" target="_blank" rel="noopener">Pagina dell'offerta</a>` : ""}${o.tel ? `<a class="btn sec" href="tel:${h(o.tel)}">Chiama</a>` : ""}</div></section>`;
 }
 
 function vistaDettaglio(id, scenario = "centrale") {
@@ -985,9 +989,10 @@ $("#filePdf").addEventListener("change", async (e) => {
   esitiImport = [];
   for (const f of files) {
     try {
-      const an = analizza(await testoPdf(f, pdfjs));
+      const testoCte = await testoPdf(f, pdfjs);
+      const an = analizza(testoCte);
       if (!an.tipo) { esitiImport.push({ file: f.name, illeggibile: true }); continue; }
-      const off = { id: uid(), incluso: true, ...bozzaOfferta(an, f.name) };
+      const off = { id: uid(), incluso: true, ...bozzaOfferta(an, f.name), attivazione: attivazioneDaTesto(testoCte) };
       if (!off.nome) off.nome = f.name.replace(/\.pdf$/i, "");
       S.cte.push(off);
       esitiImport.push({ file: f.name, id: off.id });
@@ -1611,6 +1616,16 @@ function boxInternetEnergia(o, totAnnuo) {
     <button class="btn sec full" id="boxNet">Confronta con energia e internet separati</button></section>`;
 }
 
+// link esterni: sempre assoluti e fuori dall'app (un link relativo caricherebbe una pagina interna senza stile)
+document.addEventListener("click", (e) => {
+  const a = e.target.closest?.("a[href]");
+  if (!a) return;
+  const href = a.getAttribute("href");
+  if (/^(#|tel:|mailto:|https?:)/i.test(href)) return;
+  e.preventDefault();
+  const abs = urlCompleto(href);
+  if (abs) { a.setAttribute("href", abs); a.click(); } else toast("Indirizzo non valido: " + href);
+});
 const VISTE = { internet: vistaInternet, offerte: vistaOfferte, cte: vistaCte, profilo: vistaProfilo, dati: vistaDati };
 vai("offerte");
 // prima mostra le offerte salvate, poi aggiorna l'app (può ricaricarla), infine scarica le offerte del giorno

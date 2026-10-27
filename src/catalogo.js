@@ -54,6 +54,10 @@ export function esclusione(o, u, annuo, oggiIso, { dual = false } = {}) {
   if (o.dal && o.dal > oggiIso) return "non ancora sottoscrivibile";
   if (o.res === "R" && !u.residente) return "solo per residenti";
   if (o.res === "NR" && u.residente) return "solo per non residenti";
+  // alcuni venditori dichiarano "tutti" ma nel nome scrivono che è per seconde case / non residenti (o viceversa)
+  const titolo = `${o.nome} ${o.descr || ""}`;
+  if (u.residente && o.res !== "R" && /seconda\s+casa|seconde\s+case|non\s+residen/i.test(o.nome)) return "pensata per seconde case o non residenti (lo dice il nome dell'offerta)";
+  if (!u.residente && o.res !== "NR" && /\bresidenti\b|domestico\s+residente/i.test(o.nome) && !/non\s+residen/i.test(titolo)) return "pensata per residenti (lo dice il nome dell'offerta)";
   if (o.att.length && !o.att.includes("99") && !o.att.includes(u.situazione || "01")) return `non valida per: ${SITUAZIONI[u.situazione || "01"].toLowerCase()}`;
   if (!inZona(o, u.comune)) return "non disponibile nel tuo comune";
   if (o.forn === "LUCE" && !entro(u.luce.potenzaKw, o.pot)) return "potenza impegnata fuori dai limiti dell'offerta";

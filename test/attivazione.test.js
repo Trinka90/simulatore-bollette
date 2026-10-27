@@ -21,3 +21,24 @@ test("festività e mese della simulazione", () => {
   assert.equal(meseSimulazione("2026-12-14"), "2026-12");
   assert.equal(meseSimulazione("2026-12-28"), "2027-01");
 });
+
+test("inizio fornitura letto dal testo della CTE o dell'offerta", async () => {
+  const { attivazioneDaTesto, dataAttivazione } = await import("../src/attivazione.js");
+  const a = attivazioneDaTesto("OFFERTA DECORRENTE DAL 01/12/2026. Il prezzo della componente energia…");
+  assert.deepEqual([a.tipo, a.data], ["data", "2026-12-01"]);
+  const b = attivazioneDaTesto("La fornitura avrà inizio dal primo giorno del secondo mese successivo alla conclusione del contratto.");
+  assert.deepEqual([b.tipo, b.mesi], ["mesi", 2]);
+  assert.equal(dataAttivazione("2026-10-27", "LUCE", { cte: b }).attivazione, "2026-12-01");
+  assert.equal(dataAttivazione("2026-10-27", "GAS", { cte: a }).attivazione, "2026-12-01");
+  const c = attivazioneDaTesto("Il fornitore si impegna a completare l'attivazione della fornitura entro 60 giorni dalla firma.");
+  assert.deepEqual([c.tipo, c.testo], ["entro", "entro 60 giorni"]);
+  assert.equal(attivazioneDaTesto("Prezzo fisso per 12 mesi dalla data di attivazione della fornitura."), null);
+});
+
+test("link delle offerte sempre assoluti", async () => {
+  const { urlCompleto } = await import("../src/opendata.js");
+  assert.equal(urlCompleto("www.ambiensenergia.it"), "https://www.ambiensenergia.it");
+  assert.equal(urlCompleto("https://x.it/a"), "https://x.it/a");
+  assert.equal(urlCompleto("sito.it/offerte?x=1"), "https://sito.it/offerte?x=1");
+  assert.equal(urlCompleto("non è un link"), "");
+});

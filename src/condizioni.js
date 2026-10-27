@@ -42,6 +42,7 @@ export function condizioniParticolari(o, u = {}) {
   else if (sitoInternet(o)) add("info", "Il fornitore vende anche internet", "Lo stesso fornitore offre la fibra con uno sconto per chi ha luce o gas: vedi la scheda Internet.");
   // modalità
   if (o.canali?.length === 1 && o.canali[0] === "01") add("info", "Solo online", "Si attiva solo sul sito del venditore.");
+  if (/(partner|agent[ei]|agenzi[ae]|punti vendita|sportell)/i.test(o.descr || "") && /(attivabile|sottoscrivibile|riservat|solo|esclusiv)/i.test(o.descr || "")) add("info", "Solo tramite agenti o sportelli", "Secondo la descrizione si attiva tramite partner, agenti o punti vendita del venditore, non online.");
   if (o.pag?.length && o.pag.every((x) => x === "01" || x === "02")) add("attenzione", "Solo domiciliazione", "Si paga solo con addebito sul conto (bancario o postale).");
   if (o.serv?.length) add("info", "Servizi inclusi", `Comprende anche: ${o.serv.join(", ")}.`);
   if (/nuovi clienti|solo per chi non è (?:già )?cliente/i.test(o.descr || "")) add("info", "Solo nuovi clienti", "Riservata a chi non è già cliente del venditore.");

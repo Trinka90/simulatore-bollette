@@ -473,7 +473,7 @@ export function daCte(o) {
     tipo: variab ? "variabile" : "fisso", fasce, perditeIncluse: o.perdite !== "tutto", tetto: o.prezzoMax ?? null,
     idx: variab ? [{ c: luce ? "12" : "14", k: null }] : [], disp, reg: [], comp, sc: [], cond: [], serv: [], att: [], canali: [], pag: [],
     singola: true, res: "T", zone: null, cons: null, pot: null, durata: null, dal: null, al: null,
-    descr: (o.note || []).join(" "), note: o.note || [], fonte: o.fonte || "inserita da te", url: "", tel: "",
+    descr: (o.note || []).join(" "), note: o.note || [], fonte: o.fonte || "inserita da te", url: "", tel: "", attivazioneCte: o.attivazione || null,
   };
 }
 

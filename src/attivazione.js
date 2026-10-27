@@ -35,8 +35,17 @@ const primoDelMese = (y, m) => new Date(Date.UTC(y, m, 1)); // m 0-based, gestis
  * firma: "AAAA-MM-GG"; forn: "LUCE" | "GAS"; anticipata: esecuzione senza attendere il ripensamento.
  * Ritorna { richiesta, attivazione, mese: "AAAA-MM", regola }.
  */
-export function dataAttivazione(firma, forn, { anticipata = false, domestico = true } = {}) {
+export function dataAttivazione(firma, forn, { anticipata = false, domestico = true, cte = null } = {}) {
   const r = piu(giorno(firma), anticipata ? LAVORAZIONE : RIPENSAMENTO + LAVORAZIONE);
+  // se la CTE o la descrizione dell'offerta dicono quando parte la fornitura, vale quello
+  if (cte?.tipo === "data") {
+    const a = cte.data < firma ? null : cte.data;
+    if (a) return { richiesta: iso(r), attivazione: a, mese: a.slice(0, 7), regola: "data indicata dal venditore", frase: cte.frase, daCte: true };
+  }
+  if (cte?.tipo === "mesi") {
+    const f = giorno(firma), a = iso(primoDelMese(f.getUTCFullYear(), f.getUTCMonth() + cte.mesi));
+    return { richiesta: iso(r), attivazione: a, mese: a.slice(0, 7), regola: `il venditore indica il 1° giorno del ${["", "", "secondo ", "terzo ", "quarto "][cte.mesi] || ""}mese successivo alla firma`, frase: cte.frase, daCte: true };
+  }
   const rIso = iso(r);
   let att, regola;
   if (forn === "LUCE" && domestico && rIso > ULTIMA_RICHIESTA_VECCHIE) {
@@ -58,4 +67,26 @@ export function meseSimulazione(attivazione) {
   const d = giorno(attivazione);
   if (d.getUTCDate() <= 15) return attivazione.slice(0, 7);
   return iso(primoDelMese(d.getUTCFullYear(), d.getUTCMonth() + 1)).slice(0, 7);
+}
+
+const ORD = { secondo: 2, terzo: 3, quarto: 4 };
+const dataIso = (s) => { const m = /(\d{1,2})[/.-](\d{1,2})[/.-](\d{4})/.exec(s); return m ? `${m[3]}-${m[2].padStart(2, "0")}-${m[1].padStart(2, "0")}` : null; };
+const estratto = (t, i, n) => "…" + t.slice(Math.max(0, i - 30), i + n + 30).replace(/\s+/g, " ").trim() + "…";
+/**
+ * Cosa dice la CTE (o la descrizione dell'offerta) sull'inizio della fornitura.
+ * { tipo: "data", data } · { tipo: "mesi", mesi } · { tipo: "entro", testo } — sempre con la frase di origine.
+ */
+export function attivazioneDaTesto(testo) {
+  const t = String(testo || "").replace(/\s+/g, " ");
+  let m = /(?:decorrent[ei]|con decorrenza|attivazione|inizio (?:della |delle )?(?:fornitura|somministrazion[ei])|avvio della fornitura|fornitura avr[aà] inizio)[^.]{0,60}?\bdal\s+(\d{1,2}[/.-]\d{1,2}[/.-]\d{4})/i.exec(t);
+  if (m && dataIso(m[1])) return { tipo: "data", data: dataIso(m[1]), frase: estratto(t, m.index, m[0].length) };
+  const re = /primo giorno del(?:l['’])?\s+(?:(secondo|terzo|quarto)\s+)?mese successivo/gi;
+  while ((m = re.exec(t))) {
+    const prima = t.slice(Math.max(0, m.index - 160), m.index);
+    if (/(fornitura|somministrazion|attivazion|decorr|inizi|switch|esecuzione del contratto)/i.test(prima))
+      return { tipo: "mesi", mesi: m[1] ? ORD[m[1].toLowerCase()] : 1, frase: estratto(t, m.index - 120, m[0].length + 120) };
+  }
+  m = /(?:attivazione|inizio (?:della )?fornitura|avvio della fornitura)[^.]{0,80}?entro\s+(\d+)\s+(giorni|mesi)|entro\s+(\d+)\s+(giorni|mesi)[^.]{0,60}?(?:attivazione|inizio della fornitura)/i.exec(t);
+  if (m) return { tipo: "entro", testo: `entro ${m[1] || m[3]} ${m[2] || m[4]}`, frase: estratto(t, m.index, m[0].length) };
+  return null;
 }

@@ -56,6 +56,15 @@ const NOMI_VENDITORI = {
   "posteitaliane.it": "Poste Energia", "heracomm.gruppohera.it": "Hera Comm", "estenergy.gruppohera.it": "EstEnergy (Hera)", "a2a.it": "A2A Energia",
   "aceaenergia.it": "Acea Energia", "estraprometeo.it": "Estra Prometeo", "seviren.it": "SEV (Iren)", "unionenergia.it": "Union Energia", "magisenergia.it": "Magis", "elitenergia.it": "Elit", "agsm.it": "AGSM AIM",
 };
+/** Link assoluto: molti venditori scrivono "www.sito.it" senza https://, che nell'app diventerebbe un indirizzo interno. */
+export function urlCompleto(u) {
+  u = String(u || "").trim();
+  if (!u) return "";
+  if (/^https?:\/\//i.test(u)) return u;
+  if (/^\/\//.test(u)) return "https:" + u;
+  if (/^[a-z0-9.-]+\.[a-z]{2,}(?:[/?#:]|$)/i.test(u)) return "https://" + u;
+  return "";
+}
 export function dominio(url) {
   if (!url) return "";
   return url.trim().toLowerCase().replace(/^https?:\/\//, "").replace(/^www\d?\./, "").split(/[/?#]/)[0];
@@ -96,7 +105,7 @@ export function normalizzaOfferta(o, rilevazione) {
   return {
     id: testo(o, "IdentificativiOfferta/COD_OFFERTA"),
     piva, sito: dominio(sito), venditore: nomeVenditore(sito, piva),
-    url: testo(det, "Contatti/URL_OFFERTA") || (sito ? `https://${dominio(sito)}` : ""),
+    url: urlCompleto(testo(det, "Contatti/URL_OFFERTA")) || (sito ? `https://${dominio(sito)}` : ""),
     tel: testo(det, "Contatti/TELEFONO"),
     forn: mercato === "02" ? "GAS" : mercato === "01" ? "LUCE" : "DUAL",
     // pacchetti dual: codici delle offerte luce e gas da sottoscrivere insieme
