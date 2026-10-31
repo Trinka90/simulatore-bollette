@@ -16,6 +16,7 @@ import { confermaAvvio, controllaAggiornamento, VERSIONE_WEB } from "./aggiorna-
 import { analizzaBolletta, consumiDaBollette } from "./bolletta-pdf.js";
 import { leggiConsumiCsv, ultimi12 } from "./consumi-csv.js";
 import { dataAttivazione, meseSimulazione, attivazioneDaTesto } from "./attivazione.js";
+import { analisiCompleta } from "./cte-analisi.js";
 import { areaSTG, curva, soglie, fraseSoglie, restare, GRIGLIA, FINE_STG } from "./stg.js";
 import datiInclusi from "../data/dati.json";
 import comuniDb from "../data/comuni.json";
@@ -933,7 +934,7 @@ function vistaCte() {
           <label class="sw" style="margin:0"><input type="checkbox" data-inc="${o.id}" ${o.incluso !== false ? "checked" : ""}></label></div>
         ${r ? `<div class="small" style="margin-top:6px"><b>${eur(r.centrale, 0)}</b> in 12 mesi · <b>${pos + 1}ª</b> su ${R.lista.length}
           ${pos === 0 ? badge("PIÙ CONVENIENTE", "best") : `· la migliore costa ${eur(r.centrale - R.lista[0].centrale, 0)} in meno: <a href="#" data-det="${h(R.lista[0].offerta.id)}">${h(R.lista[0].offerta.venditore)} ${h(R.lista[0].offerta.nome)}</a>`}</div>` : ""}
-        <div class="row" style="margin-top:6px">${r ? `<button class="btn sec" data-vedi="${o.id}">Bollette</button>` : ""}<button class="btn sec" data-mod="${o.id}">Modifica</button>
+        <div class="row" style="margin-top:6px">${o.analisi ? `<button class="btn sec" data-ana="${o.id}">Cosa contiene</button>` : ""}${r ? `<button class="btn sec" data-vedi="${o.id}">Bollette</button>` : ""}<button class="btn sec" data-mod="${o.id}">Modifica</button>
           <button class="btn del" data-del="${o.id}">Elimina</button></div></div>`;
     }
   }
@@ -945,6 +946,7 @@ function vistaCte() {
   $$("[data-inc]").forEach((c) => (c.onchange = () => { S.cte.find((o) => o.id === c.dataset.inc).incluso = c.checked; salva(); cache.clear(); vistaCte(); }));
   $$("[data-mod]").forEach((b) => (b.onclick = () => editor(structuredClone(S.cte.find((o) => o.id === b.dataset.mod)))));
   $$("[data-vedi]").forEach((b) => (b.onclick = () => vistaDettaglio(b.dataset.vedi)));
+  $$("[data-ana]").forEach((b) => (b.onclick = () => vistaAnalisiCte(b.dataset.ana)));
   $$("a[data-det]").forEach((a) => (a.onclick = (e) => { e.preventDefault(); vistaDettaglio(a.dataset.det); }));
   $$("[data-del]").forEach((b) => (b.onclick = () => {
     const o = S.cte.find((x) => x.id === b.dataset.del);
@@ -992,7 +994,13 @@ $("#filePdf").addEventListener("change", async (e) => {
       const testoCte = await testoPdf(f, pdfjs);
       const an = analizza(testoCte);
       if (!an.tipo) { esitiImport.push({ file: f.name, illeggibile: true }); continue; }
-      const off = { id: uid(), incluso: true, ...bozzaOfferta(an, f.name), attivazione: attivazioneDaTesto(testoCte) };
+      const analisi = analisiCompleta(testoCte, S.catalogo?.offerte || []);
+      const off = { id: uid(), incluso: true, ...bozzaOfferta(an, f.name), attivazione: attivazioneDaTesto(testoCte), analisi };
+      if (analisi.portale.trovata) { off.fornitore = off.fornitore || analisi.portale.venditore; if (!an.info.nome) off.nome = analisi.portale.nome; }
+      if (!an.info.nome) { const nm = /\bOFFERTA\s+(?:LUCE\s+|GAS\s+)?([A-Z0-9][A-Z0-9 +&'’.-]{2,40}?)(?=\s+(?:Codice|codice|Offerta|offerta|valid|VALID)|\n|$)/.exec(testoCte); if (nm && !analisi.portale.trovata) off.nome = nm[1].trim(); }
+      // dispacciamento del venditore oltre ai valori ARERA: va nel prezzo
+      const disp = analisi.sezioni.dispacciamento.voci.flatMap((v) => v.importi).find((i) => i.u === "€/kWh" && i.v > 0 && i.v < 0.1);
+      if (off.fornitura === "LUCE" && disp && !off.altriKwh) { off.altriKwh = disp.v; off.note.push(`Dispacciamento del venditore ${nf(disp.v, 4)} €/kWh (dalla CTE).`); }
       if (!off.nome) off.nome = f.name.replace(/\.pdf$/i, "");
       S.cte.push(off);
       esitiImport.push({ file: f.name, id: off.id });
@@ -1004,6 +1012,37 @@ $("#filePdf").addEventListener("change", async (e) => {
   salva(); cache.clear();
   vistaImport();
 });
+
+function vistaAnalisiCte(id, indietro = () => vai("cte")) {
+  const o = S.cte.find((x) => x.id === id), a = o?.analisi;
+  if (!a) { toast("Ricarica il PDF della CTE per l'analisi completa"); return; }
+  $("#titolo").textContent = "Cosa dice la CTE";
+  const ann = (i) => (/mese$/.test(i.u) ? ` (${eur(i.v * 12)} all'anno)` : /€\/kW$/.test(i.u) && S.utenza.luce.potenzaKw ? ` (${eur(i.v * S.utenza.luce.potenzaKw)} con ${nf(S.utenza.luce.potenzaKw)} kW)` : "");
+  const imp = (v) => v.importi.map((i) => `<b>${nf(i.v, i.v < 1 ? 4 : 2)} ${h(i.u)}</b>${ann(i)}`).join(" · ");
+  const ico = { attenzione: "⚠", info: "ℹ" };
+  let html = `<button class="btn ghost" id="indietro">‹ Indietro</button>
+    <section class="hero"><div class="vend">${h(o.fornitore || "Fornitore")}${a.codice ? ` · codice ${h(a.codice)}` : ""}</div><h2>${h(o.nome)}</h2>
+      <p class="small">${h(a.riassunto)}</p>
+      <div class="conf"><span>Frasi con importi lette</span><b>${a.statistiche.conImporti}: ${a.statistiche.classificate} classificate${a.statistiche.daLeggere ? `, <span class="bad">${a.statistiche.daLeggere} da leggere</span>` : ""}</b></div></section>
+    <section class="sez"><h3>Che tipo di offerta è</h3><table class="kv small">
+      <tr><td>Fornitura</td><td>${a.forn === "GAS" ? "Gas" : a.forn === "LUCE" ? "Luce" : "non riconosciuta"}</td></tr>
+      <tr><td>Prezzo</td><td>${h(a.natura)}${a.durataMesi ? ` per ${a.durataMesi} mesi` : ""}${a.indice ? ` · indice ${h(a.indice)}${a.poiIndice ? " (dopo la scadenza)" : ""}` : ""}</td></tr>
+      <tr><td>Inizio fornitura</td><td>${a.attivazione ? h(a.attivazione.tipo === "data" ? `dal ${dataIt(a.attivazione.data)}` : a.attivazione.tipo === "mesi" ? `1° giorno del ${a.attivazione.mesi === 1 ? "" : ["", "", "secondo ", "terzo ", "quarto "][a.attivazione.mesi]}mese successivo alla firma` : a.attivazione.testo) : "non indicato"}</td></tr>
+      <tr><td>Portale ARERA</td><td>${h(a.portale.testo)}</td></tr></table>
+      ${a.portale.mancanti?.length ? `<ul class="small">${a.portale.mancanti.map((d) => `<li>${h(d.nome)}: ${nf(d.v, 6)} ${h(d.u)} sul Portale</li>`).join("")}</ul>` : ""}</section>`;
+  if (a.avvisi.length) html += `<section class="sez"><h3>Da sapere prima di firmare</h3><ul class="breve">${a.avvisi.map((x) => `<li class="${x.livello}"><span class="ic">${ico[x.livello]}</span><div><b>${h(x.titolo)}</b><div class="small">${h(x.frase)}</div></div></li>`).join("")}</ul></section>`;
+  if (a.daLeggere.length) html += `<section class="sez"><h3 class="bad">Importi che non so classificare: leggili</h3><ul class="small">${a.daLeggere.map((v) => `<li>${imp(v)}<div class="frase">${h(v.frase)}</div></li>`).join("")}</ul></section>`;
+  for (const s of Object.values(a.sezioni)) {
+    if (!s.voci.length) continue;
+    html += `<section class="sez"><h3>${h(s.titolo)}</h3><ul class="small" style="padding-left:16px">${s.voci.map((v) => `<li style="margin-bottom:6px">${imp(v)}<div class="frase">${h(v.frase)}</div></li>`).join("")}</ul></section>`;
+  }
+  const vuote = Object.values(a.sezioni).filter((s) => !s.voci.length && !/regolate|Stime/.test(s.titolo)).map((s) => s.titolo.toLowerCase());
+  if (vuote.length) html += `<p class="small mut">Nessun importo trovato per: ${h(vuote.join(", "))}. Se la CTE rimanda alle condizioni generali, quei costi possono essere lì.</p>`;
+  html += `<p class="small mut">Ho letto ${a.statistiche.frasi} frasi: qui sopra c'è ogni frase che contiene un importo. Se il PDF è una scansione (immagine) il testo non è leggibile.</p>`;
+  $("#vista").innerHTML = html;
+  window.scrollTo(0, 0);
+  $("#indietro").onclick = indietro;
+}
 
 function vistaImport() {
   $("#titolo").textContent = "CTE lette";
@@ -1019,6 +1058,7 @@ function vistaImport() {
     const tipo = o.tipoPrezzo === "indicizzato" ? badge("VARIABILE", "var") : badge("PREZZO FISSO", "reale");
     html += `<div class="card"><div class="row sp"><b class="grow">${manca.length ? "⚠" : "✓"} ${h(o.fornitore || "Fornitore non indicato")}</b>
       <span>${o.fornitura === "LUCE" ? "Luce" : "Gas"} ${tipo}</span></div><div class="small">${h(o.nome)}</div>`;
+    if (o.analisi) html += `<div class="small" style="margin-top:6px">${h(o.analisi.riassunto)}</div><button class="btn sec mini" data-ana="${o.id}" style="margin-top:6px">Leggi cosa contiene, voce per voce ›</button>`;
     if (!manca.length) html += `<div class="small mut">${h(descrCte(o))}</div>`;
     else {
       html += `<div class="small" style="margin-top:6px">Nella CTE non ho trovato ${manca.length === 1 ? "questo dato" : "questi dati"}:</div>`;
@@ -1028,6 +1068,7 @@ function vistaImport() {
   }
   html += `<button class="btn full" id="impFine">Vai al confronto</button>`;
   $("#vista").innerHTML = html;
+  $$("[data-ana]").forEach((b) => (b.onclick = () => vistaAnalisiCte(b.dataset.ana, vistaImport)));
   window.scrollTo(0, 0);
   $("#impFine").onclick = () => {
     for (const i of $$("[data-manca]")) {

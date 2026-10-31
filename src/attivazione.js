@@ -84,7 +84,7 @@ export function attivazioneDaTesto(testo) {
   while ((m = re.exec(t))) {
     const prima = t.slice(Math.max(0, m.index - 160), m.index);
     if (/(fornitura|somministrazion|attivazion|decorr|inizi|switch|esecuzione del contratto)/i.test(prima))
-      return { tipo: "mesi", mesi: m[1] ? ORD[m[1].toLowerCase()] : 1, frase: estratto(t, m.index - 120, m[0].length + 120) };
+      return { tipo: "mesi", mesi: m[1] ? ORD[m[1].toLowerCase()] : 1, frase: estratto(t, Math.max(0, t.lastIndexOf(".", m.index) + 1), m.index - Math.max(0, t.lastIndexOf(".", m.index) + 1) + m[0].length + 60) };
   }
   m = /(?:attivazione|inizio (?:della )?fornitura|avvio della fornitura)[^.]{0,80}?entro\s+(\d+)\s+(giorni|mesi)|entro\s+(\d+)\s+(giorni|mesi)[^.]{0,60}?(?:attivazione|inizio della fornitura)/i.exec(t);
   if (m) return { tipo: "entro", testo: `entro ${m[1] || m[3]} ${m[2] || m[4]}`, frase: estratto(t, m.index, m[0].length) };
