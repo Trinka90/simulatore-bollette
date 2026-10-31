@@ -16,6 +16,8 @@ import { confermaAvvio, controllaAggiornamento, VERSIONE_WEB } from "./aggiorna-
 import { analizzaBolletta, consumiDaBollette } from "./bolletta-pdf.js";
 import { leggiConsumiCsv, ultimi12 } from "./consumi-csv.js";
 import { dataAttivazione, meseSimulazione, attivazioneDaTesto } from "./attivazione.js";
+import { combinazioneMigliore, costoPacchetto } from "./streaming.js";
+import catalogoStreaming from "../data/streaming.json";
 import { analisiCompleta, completaDaAnalisi, serviziObbligatori } from "./cte-analisi.js";
 import { areaSTG, curva, soglie, fraseSoglie, restare, GRIGLIA, FINE_STG } from "./stg.js";
 import datiInclusi from "../data/dati.json";
@@ -89,7 +91,7 @@ function toast(msg, ms = 2600) {
 const attendi = () => new Promise((r) => setTimeout(r, 30));
 
 // ------------------------------------------------------------------ navigazione
-const TITOLI = { internet: "Internet casa", offerte: "Offerte luce e gas", cte: "La mia offerta", profilo: "I miei consumi", dati: "Info e aggiornamenti" };
+const TITOLI = { internet: "Internet e streaming", offerte: "Offerte luce e gas", cte: "La mia offerta", profilo: "I miei consumi", dati: "Info e aggiornamenti" };
 function vai(tab) {
   S.tab = tab;
   $$(".tabs button").forEach((b) => b.classList.toggle("on", b.dataset.tab === tab));
@@ -1455,6 +1457,7 @@ function cardNet(r, best, extra = "") {
   if (o.vincolo > 0) pills.push(`<span class="pill bad">Vincolo ${o.vincolo} mesi</span>`);
   if ((o.rate || []).some((x) => x.a > 24)) pills.push(`<span class="pill bad">Rate fino a ${Math.max(...o.rate.map((x) => x.a))} mesi</span>`);
   if (o.fonteTipo === "comparatore") pills.push(`<span class="pill neutral">Fonte non ufficiale</span>`);
+  if (o.dettagli?.streaming) pills.push(`<span class="pill save">🎬 ${h(o.dettagli.streaming.split(",")[0].split("(")[0].trim())}</span>`);
   if (r.scaduta) pills.push(`<span class="pill bad">Scaduta il ${dataIt(o.scade)}</span>`);
   else if (o.scade) pills.push(`<span class="pill neutral">Fino al ${dataIt(o.scade)}</span>`);
   return `<article class="offer ${o.mia ? "mia" : ""}" data-net="${h(o.id)}" role="button">
@@ -1464,13 +1467,81 @@ function cardNet(r, best, extra = "") {
     ${pills.length ? `<div class="pills">${pills.slice(0, 5).join("")}</div>` : ""}${extra}</article>`;
 }
 
+const segNet = () => `<div class="seg big" id="nSez" style="margin-bottom:8px"><button data-v="internet" class="${S.netSez !== "streaming" ? "on" : ""}">🌐 Internet casa</button><button data-v="streaming" class="${S.netSez === "streaming" ? "on" : ""}">🎬 Streaming e pay TV</button></div>`;
+const legaSegNet = () => $$("#nSez button").forEach((b) => (b.onclick = () => { S.netSez = b.dataset.v; window.scrollTo(0, 0); VISTE.internet(); }));
+
+// ------------------------------------------------------------------ STREAMING
+const ST_DEF = { voluti: { netflix: "ads", prime: "ads" }, pubblicita: true, impegno: true, hoTim: null };
+S.st = { ...ST_DEF, ...LS.get("streaming", {}) };
+const salvaSt = () => LS.set("streaming", S.st);
+function vistaStreaming() {
+  const v = $("#vista"), C = catalogoStreaming;
+  const hoTim = S.st.hoTim ?? (S.net.mia?.operatore || "").toUpperCase() === "TIM";
+  const pref = { pubblicita: S.st.pubblicita, impegno: S.st.impegno, hoTim };
+  const visibili = C.servizi.filter((x) => !x.nascosto);
+  const r = combinazioneMigliore(C, S.st.voluti, pref, oggiIso());
+  const m = r.migliore;
+  const nomeP = (sid, pid) => C.servizi.find((x) => x.id === sid)?.piani.find((p) => p.id === pid)?.nome || pid;
+  const sceltaPiano = (sv) => {
+    const val = S.st.voluti[sv.id];
+    if (!["dazn", "now"].includes(sv.id)) return `<select data-qual="${sv.id}" ${val ? "" : "disabled"}><option value="ads" ${val === "ads" || val === "base" ? "selected" : ""}>il più economico</option><option value="standard" ${val === "standard" ? "selected" : ""}>senza pubblicità</option>${sv.piani.some((p) => p.id === "premium") ? `<option value="premium" ${val === "premium" ? "selected" : ""}>Premium / 4K</option>` : ""}</select>`;
+    return `<select data-qual="${sv.id}" ${val ? "" : "disabled"}>${sv.piani.map((p) => `<option value="${p.id}" ${val === p.id ? "selected" : ""}>${h(p.nome)}</option>`).join("")}</select>`;
+  };
+  let html = segNet() + `<section class="sez"><h3>Cosa vuoi vedere?</h3>
+    <div class="small mut" style="margin-bottom:6px">Scegli i servizi: trovo il modo più economico di averli per 12 mesi, con abbonamenti singoli o pacchetti.</div>
+    <table class="lista">${visibili.map((sv) => `<tr><td><label class="sw" style="margin:0"><input type="checkbox" data-sv="${sv.id}" ${S.st.voluti[sv.id] ? "checked" : ""}> <span><b>${h(sv.nome)}</b><div class="frase">${h(sv.tipo)}${sv.dubbio ? " · prezzo da verificare" : ""}</div></span></label></td><td class="r">${sceltaPiano(sv)}</td></tr>`).join("")}</table>
+    <label class="sw"><span>Va bene la pubblicità (piani più economici)</span><input type="checkbox" id="sPub" ${S.st.pubblicita ? "checked" : ""}></label>
+    <label class="sw"><span>Accetto un impegno di 12 mesi (annuali e pacchetti scontati)</span><input type="checkbox" id="sImp" ${S.st.impegno ? "checked" : ""}></label>
+    <label class="sw"><span>Ho (o prenderei) internet casa TIM</span><input type="checkbox" id="sTim" ${hoTim ? "checked" : ""}></label></section>`;
+  if (!r.ids.length) html += `<div class="empty">Scegli almeno un servizio.</div>`;
+  else {
+    const risp = r.singoli.totale - m.totale;
+    html += `<section class="best"><div class="best-l">Il modo più economico per 12 mesi</div>
+      <div class="row sp"><div class="min0"><div class="nome">${m.pacchetti.length ? m.pacchetti.map((x) => h(x.k.nome)).join(" + ") + (m.singoli.length ? " + abbonamenti singoli" : "") : "Abbonamenti singoli"}</div></div>
+        <div class="price"><div class="tot">${eur(m.totale / 12, 2)}</div><div class="sub">al mese in media · ${eur(m.totale, 0)} in 12 mesi</div></div></div>
+      ${risp > 0.5 ? `<div class="conf"><span>rispetto ad abbonarti a ognuno separatamente (${eur(r.singoli.totale, 0)})</span><b class="ok">risparmi ${eur(risp, 0)}</b></div>` : ""}
+      <table class="lista small" style="margin-top:8px">
+        ${m.pacchetti.map((x) => `<tr><td><b>${h(x.k.nome)}</b> <span class="mut">(${h(x.k.operatore)})</span><div class="frase">Comprende: ${x.k.include.map(([sid, pid]) => `${h(C.servizi.find((y) => y.id === sid)?.nome || sid)} ${h(nomeP(sid, pid).toLowerCase().includes("pubblicit") ? "(con pubblicità)" : "")}`).join(", ")}${x.k.promoMesi ? ` · ${eur(x.k.promo)} al mese per ${x.k.promoMesi} mesi, poi ${eur(x.k.mensile)}` : ` · ${eur(x.k.mensile)} al mese`}${x.k.note.length ? " · " + h(x.k.note.join(" · ")) : ""}${x.k.scade ? ` · promo fino al ${dataIt(x.k.scade)}` : ""}</div></td><td class="r num">${eur(x.costo, 0)}</td></tr>`).join("")}
+        ${m.singoli.map((x) => `<tr><td><b>${h(x.servizio.nome)}</b> — ${h(x.piano.nome)}<div class="frase">${h(x.modo)}${x.piano.note ? " · " + h(x.piano.note) : ""}</div></td><td class="r num">${eur(x.totale, 0)}</td></tr>`).join("")}
+        <tr class="t"><td>Totale 12 mesi</td><td class="r num">${eur(m.totale, 0)}</td></tr></table>
+      ${m.extra.length ? `<div class="small" style="margin-top:6px">In più ti ritrovi: ${h(m.extra.join(", "))}.</div>` : ""}</section>`;
+    if (r.alternative.length) html += `<section class="sez"><h3>Altre combinazioni</h3><table class="lista">${r.alternative.map((a) => `<tr><td>${a.pacchetti.length ? a.pacchetti.map((x) => h(x.k.nome)).join(" + ") : "Solo abbonamenti singoli"}${a.singoli.length && a.pacchetti.length ? ` + ${a.singoli.map((x) => h(x.servizio.nome)).join(", ")}` : ""}</td><td class="r num">${eur(a.totale, 0)}<div class="frase">+${eur(a.totale - m.totale, 0)}</div></td></tr>`).join("")}</table></section>`;
+    const om = C.omaggi.filter((o) => r.ids.includes(o.servizio) && !(o.scade && o.scade < oggiIso()));
+    if (om.length) html += `<section class="sez"><h3>Gratis con internet</h3><ul class="breve">${om.map((o) => `<li class="piu"><span class="ic">🎁</span><div><b>${h(C.servizi.find((x) => x.id === o.servizio)?.nome)}${o.mesi ? ` gratis ${o.mesi} mesi` : ""} con ${h(o.operatore)} ${h(o.offerta)}</b><div class="small">${h(o.poi)}${o.internetId ? ` · <a href="#" data-net-om="${h(o.internetId)}">vedi l'offerta internet</a>` : ""}</div></div></li>`).join("")}</ul></section>`;
+  }
+  html += `<section class="sez"><h3>Listino dei servizi</h3><table class="lista small">${visibili.map((sv) => sv.piani.map((p, i) => `<tr><td>${i === 0 ? `<b>${h(sv.nome)}</b> ` : ""}${h(p.nome)}${p.note ? `<div class="frase">${h(p.note)}</div>` : ""}</td><td class="r num">${eur(p.mensile)}/mese${p.annuo ? `<div class="frase">${eur(p.annuo)}/anno</div>` : ""}${p.vincolo12 ? `<div class="frase">${eur(p.vincolo12)}/mese con 12 mesi</div>` : ""}</td></tr>`).join("")).join("")}</table>
+    <p class="small mut">${h(C.nota)} Aggiornato al ${dataIt(C.aggiornato_al)}.</p>
+    <details class="small"><summary>Fonti</summary><ul>${[...new Set([...C.servizi.map((x) => x.fonte), ...C.pacchetti.map((x) => x.fonte)])].map((u) => `<li><a href="${h(u)}" target="_blank" rel="noopener">${h(u.replace(/^https?:\/\/(www\.)?/, "").slice(0, 60))}</a></li>`).join("")}</ul></details></section>`;
+  v.innerHTML = html;
+  legaSegNet();
+  $$("[data-sv]").forEach((c) => (c.onchange = () => {
+    const id = c.dataset.sv, sv = C.servizi.find((x) => x.id === id);
+    if (c.checked) S.st.voluti[id] = ["dazn", "now"].includes(id) ? sv.piani[0].id : sv.piani.some((p) => p.id === "ads") ? "ads" : sv.piani[0].id;
+    else delete S.st.voluti[id];
+    salvaSt(); vistaStreaming();
+  }));
+  $$("[data-qual]").forEach((sel) => (sel.onchange = () => {
+    const id = sel.dataset.qual, sv = C.servizi.find((x) => x.id === id);
+    let v2 = sel.value;
+    if (v2 === "ads" && !sv.piani.some((p) => p.id === "ads")) v2 = sv.piani[0].id;
+    if (v2 === "standard" && !sv.piani.some((p) => p.id === "standard")) v2 = sv.piani.find((p) => !p.pubblicita)?.id || sv.piani[0].id;
+    S.st.voluti[id] = v2; if (v2 === "standard" || v2 === "noads") S.st.pubblicita = S.st.pubblicita && true;
+    salvaSt(); vistaStreaming();
+  }));
+  $("#sPub").onchange = (e) => { S.st.pubblicita = e.target.checked; salvaSt(); vistaStreaming(); };
+  $("#sImp").onchange = (e) => { S.st.impegno = e.target.checked; salvaSt(); vistaStreaming(); };
+  $("#sTim").onchange = (e) => { S.st.hoTim = e.target.checked; salvaSt(); vistaStreaming(); };
+  $$("[data-net-om]").forEach((a) => (a.onclick = (e) => { e.preventDefault(); S.netSez = "internet"; vistaDettaglioInternet(a.dataset.netOm); }));
+}
+
 function vistaInternet() {
+  if (S.netSez === "streaming") return vistaStreaming();
   const v = $("#vista");
   const { lista, mia, N } = classificaNet();
   const best = miglioreNet(lista);
   const pk = pacchettiEnergiaInternet(N);
   const T = S.net.tecnologia;
-  let html = `<div class="intest"><div class="seg big" id="nTec">${Object.keys(TECNO).map((t) => `<button data-v="${t}" class="${T === t ? "on" : ""}">${t === "FTTH" ? "Fibra FTTH" : t === "FTTC" ? "Fibra FTTC" : "FWA (radio)"}</button>`).join("")}</div>
+  let html = segNet() + `<div class="intest"><div class="seg big" id="nTec">${Object.keys(TECNO).map((t) => `<button data-v="${t}" class="${T === t ? "on" : ""}">${t === "FTTH" ? "Fibra FTTH" : t === "FTTC" ? "Fibra FTTC" : "FWA (radio)"}</button>`).join("")}</div>
     <div class="small mut">Quale tecnologia arriva a casa tua? <a href="${URL_COPERTURA}" target="_blank" rel="noopener">Controlla l'indirizzo sulla mappa AGCOM</a> o sul sito dell'operatore.</div></div>`;
   html += `<div class="seg" id="nOr">${[12, 24, 36].map((n) => `<button data-v="${n}" class="${N === n ? "on" : ""}">${n} mesi</button>`).join("")}</div>`;
 
@@ -1524,6 +1595,7 @@ function vistaInternet() {
     <p class="mut">${h(catalogoInternet.nota)} Aggiornato al ${dataIt(catalogoInternet.aggiornato_al)}. Le promozioni cambiano spesso: prima di firmare chiedi la <b>sintesi contrattuale</b> e confronta canone, durata della promo, costi di attivazione e di uscita.</p></div>`;
   v.innerHTML = html;
 
+  legaSegNet();
   $$("#nTec button").forEach((b) => (b.onclick = () => { S.net.tecnologia = b.dataset.v; salvaNet(); vistaInternet(); }));
   $$("#nOr button").forEach((b) => (b.onclick = () => { S.net.orizzonte = +b.dataset.v; salvaNet(); vistaInternet(); }));
   $$("[data-nf]").forEach((b) => (b.onclick = () => {
@@ -1616,6 +1688,14 @@ function vistaDettaglioInternet(id) {
       ${(o.note || []).map((n) => `<li class="info"><span class="ic">ℹ</span><div><div class="small">${h(n)}</div></div></li>`).join("")}
       ${r.dubbi.map((n) => `<li class="attenzione"><span class="ic">?</span><div><b>Da verificare</b><div class="small">${h(n)}</div></div></li>`).join("")}
     </ul></section>
+    ${o.dettagli ? `<section class="sez"><h3>Dettagli tecnici</h3><table class="kv small">
+      ${o.dettagli.normale ? `<tr><td>Velocità normalmente disponibile</td><td>${h(o.dettagli.normale)}</td></tr>` : ""}
+      ${o.dettagli.minimo ? `<tr><td>Velocità minima</td><td>${h(o.dettagli.minimo)}</td></tr>` : ""}
+      ${o.dettagli.fttc ? `<tr><td>Se non hai la FTTH</td><td>${h(o.dettagli.fttc)}</td></tr>` : ""}
+      ${o.dettagli.modem ? `<tr><td>Modem</td><td>${h(o.dettagli.modem)}</td></tr>` : ""}
+      ${o.dettagli.garantito ? `<tr><td>Prezzo garantito</td><td>almeno ${o.dettagli.garantito} mesi</td></tr>` : ""}
+      ${o.dettagli.streaming ? `<tr><td>Streaming</td><td>🎬 ${h(o.dettagli.streaming)}</td></tr>` : ""}</table>
+      <p class="small mut">La velocità «fino a» è il massimo teorico; quella normalmente disponibile è quella che l'operatore dichiara nella sintesi contrattuale.</p></section>` : ""}
     <section class="sez"><h3>Quanto paghi in ${N} mesi</h3><table class="lista">${r.voci.map((x) => `<tr><td>${h(x.t)}</td><td class="r num">${eur(x.v)}</td></tr>`).join("")}
       <tr class="t"><td>Totale</td><td class="r num">${eur(r.totale)}</td></tr></table>
       <div class="sub-h">Mese per mese</div><table class="lista">${r.unaTantum ? `<tr><td>Prima fattura: una tantum</td><td class="r num">${eur(r.unaTantum)}</td></tr>` : ""}${gruppi.map((g) => `<tr><td>${g.da === g.a ? `Mese ${g.da}` : `Mesi ${g.da}–${g.a}`}</td><td class="r num">${eur(g.v)}${g.da !== g.a ? " al mese" : ""}</td></tr>`).join("")}</table></section>

@@ -1,0 +1,929 @@
+{
+ "aggiornato_al": "2026-10-31",
+ "nota": "Prezzi di listino e promozioni raccolti dalle pagine dei servizi e degli operatori (fonte e data per ognuno). I prezzi cambiano spesso: controlla prima di abbonarti.",
+ "servizi": [
+  {
+   "id": "netflix",
+   "nome": "Netflix",
+   "tipo": "Film e serie",
+   "piani": [
+    {
+     "id": "ads",
+     "nome": "Standard con pubblicità",
+     "mensile": 6.99,
+     "annuo": null,
+     "vincolo12": null,
+     "pubblicita": true,
+     "note": ""
+    },
+    {
+     "id": "standard",
+     "nome": "Standard",
+     "mensile": 13.99,
+     "annuo": null,
+     "vincolo12": null,
+     "pubblicita": false,
+     "note": ""
+    },
+    {
+     "id": "premium",
+     "nome": "Premium (4K, 4 schermi)",
+     "mensile": 19.99,
+     "annuo": null,
+     "vincolo12": null,
+     "pubblicita": false,
+     "note": ""
+    }
+   ],
+   "fonte": "https://www.giardiniblog.it/netflix-costo-abbonamenti/",
+   "verificato": "2026-10-13"
+  },
+  {
+   "id": "disney",
+   "nome": "Disney+",
+   "tipo": "Film e serie",
+   "piani": [
+    {
+     "id": "ads",
+     "nome": "Standard con pubblicità",
+     "mensile": 6.99,
+     "annuo": null,
+     "vincolo12": null,
+     "pubblicita": true,
+     "note": "5,99 € con 6 mesi minimi"
+    },
+    {
+     "id": "standard",
+     "nome": "Standard",
+     "mensile": 10.99,
+     "annuo": 109.9,
+     "vincolo12": null,
+     "pubblicita": false,
+     "note": ""
+    },
+    {
+     "id": "premium",
+     "nome": "Premium (4K)",
+     "mensile": 15.99,
+     "annuo": 159.9,
+     "vincolo12": null,
+     "pubblicita": false,
+     "note": ""
+    }
+   ],
+   "fonte": "https://www.giardiniblog.it/disney-prezzi-abbonamenti/",
+   "verificato": "2026-10-31"
+  },
+  {
+   "id": "prime",
+   "nome": "Prime Video (Amazon Prime)",
+   "tipo": "Film, serie e Champions",
+   "piani": [
+    {
+     "id": "ads",
+     "nome": "Prime (con pubblicità)",
+     "mensile": 4.99,
+     "annuo": 49.9,
+     "vincolo12": null,
+     "pubblicita": true,
+     "note": "comprende spedizioni Amazon Prime"
+    },
+    {
+     "id": "noads",
+     "nome": "Prime senza pubblicità",
+     "mensile": 6.98,
+     "annuo": 73.78,
+     "vincolo12": null,
+     "pubblicita": false,
+     "note": ""
+    }
+   ],
+   "fonte": "https://selectra.net/pay-tv/azienda/amazon-prime-video/costo",
+   "verificato": "2026-10-31"
+  },
+  {
+   "id": "hbomax",
+   "nome": "HBO Max",
+   "tipo": "Film e serie",
+   "piani": [
+    {
+     "id": "ads",
+     "nome": "Base con pubblicità",
+     "mensile": 6.99,
+     "annuo": null,
+     "vincolo12": null,
+     "pubblicita": true,
+     "note": ""
+    },
+    {
+     "id": "standard",
+     "nome": "Standard",
+     "mensile": 11.99,
+     "annuo": null,
+     "vincolo12": null,
+     "pubblicita": false,
+     "note": ""
+    },
+    {
+     "id": "premium",
+     "nome": "Premium (4K)",
+     "mensile": 16.99,
+     "annuo": null,
+     "vincolo12": null,
+     "pubblicita": false,
+     "note": ""
+    }
+   ],
+   "fonte": "https://selectra.net/pay-tv/attualita/mercato/hbo-max-aumento-prezzi-italia",
+   "verificato": "2026-07-07"
+  },
+  {
+   "id": "dazn",
+   "nome": "DAZN",
+   "tipo": "Calcio e sport",
+   "piani": [
+    {
+     "id": "goal",
+     "nome": "Goal (3 partite di Serie A a giornata, Serie B)",
+     "mensile": 19.99,
+     "annuo": 129,
+     "vincolo12": 13.99,
+     "pubblicita": false,
+     "note": ""
+    },
+    {
+     "id": "full",
+     "nome": "Full (tutta la Serie A)",
+     "mensile": 46.99,
+     "annuo": 379,
+     "vincolo12": 36.99,
+     "pubblicita": false,
+     "note": ""
+    },
+    {
+     "id": "family",
+     "nome": "Family (2 case)",
+     "mensile": 71.99,
+     "annuo": 619,
+     "vincolo12": 61.99,
+     "pubblicita": false,
+     "note": ""
+    },
+    {
+     "id": "myclub",
+     "nome": "MyClubPass (tutte le partite di una squadra)",
+     "mensile": 39.99,
+     "annuo": 329,
+     "vincolo12": 29.99,
+     "pubblicita": false,
+     "note": ""
+    },
+    {
+     "id": "sports",
+     "nome": "Sports (senza calcio)",
+     "mensile": 14.99,
+     "annuo": 99,
+     "vincolo12": 11.99,
+     "pubblicita": false,
+     "note": ""
+    }
+   ],
+   "fonte": "https://www.dazn.com/it-IT/news/calcio/prezzi-dazn-piani-abbonamenti-quanto-costa/ztztfvtth5e717ayya9ilq2t0",
+   "verificato": "2026-10-20"
+  },
+  {
+   "id": "now",
+   "nome": "NOW (Sky in streaming)",
+   "tipo": "Serie Sky, cinema, sport",
+   "piani": [
+    {
+     "id": "ent",
+     "nome": "Pass Entertainment",
+     "mensile": 8.99,
+     "annuo": null,
+     "vincolo12": 4.99,
+     "pubblicita": false,
+     "note": ""
+    },
+    {
+     "id": "cinema",
+     "nome": "Pass Cinema & Entertainment",
+     "mensile": 11.99,
+     "annuo": null,
+     "vincolo12": 7.99,
+     "pubblicita": false,
+     "note": ""
+    },
+    {
+     "id": "sport",
+     "nome": "Pass Sport",
+     "mensile": 34.99,
+     "annuo": null,
+     "vincolo12": 24.99,
+     "pubblicita": false,
+     "note": ""
+    },
+    {
+     "id": "completa",
+     "nome": "Offerta Completa",
+     "mensile": 46.99,
+     "annuo": null,
+     "vincolo12": 32.99,
+     "pubblicita": false,
+     "note": ""
+    }
+   ],
+   "fonte": "https://selectra.net/pay-tv/azienda/now-tv/offerte",
+   "verificato": "2026-10-31"
+  },
+  {
+   "id": "infinity",
+   "nome": "Infinity+ (Mediaset)",
+   "tipo": "Film, serie, Champions",
+   "piani": [
+    {
+     "id": "base",
+     "nome": "Infinity+",
+     "mensile": 11.99,
+     "annuo": 69,
+     "vincolo12": null,
+     "pubblicita": false,
+     "note": "annuale 5,75 €/mese con vincolo"
+    }
+   ],
+   "fonte": "https://taglialabolletta.it/pay-tv/infinity-plus",
+   "verificato": "2026-08-18"
+  },
+  {
+   "id": "paramount",
+   "nome": "Paramount+",
+   "tipo": "Film e serie",
+   "piani": [
+    {
+     "id": "base",
+     "nome": "Paramount+",
+     "mensile": 7.99,
+     "annuo": 79.9,
+     "vincolo12": null,
+     "pubblicita": false,
+     "note": "prezzo 2025: verifica eventuali aumenti; anche come canale Prime Video a 7,99 €"
+    }
+   ],
+   "fonte": "https://cinema.everyeye.it/notizie/netflix-prime-disney-paramount-apple-tv-prezzi-streaming-costano-834236.html",
+   "verificato": "2025-10-13",
+   "dubbio": true
+  },
+  {
+   "id": "appletv",
+   "nome": "Apple TV",
+   "tipo": "Film e serie",
+   "piani": [
+    {
+     "id": "base",
+     "nome": "Apple TV",
+     "mensile": 9.99,
+     "annuo": null,
+     "vincolo12": null,
+     "pubblicita": false,
+     "note": "negli USA è salito a 12,99 $: in Italia possibile aumento"
+    }
+   ],
+   "fonte": "https://www.startmag.it/economia-on-demand/tutto-sullennesimo-aumento-di-prezzo-di-apple-tv/",
+   "verificato": "2025-08-22",
+   "dubbio": true
+  },
+  {
+   "id": "timvision",
+   "nome": "TIMVISION Play",
+   "tipo": "Intrattenimento e sport TIM",
+   "piani": [
+    {
+     "id": "play",
+     "nome": "TIMVISION Play",
+     "mensile": 7.99,
+     "annuo": null,
+     "vincolo12": null,
+     "pubblicita": false,
+     "note": ""
+    }
+   ],
+   "fonte": "https://www.mondomobileweb.it/328554-timvision-con-disney-e-timvision-con-netflix-nuovi-prezzi-piu-alti-dal-25-ottobre-2026/",
+   "verificato": "2026-10-31",
+   "nascosto": true
+  },
+  {
+   "id": "skytv",
+   "nome": "Sky TV",
+   "tipo": "Serie Sky e intrattenimento",
+   "piani": [
+    {
+     "id": "base",
+     "nome": "Sky TV",
+     "mensile": 14.99,
+     "annuo": null,
+     "vincolo12": null,
+     "pubblicita": false,
+     "note": ""
+    }
+   ],
+   "fonte": "https://www.facile.it/pay-tv/news/offerte-sky-settembre-2026.html",
+   "verificato": "2026-09-30",
+   "nascosto": true
+  }
+ ],
+ "pacchetti": [
+  {
+   "id": "tv-netflix",
+   "nome": "TIMVISION con Netflix",
+   "operatore": "TIM",
+   "include": [
+    [
+     "netflix",
+     "ads"
+    ],
+    [
+     "timvision",
+     "play"
+    ]
+   ],
+   "mensile": 8.99,
+   "promoMesi": null,
+   "promo": null,
+   "annuale": false,
+   "richiede": null,
+   "unaTantum": 0,
+   "note": [
+    "Mensile senza vincoli",
+    "Prezzo dal 25/10/2026"
+   ],
+   "fonte": "https://www.tim.it/offerte-tv/timvision-netflix",
+   "verificato": "2026-10-31",
+   "scade": null,
+   "dubbio": false
+  },
+  {
+   "id": "tv-s",
+   "nome": "TIMVISION S (annuale)",
+   "operatore": "TIM",
+   "include": [
+    [
+     "netflix",
+     "ads"
+    ],
+    [
+     "hbomax",
+     "ads"
+    ],
+    [
+     "infinity",
+     "base"
+    ],
+    [
+     "timvision",
+     "play"
+    ]
+   ],
+   "mensile": 14.99,
+   "promoMesi": 12,
+   "promo": 8,
+   "annuale": true,
+   "richiede": "tim",
+   "unaTantum": 0,
+   "note": [
+    "serve già una linea internet TIM (offerta annuale, rinnovo automatico)"
+   ],
+   "fonte": "https://www.tim.it/offerte-tv/timvision-netflix",
+   "verificato": "2026-10-31",
+   "scade": "2026-11-18",
+   "dubbio": false
+  },
+  {
+   "id": "tv-m",
+   "nome": "TIMVISION M (annuale)",
+   "operatore": "TIM",
+   "include": [
+    [
+     "netflix",
+     "ads"
+    ],
+    [
+     "hbomax",
+     "ads"
+    ],
+    [
+     "disney",
+     "ads"
+    ],
+    [
+     "infinity",
+     "base"
+    ],
+    [
+     "timvision",
+     "play"
+    ]
+   ],
+   "mensile": 18.99,
+   "promoMesi": 12,
+   "promo": 12,
+   "annuale": true,
+   "richiede": "tim",
+   "unaTantum": 0,
+   "note": [
+    "serve già una linea internet TIM (offerta annuale, rinnovo automatico)"
+   ],
+   "fonte": "https://www.tim.it/offerte-tv/timvision-netflix",
+   "verificato": "2026-10-31",
+   "scade": "2026-11-18",
+   "dubbio": false
+  },
+  {
+   "id": "tv-l",
+   "nome": "TIMVISION L (annuale)",
+   "operatore": "TIM",
+   "include": [
+    [
+     "netflix",
+     "ads"
+    ],
+    [
+     "hbomax",
+     "ads"
+    ],
+    [
+     "disney",
+     "ads"
+    ],
+    [
+     "prime",
+     "ads"
+    ],
+    [
+     "infinity",
+     "base"
+    ],
+    [
+     "timvision",
+     "play"
+    ]
+   ],
+   "mensile": 20.99,
+   "promoMesi": 12,
+   "promo": 14,
+   "annuale": true,
+   "richiede": "tim",
+   "unaTantum": 0,
+   "note": [
+    "serve già una linea internet TIM (offerta annuale, rinnovo automatico)",
+    "Prime Video con pubblicità"
+   ],
+   "fonte": "https://www.tim.it/offerte-tv/timvision-netflix",
+   "verificato": "2026-10-31",
+   "scade": "2026-11-18",
+   "dubbio": false
+  },
+  {
+   "id": "tv-s-m",
+   "nome": "TIMVISION S (mensile)",
+   "operatore": "TIM",
+   "include": [
+    [
+     "netflix",
+     "ads"
+    ],
+    [
+     "hbomax",
+     "ads"
+    ],
+    [
+     "infinity",
+     "base"
+    ],
+    [
+     "timvision",
+     "play"
+    ]
+   ],
+   "mensile": 19.99,
+   "promoMesi": null,
+   "promo": null,
+   "annuale": false,
+   "richiede": null,
+   "unaTantum": 0,
+   "note": [
+    "Mensile senza vincoli"
+   ],
+   "fonte": "https://www.tim.it/offerte-tv/timvision-netflix",
+   "verificato": "2026-10-31",
+   "scade": null,
+   "dubbio": false
+  },
+  {
+   "id": "tv-l-m",
+   "nome": "TIMVISION L (mensile)",
+   "operatore": "TIM",
+   "include": [
+    [
+     "netflix",
+     "ads"
+    ],
+    [
+     "hbomax",
+     "ads"
+    ],
+    [
+     "disney",
+     "ads"
+    ],
+    [
+     "prime",
+     "ads"
+    ],
+    [
+     "infinity",
+     "base"
+    ],
+    [
+     "timvision",
+     "play"
+    ]
+   ],
+   "mensile": 25.99,
+   "promoMesi": null,
+   "promo": null,
+   "annuale": false,
+   "richiede": null,
+   "unaTantum": 0,
+   "note": [
+    "Mensile senza vincoli"
+   ],
+   "fonte": "https://www.tim.it/offerte-tv/timvision-netflix",
+   "verificato": "2026-10-31",
+   "scade": null,
+   "dubbio": false
+  },
+  {
+   "id": "tv-s-dazn",
+   "nome": "TIMVISION S con DAZN",
+   "operatore": "TIM",
+   "include": [
+    [
+     "netflix",
+     "ads"
+    ],
+    [
+     "hbomax",
+     "ads"
+    ],
+    [
+     "infinity",
+     "base"
+    ],
+    [
+     "dazn",
+     "full"
+    ],
+    [
+     "timvision",
+     "play"
+    ]
+   ],
+   "mensile": 46.99,
+   "promoMesi": 12,
+   "promo": 38,
+   "annuale": true,
+   "richiede": "tim",
+   "unaTantum": 0,
+   "note": [
+    "serve già una linea internet TIM (offerta annuale, rinnovo automatico)"
+   ],
+   "fonte": "https://www.tim.it/offerte-tv/timvision-netflix",
+   "verificato": "2026-10-31",
+   "scade": "2026-11-18",
+   "dubbio": false
+  },
+  {
+   "id": "tv-l-dazn",
+   "nome": "TIMVISION L con DAZN",
+   "operatore": "TIM",
+   "include": [
+    [
+     "netflix",
+     "ads"
+    ],
+    [
+     "hbomax",
+     "ads"
+    ],
+    [
+     "disney",
+     "ads"
+    ],
+    [
+     "prime",
+     "ads"
+    ],
+    [
+     "infinity",
+     "base"
+    ],
+    [
+     "dazn",
+     "full"
+    ],
+    [
+     "timvision",
+     "play"
+    ]
+   ],
+   "mensile": 52.99,
+   "promoMesi": 12,
+   "promo": 44,
+   "annuale": true,
+   "richiede": "tim",
+   "unaTantum": 0,
+   "note": [
+    "serve già una linea internet TIM (offerta annuale, rinnovo automatico)"
+   ],
+   "fonte": "https://www.tim.it/offerte-tv/timvision-netflix",
+   "verificato": "2026-10-31",
+   "scade": "2026-11-18",
+   "dubbio": false
+  },
+  {
+   "id": "tv-s-club",
+   "nome": "TIMVISION S con DAZN MyClubPass",
+   "operatore": "TIM",
+   "include": [
+    [
+     "netflix",
+     "ads"
+    ],
+    [
+     "hbomax",
+     "ads"
+    ],
+    [
+     "infinity",
+     "base"
+    ],
+    [
+     "dazn",
+     "myclub"
+    ],
+    [
+     "timvision",
+     "play"
+    ]
+   ],
+   "mensile": 39.99,
+   "promoMesi": 12,
+   "promo": 23,
+   "annuale": true,
+   "richiede": "tim",
+   "unaTantum": 0,
+   "note": [
+    "serve già una linea internet TIM (offerta annuale, rinnovo automatico)"
+   ],
+   "fonte": "https://www.tim.it/offerte-tv/timvision-netflix",
+   "verificato": "2026-10-31",
+   "scade": "2026-11-18",
+   "dubbio": false
+  },
+  {
+   "id": "tv-gold",
+   "nome": "TIMVISION Gold (annuale)",
+   "operatore": "TIM",
+   "include": [
+    [
+     "netflix",
+     "ads"
+    ],
+    [
+     "disney",
+     "ads"
+    ],
+    [
+     "prime",
+     "ads"
+    ],
+    [
+     "infinity",
+     "base"
+    ],
+    [
+     "dazn",
+     "full"
+    ],
+    [
+     "timvision",
+     "play"
+    ]
+   ],
+   "mensile": 44.99,
+   "promoMesi": 12,
+   "promo": 42.49,
+   "annuale": true,
+   "richiede": "tim",
+   "unaTantum": 0,
+   "note": [
+    "serve già una linea internet TIM (offerta annuale, rinnovo automatico)",
+    "Primo anno 509,88 €, poi 539,88 €/anno"
+   ],
+   "fonte": "https://www.tim.it/offerte-tv/timvision-netflix",
+   "verificato": "2026-10-31",
+   "scade": "2026-11-18",
+   "dubbio": false
+  },
+  {
+   "id": "tv-family-l",
+   "nome": "TIMVISION Family L (annuale)",
+   "operatore": "TIM",
+   "include": [
+    [
+     "netflix",
+     "ads"
+    ],
+    [
+     "disney",
+     "ads"
+    ],
+    [
+     "prime",
+     "ads"
+    ],
+    [
+     "infinity",
+     "base"
+    ],
+    [
+     "dazn",
+     "goal"
+    ],
+    [
+     "timvision",
+     "play"
+    ]
+   ],
+   "mensile": 19.99,
+   "promoMesi": 12,
+   "promo": 15.995,
+   "annuale": true,
+   "richiede": "tim",
+   "unaTantum": 0,
+   "note": [
+    "serve già una linea internet TIM (offerta annuale, rinnovo automatico)",
+    "Primo anno 191,94 €, poi 239,88 €/anno"
+   ],
+   "fonte": "https://www.tim.it/offerte-tv/timvision-netflix",
+   "verificato": "2026-10-31",
+   "scade": "2026-11-18",
+   "dubbio": false
+  },
+  {
+   "id": "sky-netflix",
+   "nome": "Sky TV + Netflix",
+   "operatore": "Sky",
+   "include": [
+    [
+     "netflix",
+     "ads"
+    ],
+    [
+     "skytv",
+     "base"
+    ]
+   ],
+   "mensile": 29.99,
+   "promoMesi": 18,
+   "promo": 14.99,
+   "annuale": false,
+   "richiede": null,
+   "unaTantum": 0,
+   "note": [
+    "Prezzo per 18 mesi",
+    "Comprende Sky TV, Sky Stream, Sky Go"
+   ],
+   "fonte": "https://www.facile.it/pay-tv/news/offerte-sky-settembre-2026.html",
+   "verificato": "2026-09-30",
+   "scade": null,
+   "dubbio": true
+  },
+  {
+   "id": "sky-cinema",
+   "nome": "Sky TV + Sky Cinema",
+   "operatore": "Sky",
+   "include": [
+    [
+     "skytv",
+     "base"
+    ],
+    [
+     "now",
+     "cinema"
+    ]
+   ],
+   "mensile": 24.99,
+   "promoMesi": 6,
+   "promo": 14.99,
+   "annuale": false,
+   "richiede": null,
+   "unaTantum": 0,
+   "note": [
+    "14,99 € per 6 mesi, poi 24,99 €",
+    "Sky Cinema equivalente al Pass Cinema di NOW"
+   ],
+   "fonte": "https://www.facile.it/pay-tv/news/offerte-sky-settembre-2026.html",
+   "verificato": "2026-09-30",
+   "scade": null,
+   "dubbio": true
+  },
+  {
+   "id": "now-promo-sport",
+   "nome": "NOW Pass Sport annuale (12 mesi al prezzo di 8)",
+   "operatore": "NOW",
+   "include": [
+    [
+     "now",
+     "sport"
+    ]
+   ],
+   "mensile": 19.99,
+   "promoMesi": null,
+   "promo": null,
+   "annuale": true,
+   "richiede": null,
+   "unaTantum": 0,
+   "note": [
+    "12 mensilità da 19,99 € con vincolo"
+   ],
+   "fonte": "https://www.facile.it/pay-tv/news/offerte-now-ottobre-2026.html",
+   "verificato": "2026-10-23",
+   "scade": null,
+   "dubbio": false
+  },
+  {
+   "id": "now-promo-completa",
+   "nome": "NOW Offerta Completa annuale (12 mesi al prezzo di 8)",
+   "operatore": "NOW",
+   "include": [
+    [
+     "now",
+     "completa"
+    ]
+   ],
+   "mensile": 27.99,
+   "promoMesi": null,
+   "promo": null,
+   "annuale": true,
+   "richiede": null,
+   "unaTantum": 0,
+   "note": [
+    "12 mensilità da 27,99 € con vincolo"
+   ],
+   "fonte": "https://www.facile.it/pay-tv/news/offerte-now-ottobre-2026.html",
+   "verificato": "2026-10-23",
+   "scade": null,
+   "dubbio": false
+  }
+ ],
+ "omaggi": [
+  {
+   "operatore": "WINDTRE",
+   "offerta": "Super Fibra",
+   "internetId": "windtre-super-fibra",
+   "servizio": "prime",
+   "mesi": 12,
+   "poi": "4,99 €/mese se non disdici",
+   "fonte": "https://www.windtre.it/offerte-fibra/super-fibra-internet-a-casa"
+  },
+  {
+   "operatore": "WINDTRE",
+   "offerta": "Super Fibra & Netflix",
+   "internetId": null,
+   "servizio": "netflix",
+   "mesi": 12,
+   "poi": "31,49 €/mese tutto compreso (fibra + Netflix con pubblicità)",
+   "fonte": "https://tariffe.segugio.it/adsl-energia-gas/windtre/adsl/super-fibra-e-netflix-con-pubblicita/scheda-12121.aspx"
+  },
+  {
+   "operatore": "Plenitude",
+   "offerta": "Plenitude Fibra",
+   "internetId": "plenitude-fibra",
+   "servizio": "disney",
+   "mesi": 6,
+   "poi": "Disney+ Standard con pubblicità; attivazioni dal 02/10 al 02/11/2026",
+   "fonte": "https://eniplenitude.com/offerta/casa/fibra-internet",
+   "scade": "2026-11-02"
+  },
+  {
+   "operatore": "TIM",
+   "offerta": "TIMVISION (qualsiasi pacchetto)",
+   "internetId": null,
+   "servizio": "timvision",
+   "mesi": null,
+   "poi": "TIMVISION Play e Discovery+ inclusi",
+   "fonte": "https://www.mondomobileweb.it/328554-timvision-con-disney-e-timvision-con-netflix-nuovi-prezzi-piu-alti-dal-25-ottobre-2026/"
+  }
+ ]
+}

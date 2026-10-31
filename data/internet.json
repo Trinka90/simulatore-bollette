@@ -69,7 +69,11 @@
    ],
    "fonte": "https://www.tim.it/fisso-e-mobile/fibra-e-adsl/fibra-internet-casa",
    "fonteTipo": "ufficiale",
-   "verificato": "2026-10-24"
+   "verificato": "2026-10-24",
+   "dettagli": {
+    "modem": "TIM HUB Pro (fibra ottica integrata)",
+    "fttc": "in FTTC/FTTE fino a 200/20 Mbit/s"
+   }
   },
   {
    "id": "tim-wifi-casa-mobile",
@@ -145,7 +149,11 @@
    ],
    "fonte": "https://www.tim.it/fisso-e-mobile/fibra-e-adsl/fibra-internet-casa",
    "fonteTipo": "ufficiale",
-   "verificato": "2026-10-24"
+   "verificato": "2026-10-24",
+   "dettagli": {
+    "modem": "TIM HUB Pro (fibra ottica integrata)",
+    "fttc": "in FTTC/FTTE fino a 200/20 Mbit/s"
+   }
   },
   {
    "id": "tim-premium-base",
@@ -207,7 +215,11 @@
    "dubbi": [],
    "fonte": "https://www.tim.it/fisso-e-mobile/fibra-e-adsl/fibra-internet-casa/no-modem",
    "fonteTipo": "ufficiale",
-   "verificato": "2026-10-24"
+   "verificato": "2026-10-24",
+   "dettagli": {
+    "modem": "non incluso (TIM HUB a 5 €/mese per 48 mesi, oppure il tuo)",
+    "fttc": "in FTTC fino a 200/20 Mbit/s"
+   }
   },
   {
    "id": "fastweb-casa-start",
@@ -248,7 +260,12 @@
    "dubbi": [],
    "fonte": "https://www.fastweb.it/adsl-fibra-ottica/fastweb-casa-start/",
    "fonteTipo": "ufficiale",
-   "verificato": "2026-10-24"
+   "verificato": "2026-10-24",
+   "dettagli": {
+    "modem": "NeXXt One Wi-Fi 6 in comodato",
+    "garantito": 12,
+    "fttc": "in FTTC fino a 200/20 Mbit/s"
+   }
   },
   {
    "id": "fastweb-casa-pro",
@@ -290,7 +307,12 @@
    "dubbi": [],
    "fonte": "https://www.fastweb.it/adsl-fibra-ottica/fastweb-casa-pro/",
    "fonteTipo": "ufficiale",
-   "verificato": "2026-10-24"
+   "verificato": "2026-10-24",
+   "dettagli": {
+    "modem": "Seven Wi-Fi 7 in comodato",
+    "garantito": 12,
+    "fttc": "in FTTC fino a 200/20 Mbit/s"
+   }
   },
   {
    "id": "fastweb-casa-ultra",
@@ -369,7 +391,11 @@
    "dubbi": [],
    "fonte": "https://www.fastweb.it/adsl-fibra-ottica/fastweb-casa-fwa/",
    "fonteTipo": "ufficiale",
-   "verificato": "2026-10-24"
+   "verificato": "2026-10-24",
+   "dettagli": {
+    "modem": "NeXXt One Wi-Fi 6 + antenna esterna",
+    "garantito": 12
+   }
   },
   {
    "id": "vodafone-casa-start",
@@ -409,7 +435,11 @@
    "dubbi": [],
    "fonte": "https://myvfapp-aem.vodafone.it/content/dam/myvf/mva10/cce-pdf/Casa_Start.pdf",
    "fonteTipo": "ufficiale",
-   "verificato": "2026-10-24"
+   "verificato": "2026-10-24",
+   "dettagli": {
+    "normale": "FTTH 980/710 Mbit/s · FTTC 102/19,5 Mbit/s",
+    "garantito": 12
+   }
   },
   {
    "id": "vodafone-casa-pro",
@@ -449,7 +479,11 @@
    "dubbi": [],
    "fonte": "https://myvfapp-aem.vodafone.it/content/dam/myvf/mva10/cce-pdf/Casa_Pro.pdf",
    "fonteTipo": "ufficiale",
-   "verificato": "2026-10-24"
+   "verificato": "2026-10-24",
+   "dettagli": {
+    "normale": "FTTH 980/710 Mbit/s · FTTC 102/19,5 Mbit/s",
+    "garantito": 12
+   }
   },
   {
    "id": "vodafone-casa-fwa-start",
@@ -491,7 +525,12 @@
    ],
    "fonte": "https://myvfapp-aem.vodafone.it/content/dam/myvf/mva10/cce-pdf/Casa_FWA_Start_5G.pdf",
    "fonteTipo": "ufficiale",
-   "verificato": "2026-10-24"
+   "verificato": "2026-10-24",
+   "dettagli": {
+    "normale": "280/35 Mbit/s con antenna esterna, 140/10 Mbit/s indoor",
+    "minimo": "30/7 Mbit/s (esterna), 25/5 Mbit/s (indoor)",
+    "modem": "modem FWA gratuito, non va restituito"
+   }
   },
   {
    "id": "windtre-super-fibra",
@@ -556,7 +595,11 @@
    ],
    "fonte": "https://www.windtre.it/offerte-fibra/super-fibra-internet-a-casa",
    "fonteTipo": "ufficiale",
-   "verificato": "2026-10-24"
+   "verificato": "2026-10-24",
+   "dettagli": {
+    "modem": "modem Wi-Fi a rate (5,99 €/mese × 48)",
+    "streaming": "Amazon Prime 12 mesi incluso, poi 4,99 €/mese"
+   }
   },
   {
    "id": "windtre-super-fibra-mobile",
@@ -612,7 +655,11 @@
    ],
    "fonte": "https://www.windtre.it/offerte-fibra/super-fibra-per-clienti-windtre",
    "fonteTipo": "ufficiale",
-   "verificato": "2026-10-24"
+   "verificato": "2026-10-24",
+   "dettagli": {
+    "modem": "modem Wi-Fi a rate (5,99 €/mese × 48)",
+    "streaming": "Amazon Prime 12 mesi incluso, poi 4,99 €/mese"
+   }
   },
   {
    "id": "iliadbox",
@@ -659,7 +706,10 @@
    ],
    "fonte": "https://www.iliad.it/sintesi-contrattuale-fibra.html",
    "fonteTipo": "comparatore",
-   "verificato": "2026-10-24"
+   "verificato": "2026-10-24",
+   "dettagli": {
+    "modem": "iliadbox Wi-Fi 7"
+   }
   },
   {
    "id": "iliadbox-super",
@@ -704,7 +754,10 @@
    "dubbi": [],
    "fonte": "https://cdn001.iliad.it/strapi/sintesi_contrattuale_iliadbox_super_dal_26_02_2026_47ce71148f.pdf",
    "fonteTipo": "ufficiale",
-   "verificato": "2026-10-24"
+   "verificato": "2026-10-24",
+   "dettagli": {
+    "modem": "iliadbox Wi-Fi 7 + 2 ripetitori, hotspot 4G 350 GB"
+   }
   },
   {
    "id": "iliad-5g-box",
@@ -793,7 +846,11 @@
    ],
    "fonte": "https://www.sky.it/sky-wifi-fibra",
    "fonteTipo": "ufficiale",
-   "verificato": "2026-10-24"
+   "verificato": "2026-10-24",
+   "dettagli": {
+    "modem": "Sky Wifi Hub in comodato",
+    "fttc": "in FTTC fino a 200/20 Mbit/s"
+   }
   },
   {
    "id": "tiscali-fibra-power",
@@ -848,7 +905,10 @@
    ],
    "fonte": "https://casa.tiscali.it/doc/AGCOM/B2C/trasparenza-tariffaria-fisso/CASA_FIBRA_POWER_dedicata_a_te_2.5_GIGA.pdf",
    "fonteTipo": "ufficiale",
-   "verificato": "2026-10-24"
+   "verificato": "2026-10-24",
+   "dettagli": {
+    "modem": "modem Wi-Fi in comodato"
+   }
   },
   {
    "id": "tiscali-home-safe-mobile",
@@ -898,7 +958,10 @@
    "dubbi": [],
    "fonte": "https://casa.tiscali.it/doc/AGCOM/B2C/trasparenza-tariffaria-fisso/CASA_FIBRA_POWER_HOME_SAFE_dedicata_a_te_2.5_GIGA_x_Mobile_250_5G_Pro.pdf",
    "fonteTipo": "ufficiale",
-   "verificato": "2026-10-24"
+   "verificato": "2026-10-24",
+   "dettagli": {
+    "modem": "modem Wi-Fi in comodato"
+   }
   },
   {
    "id": "eolo-fibra",
@@ -940,7 +1003,10 @@
    "scade": "2026-10-31",
    "fonte": "https://www.eolo.it/offerte-internet-casa/eolo-fibra",
    "fonteTipo": "ufficiale",
-   "verificato": "2026-10-24"
+   "verificato": "2026-10-24",
+   "dettagli": {
+    "modem": "router Wi-Fi 7 incluso"
+   }
   },
   {
    "id": "linkem-5g",
@@ -1042,7 +1108,12 @@
    ],
    "fonte": "https://eniplenitude.com/offerta/casa/fibra-internet",
    "fonteTipo": "ufficiale",
-   "verificato": "2026-10-24"
+   "verificato": "2026-10-24",
+   "dettagli": {
+    "modem": "modem Wi-Fi 7 installato dal tecnico",
+    "fttc": "in FTTC fino a 200/20 Mbit/s",
+    "streaming": "Disney+ 6 mesi gratis (attivazioni entro il 02/11/2026)"
+   }
   },
   {
    "id": "enel-fibra-per-te",
@@ -1093,7 +1164,11 @@
    "dubbi": [],
    "fonte": "https://www.enel.it/content/dam/asset/documenti/assistenza/fibra/articoli/sintesi-contrattuale-fibra/documenti-di-sintesi-contrattuale/sintesi-contrattuale-enel-fibra-per-te.pdf",
    "fonteTipo": "ufficiale",
-   "verificato": "2026-10-24"
+   "verificato": "2026-10-24",
+   "dettagli": {
+    "minimo": "100/20 Mbit/s garantiti",
+    "modem": "in comodato (50 € se non restituito)"
+   }
   },
   {
    "id": "enel-fibra-flash-trio",
@@ -1151,7 +1226,11 @@
    "dubbi": [],
    "fonte": "https://www.enel.it/content/dam/asset/documenti/offerte/casa/fibra/docs/sintesi-contrattuali/sintesi-contrattuale-enel-fibra-flash-trio-star.pdf",
    "fonteTipo": "ufficiale",
-   "verificato": "2026-10-24"
+   "verificato": "2026-10-24",
+   "dettagli": {
+    "minimo": "100/20 Mbit/s garantiti",
+    "modem": "in comodato (50 € se non restituito)"
+   }
   },
   {
    "id": "iren-stay-connettivita",
@@ -1282,7 +1361,12 @@
    ],
    "fonte": "https://documenti.edisonenergia.it/getbusinessdoc.ashx?id=CONDECO_SC_Edison_wifi_FTTH_1000_500",
    "fonteTipo": "ufficiale",
-   "verificato": "2026-10-24"
+   "verificato": "2026-10-24",
+   "dettagli": {
+    "normale": "500/100 Mbit/s (profilo 2,5 Giga)",
+    "minimo": "100/12 Mbit/s",
+    "modem": "modem Edison o il tuo"
+   }
   }
  ]
 }
