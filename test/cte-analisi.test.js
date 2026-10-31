@@ -78,3 +78,16 @@ test("CTE di esempio: ogni importo classificato e codice confrontato col Portale
   assert.equal(a.portale.trovata, true);
   assert.deepEqual(a.portale.mancanti.map((d) => d.v), [0.05]);
 });
+
+test("Illumia: sceglie tra monoraria e fasce in base ai consumi; penali e deposito nell'offerta", async () => {
+  const { daCte, scontiEPenali } = await import("../src/bolletta.js");
+  const t = leggi("illumia-energia-lunga-luce"), a = analisiCompleta(t, []);
+  const notte = completaDaAnalisi({ ...bozzaOfferta(analizza(t), "x.pdf"), note: [] }, a, { F1: 0.2, F2: 0.2, F3: 0.6 });
+  assert.deepEqual(notte.prezzi, { F1: 0.135, F2: 0.155, F3: 0.121 });
+  const giorno = completaDaAnalisi({ ...bozzaOfferta(analizza(t), "x.pdf"), note: [] }, a, { F1: 0.33, F2: 0.31, F3: 0.36 });
+  assert.deepEqual(giorno.prezzi, { F0: 0.135 });
+  const o = daCte({ ...giorno, id: "x", fornitura: "LUCE", tipoPrezzo: "fisso" });
+  const sp = scontiEPenali(o, [], {});
+  assert.match(sp.penali[0].testo, /^300 €, 200 €, 100 €/);
+  assert.match(sp.deposito, /deposito cauzionale/);
+});

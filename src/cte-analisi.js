@@ -147,7 +147,7 @@ export function analisiCompleta(testoGrezzo, catalogo = []) {
     `${voci.length + daLeggere.length} importi letti: ${voci.length} classificati${daLeggere.length ? `, ${daLeggere.length} da leggere` : ""}`,
     att ? `${att} punti di attenzione` : "nessuna clausola a rischio trovata",
   ].join(" · ");
-  return { forn, ...scheda, natura: scheda.natura, portale, sezioni, daLeggere, avvisi, assenze, attivazione, riassunto,
+  return { forn, ...scheda, natura: scheda.natura, portale, sezioni, energiaTutte: voci.filter((x) => x.sezione === "energia").map(({ v, u, etichetta }) => ({ v, u, etichetta })), daLeggere, avvisi, assenze, attivazione, riassunto,
     statistiche: { frasi: ff.length, importi: voci.length + daLeggere.length, classificati: voci.length, daLeggere: daLeggere.length, ignorati, stime } };
 }
 
@@ -242,15 +242,22 @@ export function serviziObbligatori(a) {
  * Completa la bozza dell'offerta con quanto letto nell'analisi completa: prezzi per fascia, quota fissa,
  * servizi obbligatori (aggiunti alla quota fissa), perdite di rete, sconto pluriennale.
  */
-export function completaDaAnalisi(off, a) {
+export function completaDaAnalisi(off, a, ripartizione = { F1: 0.33, F2: 0.31, F3: 0.36 }) {
   const note = off.note || (off.note = []);
-  const en = (a.sezioni.energia?.voci || []).filter((v) => !DOPO_ETICHETTA.test(v.etichetta));
+  const en = (a.energiaTutte || a.sezioni.energia?.voci || []).filter((v) => !DOPO_ETICHETTA.test(v.etichetta));
   if (off.fornitura === "LUCE") {
     const fasce = {};
     for (const v of en) { if (v.u !== "€/kWh") continue; const f = /\b(F[0-3])\s*:?\s*$/i.exec(v.etichetta)?.[1]?.toUpperCase() || (/monorari/i.test(v.etichetta) ? "F0" : null); if (f && !(f in fasce)) fasce[f] = v.v; }
     if (!Object.keys(fasce).length && en.find((v) => v.u === "€/kWh")) fasce.F0 = en.find((v) => v.u === "€/kWh").v;
-    if ("F0" in fasce) off.prezzi = { F0: fasce.F0 };
-    else if (fasce.F1 != null && fasce.F2 != null && fasce.F3 != null) off.prezzi = { F1: fasce.F1, F2: fasce.F2, F3: fasce.F3 };
+    const tri = fasce.F1 != null && fasce.F2 != null && fasce.F3 != null;
+    if ("F0" in fasce && tri) {
+      // offerta con due opzioni (monoraria e a fasce): scelgo quella che costa meno con la tua ripartizione dei consumi
+      const medio = fasce.F1 * ripartizione.F1 + fasce.F2 * ripartizione.F2 + fasce.F3 * ripartizione.F3;
+      const f = (x) => String(Math.round(x * 10000) / 10000).replace(".", ",");
+      if (medio < fasce.F0) { off.prezzi = { F1: fasce.F1, F2: fasce.F2, F3: fasce.F3 }; note.push(`Opzione a fasce scelta: con i tuoi consumi costa in media ${f(medio)} €/kWh contro ${f(fasce.F0)} €/kWh della monoraria (puoi sceglierla alla firma).`); }
+      else { off.prezzi = { F0: fasce.F0 }; note.push(`Opzione monoraria scelta: ${f(fasce.F0)} €/kWh contro ${f(medio)} €/kWh in media con le fasce e i tuoi consumi (puoi sceglierla alla firma).`); }
+    } else if ("F0" in fasce) off.prezzi = { F0: fasce.F0 };
+    else if (tri) off.prezzi = { F1: fasce.F1, F2: fasce.F2, F3: fasce.F3 };
     if (a.perdite === "incluse nel prezzo") off.perdite = "nessuna";
     else if (/aggiunte/.test(a.perdite || "")) off.perdite = "tutto";
   } else {
@@ -277,6 +284,12 @@ export function completaDaAnalisi(off, a) {
       break;
     }
   }
+  // penali, deposito e servizi facoltativi: diventano condizioni dell'offerta, visibili nel dettaglio e nel confronto
+  const pen = a.sezioni.penali?.voci || [];
+  off.penali = pen.length ? [pen.map((v) => `${v.v} ${v.u}`).join(", ") + ": " + pen[0].frase.slice(0, 220)] : [];
+  const dep = a.sezioni.deposito?.voci?.[0];
+  off.deposito = dep ? dep.frase.slice(0, 220) : null;
+  off.serviziOpzionali = (a.sezioni.servizi?.voci || []).filter((v) => v.opzionale).map((v) => `${v.etichetta.slice(-50).trim()} ${v.v} ${v.u}`);
   if (a.venditore && !off.fornitore) off.fornitore = a.venditore;
   if (a.nome && (!off.nome || (off.fonte || "").includes(off.nome) || /\.pdf$|^cte|condizioni/i.test(off.nome))) off.nome = a.nome;
   return off;

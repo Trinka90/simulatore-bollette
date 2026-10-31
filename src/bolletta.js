@@ -471,7 +471,8 @@ export function daCte(o) {
   return {
     id: o.id, mia: true, venditore: o.fornitore || "Fornitore non indicato", nome: o.nome || "La mia offerta", forn: o.fornitura,
     tipo: variab ? "variabile" : "fisso", fasce, perditeIncluse: o.perdite !== "tutto", tetto: o.prezzoMax ?? null,
-    idx: variab ? [{ c: luce ? "12" : "14", k: null }] : [], disp, reg: [], comp, sc: [], cond: [], serv: [], att: [], canali: [], pag: [],
+    idx: variab ? [{ c: luce ? "12" : "14", k: null }] : [], disp, reg: [], comp, sc: [],
+    cond: (o.penali || []).map((d) => ({ t: "05", d, lim: false })), garanzie: o.deposito || "", serv: o.serviziOpzionali || [], att: [], canali: [], pag: [],
     singola: true, res: "T", zone: null, cons: null, pot: null, durata: null, dal: null, al: null,
     descr: (o.note || []).join(" "), note: o.note || [], fonte: o.fonte || "inserita da te", url: "", tel: "", attivazioneCte: o.attivazione || null,
   };

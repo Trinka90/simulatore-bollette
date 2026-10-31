@@ -996,7 +996,7 @@ $("#filePdf").addEventListener("change", async (e) => {
       if (!an.tipo) { esitiImport.push({ file: f.name, illeggibile: true }); continue; }
       const analisi = analisiCompleta(testoCte, S.catalogo?.offerte || []);
       const off = { id: uid(), incluso: true, ...bozzaOfferta(an, f.name), attivazione: attivazioneDaTesto(testoCte), analisi };
-      completaDaAnalisi(off, analisi);
+      completaDaAnalisi(off, analisi, S.utenza.luce.ripartizione);
       // dispacciamento del venditore oltre ai valori ARERA: va nel prezzo
       const disp = analisi.sezioni.dispacciamento.voci.flatMap((v) => v.importi).find((i) => i.u === "€/kWh" && i.v > 0 && i.v < 0.1);
       if (off.fornitura === "LUCE" && disp && !off.altriKwh) { off.altriKwh = disp.v; off.note.push(`Dispacciamento del venditore ${nf(disp.v, 4)} €/kWh (dalla CTE).`); }
