@@ -16,7 +16,7 @@ import { confermaAvvio, controllaAggiornamento, VERSIONE_WEB } from "./aggiorna-
 import { analizzaBolletta, consumiDaBollette } from "./bolletta-pdf.js";
 import { leggiConsumiCsv, ultimi12 } from "./consumi-csv.js";
 import { dataAttivazione, meseSimulazione, attivazioneDaTesto } from "./attivazione.js";
-import { analisiCompleta } from "./cte-analisi.js";
+import { analisiCompleta, completaDaAnalisi, serviziObbligatori } from "./cte-analisi.js";
 import { areaSTG, curva, soglie, fraseSoglie, restare, GRIGLIA, FINE_STG } from "./stg.js";
 import datiInclusi from "../data/dati.json";
 import comuniDb from "../data/comuni.json";
@@ -996,8 +996,7 @@ $("#filePdf").addEventListener("change", async (e) => {
       if (!an.tipo) { esitiImport.push({ file: f.name, illeggibile: true }); continue; }
       const analisi = analisiCompleta(testoCte, S.catalogo?.offerte || []);
       const off = { id: uid(), incluso: true, ...bozzaOfferta(an, f.name), attivazione: attivazioneDaTesto(testoCte), analisi };
-      if (analisi.portale.trovata) { off.fornitore = off.fornitore || analisi.portale.venditore; if (!an.info.nome) off.nome = analisi.portale.nome; }
-      if (!an.info.nome) { const nm = /\bOFFERTA\s+(?:LUCE\s+|GAS\s+)?([A-Z0-9][A-Z0-9 +&'’.-]{2,40}?)(?=\s+(?:Codice|codice|Offerta|offerta|valid|VALID)|\n|$)/.exec(testoCte); if (nm && !analisi.portale.trovata) off.nome = nm[1].trim(); }
+      completaDaAnalisi(off, analisi);
       // dispacciamento del venditore oltre ai valori ARERA: va nel prezzo
       const disp = analisi.sezioni.dispacciamento.voci.flatMap((v) => v.importi).find((i) => i.u === "€/kWh" && i.v > 0 && i.v < 0.1);
       if (off.fornitura === "LUCE" && disp && !off.altriKwh) { off.altriKwh = disp.v; off.note.push(`Dispacciamento del venditore ${nf(disp.v, 4)} €/kWh (dalla CTE).`); }
@@ -1015,30 +1014,44 @@ $("#filePdf").addEventListener("change", async (e) => {
 
 function vistaAnalisiCte(id, indietro = () => vai("cte")) {
   const o = S.cte.find((x) => x.id === id), a = o?.analisi;
-  if (!a) { toast("Ricarica il PDF della CTE per l'analisi completa"); return; }
+  if (!a || !a.statistiche?.importi && a.statistiche?.importi !== 0) { toast("Ricarica il PDF della CTE per l'analisi completa"); return; }
   $("#titolo").textContent = "Cosa dice la CTE";
-  const ann = (i) => (/mese$/.test(i.u) ? ` (${eur(i.v * 12)} all'anno)` : /€\/kW$/.test(i.u) && S.utenza.luce.potenzaKw ? ` (${eur(i.v * S.utenza.luce.potenzaKw)} con ${nf(S.utenza.luce.potenzaKw)} kW)` : "");
-  const imp = (v) => v.importi.map((i) => `<b>${nf(i.v, i.v < 1 ? 4 : 2)} ${h(i.u)}</b>${ann(i)}`).join(" · ");
+  const kw = S.utenza.luce.potenzaKw;
+  const ann = (i) => (/mese/.test(i.u) ? ` = ${eur(i.v * 12)} all'anno` : "");
+  const val = (i) => `<b>${nf(i.v, i.v !== 0 && Math.abs(i.v) < 1 ? 4 : 2)} ${h(i.u)}</b>${ann(i)}${i.volte > 1 ? ` <span class="mut">(ripetuto ${i.volte} volte)</span>` : ""}`;
   const ico = { attenzione: "⚠", info: "ℹ" };
+  const obb = serviziObbligatori(a);
+  const riga = (k, v) => (v ? `<tr><td>${k}</td><td>${v}</td></tr>` : "");
+  const att = a.attivazione;
   let html = `<button class="btn ghost" id="indietro">‹ Indietro</button>
-    <section class="hero"><div class="vend">${h(o.fornitore || "Fornitore")}${a.codice ? ` · codice ${h(a.codice)}` : ""}</div><h2>${h(o.nome)}</h2>
+    <section class="hero"><div class="vend">${h(a.venditore || o.fornitore || "Venditore non riconosciuto")}</div><h2>${h(a.nome || o.nome)}</h2>
       <p class="small">${h(a.riassunto)}</p>
-      <div class="conf"><span>Frasi con importi lette</span><b>${a.statistiche.conImporti}: ${a.statistiche.classificate} classificate${a.statistiche.daLeggere ? `, <span class="bad">${a.statistiche.daLeggere} da leggere</span>` : ""}</b></div></section>
+      <div class="conf"><span>Importi trovati nel documento</span><b>${a.statistiche.importi}: ${a.statistiche.classificati} spiegati${a.statistiche.daLeggere ? `, <span class="bad">${a.statistiche.daLeggere} da leggere</span>` : ""}</b></div></section>
     <section class="sez"><h3>Che tipo di offerta è</h3><table class="kv small">
-      <tr><td>Fornitura</td><td>${a.forn === "GAS" ? "Gas" : a.forn === "LUCE" ? "Luce" : "non riconosciuta"}</td></tr>
-      <tr><td>Prezzo</td><td>${h(a.natura)}${a.durataMesi ? ` per ${a.durataMesi} mesi` : ""}${a.indice ? ` · indice ${h(a.indice)}${a.poiIndice ? " (dopo la scadenza)" : ""}` : ""}</td></tr>
-      <tr><td>Inizio fornitura</td><td>${a.attivazione ? h(a.attivazione.tipo === "data" ? `dal ${dataIt(a.attivazione.data)}` : a.attivazione.tipo === "mesi" ? `1° giorno del ${a.attivazione.mesi === 1 ? "" : ["", "", "secondo ", "terzo ", "quarto "][a.attivazione.mesi]}mese successivo alla firma` : a.attivazione.testo) : "non indicato"}</td></tr>
-      <tr><td>Portale ARERA</td><td>${h(a.portale.testo)}</td></tr></table>
+      ${riga("Fornitura", a.forn === "GAS" ? "Gas" : a.forn === "LUCE" ? "Luce" : "non riconosciuta")}
+      ${riga("Codice ARERA", a.codice ? h(a.codice) : "non indicato")}
+      ${riga("Sottoscrivibile", a.validita?.dal || a.validita?.al ? `${a.validita.dal ? "dal " + h(a.validita.dal) + " " : ""}${a.validita.al ? "fino al " + h(a.validita.al) : ""}` : "")}
+      ${riga("Per chi", a.destinatari?.length ? h(a.destinatari.join("; ")) : "")}
+      ${riga("Prezzo", `${h(a.natura)}${a.durataMesi ? ` per ${a.durataMesi} mesi` : ""}`)}
+      ${riga("Dopo il periodo fisso", a.dopo ? h(a.dopo) : a.durataMesi ? "nuove condizioni comunicate dal venditore (se non le accetti puoi andartene senza costi)" : "")}
+      ${riga("Perdite di rete", a.perdite ? h(a.perdite) : "")}
+      ${riga("Dispacciamento", a.dispacciamento ? h(a.dispacciamento) : "")}
+      ${riga("Pagamento", a.soloSdd ? "solo addebito su conto (SDD)" : "")}
+      ${riga("Durata del contratto", a.durataContratto ? h(a.durataContratto) : "")}
+      ${riga("Inizio fornitura", att ? h(att.tipo === "data" ? `dal ${dataIt(att.data)}` : att.tipo === "mesi" ? `1° giorno del ${att.mesi === 1 ? "" : ["", "", "secondo ", "terzo ", "quarto "][att.mesi]}mese dopo la firma` : att.testo) : "non indicato: valgono i tempi standard")}
+      ${riga("Portale ARERA", h(a.portale.testo))}</table>
       ${a.portale.mancanti?.length ? `<ul class="small">${a.portale.mancanti.map((d) => `<li>${h(d.nome)}: ${nf(d.v, 6)} ${h(d.u)} sul Portale</li>`).join("")}</ul>` : ""}</section>`;
+  if (obb.length) html += `<section class="sez"><h3 class="bad">Costi oltre all'energia che paghi comunque</h3><ul class="small">${obb.map((x) => `<li>${val(x.v)}<div class="frase">${h(x.v.frase)}</div></li>`).join("")}</ul>
+    <p class="small mut">Li ho già aggiunti alla quota fissa nel confronto.</p></section>`;
   if (a.avvisi.length) html += `<section class="sez"><h3>Da sapere prima di firmare</h3><ul class="breve">${a.avvisi.map((x) => `<li class="${x.livello}"><span class="ic">${ico[x.livello]}</span><div><b>${h(x.titolo)}</b><div class="small">${h(x.frase)}</div></div></li>`).join("")}</ul></section>`;
-  if (a.daLeggere.length) html += `<section class="sez"><h3 class="bad">Importi che non so classificare: leggili</h3><ul class="small">${a.daLeggere.map((v) => `<li>${imp(v)}<div class="frase">${h(v.frase)}</div></li>`).join("")}</ul></section>`;
-  for (const s of Object.values(a.sezioni)) {
-    if (!s.voci.length) continue;
-    html += `<section class="sez"><h3>${h(s.titolo)}</h3><ul class="small" style="padding-left:16px">${s.voci.map((v) => `<li style="margin-bottom:6px">${imp(v)}<div class="frase">${h(v.frase)}</div></li>`).join("")}</ul></section>`;
+  if (a.assenze?.length) html += `<section class="sez"><h3>Il documento dichiara</h3><ul class="breve">${a.assenze.map((x) => `<li class="piu"><span class="ic">✓</span><div><b>${h(x)}</b></div></li>`).join("")}</ul></section>`;
+  if (a.daLeggere.length) html += `<section class="sez"><h3 class="bad">Importi che non so spiegare: leggili</h3><ul class="small">${a.daLeggere.map((v) => `<li>${val(v)}<div class="frase">${h(v.frase)}</div></li>`).join("")}</ul></section>`;
+  html += `<h2>Tutti gli importi, voce per voce</h2>`;
+  for (const [k, sz] of Object.entries(a.sezioni)) {
+    if (!sz.voci.length) continue;
+    html += `<section class="sez"><h3>${h(sz.titolo)}</h3><ul class="small" style="padding-left:16px">${sz.voci.map((v) => `<li style="margin-bottom:6px">${k === "stime" ? "" : val(v)}${k === "deposito" && /^€$/.test(v.u) && /kW/.test(v.frase) && kw ? ` = ${eur(v.v * kw)} con ${nf(kw)} kW` : ""}${k === "servizi" ? (v.opzionale ? " " + badge("FACOLTATIVO", "sc") : "") : ""}<div class="frase">${h(v.frase)}</div></li>`).join("")}</ul></section>`;
   }
-  const vuote = Object.values(a.sezioni).filter((s) => !s.voci.length && !/regolate|Stime/.test(s.titolo)).map((s) => s.titolo.toLowerCase());
-  if (vuote.length) html += `<p class="small mut">Nessun importo trovato per: ${h(vuote.join(", "))}. Se la CTE rimanda alle condizioni generali, quei costi possono essere lì.</p>`;
-  html += `<p class="small mut">Ho letto ${a.statistiche.frasi} frasi: qui sopra c'è ogni frase che contiene un importo. Se il PDF è una scansione (immagine) il testo non è leggibile.</p>`;
+  html += `<p class="small mut">Ho letto ${a.statistiche.frasi} frasi. ${a.statistiche.ignorati} numeri non sono costi (mix energetico, percentuali, riferimenti di legge) e non li mostro. Se il PDF è una scansione (immagine) il testo non è leggibile.</p>`;
   $("#vista").innerHTML = html;
   window.scrollTo(0, 0);
   $("#indietro").onclick = indietro;

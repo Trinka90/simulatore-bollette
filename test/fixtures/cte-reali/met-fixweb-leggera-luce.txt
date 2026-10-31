@@ -1,0 +1,575 @@
+ALLEGATO B - Condizioni Tecnico-Economiche di fornitura 
+FIXWEB LEGGERA LUCE 24 ONLINE   Offerta valida dal 31/10/2026 
+Offerta Mercato Libero a Prezzo Fisso   Codice Cliente Segnalante 
+Clienti domestici 
+Codice Offerta 026846ESFML46XX326FIXWEBLEGEOL24 
+Le presenti CTE disciplinano, unitamente alle Condizioni Generali di fornitura (CGF), alla Richiesta di fornitura sottoscritta dal Cliente e agli allegati in essa richiamati, le
+condizioni economiche di fornitura dell’energia elettrica, riservate ai clienti titolari di POD ad uso domestico, che abbiano deciso di acquistare energia elettrica a condizioni
+di mercato libero da MET Energia Italia S.p.A. (“MET”). Le CTE sono stabilite sulla base di una libera pattuizione tra le parti, integrano le clausole riportate nelle CGF e, in
+caso di contrasto, prevalgono su queste ultime 
+Vendita di energia elettrica 
+L’Offerta FIXWEB LEGGERA LUCE 24 ONLINE prevede che il Cliente debba corrispondere a MET Energia Italia S.p.A., secondo le modalità e con la periodicità indicate nel
+presente documento, i seguenti corrispettivi riconducibili alla vendita di energia elettrica. 
+Corrispettivi definiti dal venditore
+Corrispettivo annuo
+Corrispettivo per il consumo
+nei primi 24 mesi 
+11 €/POD/mese
+0,1691 €/kWh 
+Corrispettivo per il consumo
+dal 25 esimo   mese   PUN Index GME*(1+λ) + 0,0055 €/kWh 
+Valori al netto di IVA e imposte 
+Il valore del   Corrispettivo per il consumo   sopra indicato, comprensivo delle perdite di rete, sarà fisso e invariabile per i primi 24 mesi di fornitura e verrà applicato per
+ogni kWh prelevato.
+A partire   dal 25 esimo   mese di fornitura , il Corrispettivo per il consumo sarà determinato dalla somma dello Spread espresso in tabella (fisso ed invariabile per tutta la
+durata delle CTE e comprensivo delle perdite di rete) e del PUN Index GME (come definito dal D.M. MASE del 18 aprile 2024, recante attuazione delle disposizioni di cui
+all’art. 13 del D. Lgs. 8/11/21 n.210 e s.m.i), calcolato su base quartoraria come media ponderata dei prezzi zonali. L’andamento di tale parametro è pubblicato sul sito
+internet del Gestore dei Mercati Energetici   www.mercatoelettrico.org alla voce “Statistiche” della sezione “Esiti”, mentre i prezzi zonali sono rilevabili sulla Borsa Elettrica
+Italiana (IPEX, Italian Power Exchange). Qualora, o finché, i POD del Cliente non siano dotati di misuratori atti a rilevare i prelievi almeno orari, l'energia fornita ai Punti di
+Prelievo sarà valorizzata applicando il valore medio del PUN Index GME per ciascun mese e per ciascuna fascia oraria, maggiorato di 0,003 €/kWh.
+F1, F2, ed F3 sono le fasce orarie definite dalla Delibera 181/06 e s.m.i. dell’Autorità di Regolazione per Energia Reti e Ambiente (ARERA).
+λ è il valore delle perdite di rete stabilito da ARERA, pari al 10% dei consumi per POD forniti in bassa tensione.
+Il   Corrispettivo annuo   corrisponde a 132 €/POD/anno e include la componente DispBT, prevista dal TIV per i clienti aventi diritto al Servizio di Maggior Tutela. Qualora il
+quadro regolatorio   non   dovesse   più   imporre   l’applicazione   della   componente   DispBT,   la   stessa   non   verrà   più   applicata;   pertanto,   il   valore   del   Corrispettivo   ann
+potrebbe variare in corso di fornitura. Il fornitore fatturerà un ulteriore corrispettivo CDISPD a copertura dei costi del servizio di dispacciamento e del mercato della
+capacità, espresso in €/kWh, così come determinato e aggiornato dall’Autorità, in base all’articolo 48 del TIV.
+I corrispettivi   sono   inclusivi   di   eventuali   diritti   CIP6   e   degli   oneri   relativi   all’applicazione   della   normativa   europea   in   materia   di   emissioni   di   anidride   carbonica   (CO
+(direttiva 2003/87/CE che istituisce un sistema per lo scambio di quote di emissioni dei gas a effetto serra nella Comunità ed è disponibile, al pari delle altre direttive citate
+nel Contratto, nel sito dell’Unione Europea www.europa.eu). 
+Sconti e/o bonus 
+L’offerta prevede uno sconto di 2 mensilità di quota fissa del corrispettivo di commercializzazione e vendita per i primi due anni, per un valore complessivo di 44 €/POD.
+Tale sconto verrà riconosciuto nella fattura riferita al 12esimo e 24esimo mese di fornitura. In caso di recesso e/o risoluzione anticipata rispetto a 12/24 mesi di fornitura lo
+sconto non verrà applicato o verrà applicato parzialmente.
+BONUS PORTA UN AMICO: ogni cliente che abbia sottoscritto uno dei prodotti di MET Energia Italia S.p.A. per la propria fornitura di gas naturale e/o energia elettrica,
+potrà ricevere un bonus ricorrente di €2/PdP/mese per ogni ulteriore cliente che sottoscriverà un prodotto di MET Energia Italia S.p.A. Al fine del riconoscimento del
+bonus, il cliente portato dovrà indicare, nell’apposito spazio della CTE, il codice del cliente segnalante. 
+Prodotti e/o servizi aggiuntivi 
+L’offerta include la messa a disposizione del Cliente dell’applicazione MET per poter monitorare i consumi, pagare le bollette ed usufruire di tanti altri servizi dedicati. Tale
+servizio ha un costo di 1 €/PdP/mese. 
+Tariffa per l'uso della rete elettrica 
+Saranno posti a carico del Cliente anche tutti i costi e gli oneri sostenuti dal Fornitore con riferimento ai servizi di rete, ovvero:
+le tariffe di trasmissione, distribuzione e misura e le componenti UC3 e UC6;
+i corrispettivi per gli eventuali prelievi di energia reattiva, qualora applicabili. 
+Oneri generali di sistema 
+Saranno posti a carico del Cliente anche le componenti relative agli oneri generali di sistema Asos e Arim. In particolare, la componente Asos serve per finanziare il sistema
+di incentivi riconosciuti per la produzione di energia elettrica da fonti rinnovabili e da cogenerazione. È a carico di tutti i clienti elettrici. 
+MET ENERGIA ITALIA S.p.A.
+Sede Legale Viale F. Restelli, 3/7 - 20124, Milano (MI)
+Tel. 02 84347983
+C.F/P.I. 09985750968 Capitale sociale € 100.000,00 I.V. Iscritta presso il Registro delle Imprese di Milano n.2125972 
+1 
+ALLEGATO B - Condizioni Tecnico-Economiche di fornitura 
+Saranno inoltre fatturati al Cliente gli eventuali oneri aggiuntivi, componenti tariffarie e/o maggiorazioni eventualmente introdotte dalle Autorità competenti, anche, ma
+non   esclusivamente,   in   sostituzione   di   altre   precedentemente   previste   dalla   normativa   di   settore.   Qualora   non   fossero   più   pubblicati   aggiornamenti   relativi
+componenti   previste   dall’offerta,   verrà   fatturato   l’ultimo   valore   disponibile.
+Tutte le componenti sono aggiornate da ARERA e sono reperibili al link: https://www.arera.it/consumatori/valori-rete-oneri-domestici-ee o scannerizzando il seguente QR
+Code 
+I corrispettivi indicati si intendono al netto di imposte, accise e ogni altro onere di natura fiscale gravante sulla fornitura di energia elettrica. Le aliquote delle imposte e
+delle accise vigenti sono disponibili sul sito internet di MET Energia Italia S.p.A. all’indirizzo https://it.met.com/. L’applicazione di eventuali agevolazioni sulle accise e/o
+sull’aliquota IVA deve essere espressamente richiesta da parte del Cliente; le stesse saranno applicate da MET Energia Italia S.p.A. solo a seguito della presentazione da
+parte del Cliente della documentazione richiesta che permetta di dimostrare il possesso dei requisiti necessari all’ottenimento dell’agevolazione. 
+Oneri fiscali
+Fatturazione e pagamenti 
+Come indicato nell’Art. 8 delle CGF, la fatturazione dei corrispettivi previsti dalla presente offerta avverrà con periodicità mensile. La fattura verrà inviata tramite posta
+elettronica,   se   il   Cliente   avrà   fornito   un   indirizzo   e-mail   o   sarà   disponibile   sull’area   web   riservata   accessibile
+https://portaleclienti.metenergiaitalia.it/portaleclienti/home,   ovvero   tramite   posta   ordinaria   secondo   quanto   previsto   all’Art.   8   delle   CGF.   Ulteriori   informazioni   sono
+disponibili   sul   sito   https://it.met.com/. 
+Durata e rinnovo delle CTE 
+Le CTE sono valide per tutta la durata contrattuale, quindi a tempo indeterminato. Con un preavviso pari a 3 mesi rispetto alla scadenza dell’applicazione del prezzo fisso
+indicato in tabella, MET Energia Italia S.p.A. provvederà ad aggiornare il cliente con riferimento alla variazione di prezzo e alla conseguente variazione di stima di spesa
+annua a partire dal 25 esimo   mese di fornitura, in linea con quanto descritto al paragrafo vendita di energia elettrica. 
+Richiesta di esecuzione anticipata del contratto 
+Il Cliente consumatore, qualora il Contratto venga concluso in luogo diverso dai locali commerciali ovvero a distanza, consapevole degli effetti sulla fornitura dell’eventuale
+esercizio del diritto di ripensamento indicati in dettaglio all’art. 12 delle CGF, con la sottoscrizione di questa specifica clausola chiede a MET Energia Italia S.p.A. di avviare le
+attività necessarie per l’esecuzione del Contratto prima che sia decorso il termine di ripensamento.
+Tale richiesta può comportare un anticipo della fornitura rispetto alle tempistiche di norma applicate dal Fornitore. In questo caso, qualora non sia stata avviata
+fornitura, il Consumatore potrà comunque esercitare il ripensamento ma sarà tenuto a corrispondere gli eventuali costi già sostenuti dal Fornitore così come determinati
+dalla normativa vigente. Nel caso di avvio della fornitura, il Consumatore sarà tenuto al pagamento degli eventuali corrispettivi di fornitura previsti dal Contratto fino al
+momento della cessazione della fornitura stessa. In questo caso, ai sensi degli artt. 50.3 e 51.8 del Codice del Consumo, il Consumatore riconosce che una volta che il
+Contratto sarà stato interamente eseguito dal Fornitore non avrà più diritto di esercitare il ripensamento.
+Data
+Firma per esteso del cliente 
+DocuSignSignHere1
+DocuSignDateSigned1 
+Cambio Offerta 
+Il Cliente, in corso di vigenza contrattuale, avrà la facoltà di richiedere l’applicazione di una diversa offerta di MET Energia Italia S.p.A., senza formulare il recesso da
+contratto di fornitura. Il Cambio Offerta può essere esercitato decorso il 25 esimo mese di fornitura e consente di passare ad una nuova offerta di MET Energia Italia S.p.A.
+tra quelle disponibili al momento della richiesta da parte del Cliente. La richiesta di Cambio Offerta è in ogni caso soggetta ad accettazione da parte di MET Energia Italia
+S.p.A.
+Data 
+Firma per esteso del CLIENTE
+DocuSignDateSigned1
+DocuSignSignHere1 
+MET ENERGIA ITALIA S.p.A.
+Sede Legale Viale F. Restelli, 3/7 - 20124, Milano (MI)
+Tel. 02 84347983
+C.F/P.I. 09985750968 Capitale sociale € 100.000,00 I.V. Iscritta presso il Registro delle Imprese di Milano n.2125972 
+2 
+ALLEGATO B - Condizioni Tecnico-Economiche di fornitura 
+Mix Energetico Nazionale 
+Ai sensi di quanto previsto dall’articolo 8, comma 5 del Decreto del Ministero dell’Ambiente e della Sicurezza Energetica n. 224 del 14 luglio 2023, sono riportate
+informazioni relative alla composizione del mix energetico e dell’impatto ambientale. Il Mix energetico nazionale e il Mix dell’energia elettrica venduta dalla Società sono
+determinati   dal   Gestore   dei   Servizi   Energetici   (GSE)   sulla   base   delle   dichiarazioni   fatte   dal   Fornitore;   per   maggiori   informazioni   visitare   il   sito   www.gse.it.   I   fattori
+emissione di CO2 e le scorie radioattive sono calcolati sulla base del report ISPRA “Fattori di emissione per la produzione e il consumo di energia elettrica in Ital 
+Composizione del mix
+energetico nazionale
+utilizzato per la produzione
+dell'energia elettrica immessa
+nel sistema elettrico italiano
+(%)
+Composizione del mix
+energetico utilizzato
+per la produzione di
+energia elettrica venduta
+da MET Energia Italia S.p.A.
+(%)
+Fonti primarie utilizzate:
+Anno 2025*   Anno 2025* Anno 2025* 
+100 Fonti rinnovabili
+Gas naturale
+Carbone
+Nucleare**
+Prodotti petroliferi
+Altre fonti
+0
+0
+0
+0
+0 
+Composizione
+del mix
+energetico
+per contratto
+(%) 
+Lignite
+0
+49,38
+1,25
+0,40
+0
+44,57
+0
+4,4
+22,61
+7,85
+0,79
+0,06
+58,66
+3,97
+6,06 
+NB:   i valori di cui sopra sono riferiti alle offerte per le quali il cliente decida di sottoscrivere l’opzione “Fornitura Energia Green”. 
+Fattore di emissione del
+mix energetico di MET
+Energia Italia S.p.A.
+Fattori di
+emissione di CO 2 
+specifici per
+fonte primaria
+(kg CO 2 /MWh)
+Contributi alla
+composizione del
+fattore di emissione del
+mix energetico di MET
+Energia Italia S.p.A.
+(kg CO 2 /MWh)
+Anno 2025* Anno 2025* 
+0
+862,4
+476,6
+1,012,5
+370,6
+0
+683,8
+0
+74,6
+3,8
+0,8
+214,2
+0
+42,1 
+Fattore di emissione per
+contratto 
+335,6
+0 
+NB:   i valori di cui sopra sono riferiti alle offerte per le quali il cliente decida di NON sottoscrivere l’opzione “Fornitura Energia Green”. 
+* Il mix energetico per l'anno 2025 è un dato preconsuntivo. 
+Composizione del mix
+energetico nazionale
+utilizzato per la produzione
+dell'energia elettrica immessa
+nel sistema elettrico italiano
+(%)
+Composizione del mix
+energetico utilizzato
+per la produzione di
+energia elettrica venduta
+da MET Energia Italia S.p.A.
+(%)
+Fonti primarie utilizzate:
+Anno 2025*   Anno 2025* Anno 2025* 
+9,78 Fonti rinnovabili
+Gas naturale
+Carbone
+Nucleare**
+Prodotti petroliferi
+Altre fonti
+9,15
+0,92
+0,07
+68,38
+4,63 
+Composizione
+del mix
+energetico
+per contratto
+(%) 
+Lignite
+7,07
+49,38
+1,25
+0,40
+0
+44,57
+0
+4,4
+22,61
+7,85
+0,79
+0,06
+58,66
+3,97
+6,06 
+Fattore di emissione del
+mix energetico di MET
+Energia Italia S.p.A.
+Fattori di
+emissione di CO 2 
+specifici per
+fonte primaria
+(kg CO 2 /MWh)
+Contributi alla
+composizione del
+fattore di emissione del
+mix energetico di MET
+Energia Italia S.p.A.
+(kg CO 2 /MWh)
+Anno 2025* Anno 2025* 
+0
+862,4
+476,6
+1,012,5
+370,6
+0
+683,8
+0
+74,6
+3,8
+0,8
+214,2
+0
+42,1 
+Fattore di emissione per
+contratto 
+335,6
+0 
+** Le scorie radioattive risultanti dalla produzione di energia elettrica relativa al mix energetico di MET Energia Italia S.p.A. nel 2025 sono pari a 17.693,9 g. 
+MET ENERGIA ITALIA S.p.A.
+Sede Legale Viale F. Restelli, 3/7 - 20124, Milano (MI)
+Tel. 02 84347983
+C.F/P.I. 09985750968 Capitale sociale € 100.000,00 I.V. Iscritta presso il Registro delle Imprese di Milano n.2125972 
+3 
+Scheda Sintetica 
+Offerta a prezzo fisso - Clienti domestici
+Pag. 1 / 4 
+"FixWeb LEGGERA LUCE 24 Online" E CODICE "026846ESFML46XX326FIXWEBLEGEOL24"
+OFFERTA ENERGIA ELETTRICA
+VALIDA DAL 31/10/2026 
+Venditore   MET Energia Italia SpA, https://it.met.com/
+Numero telefonico: 02 84347983
+Indirizzo di posta: Viale Restelli 3/7, Milano, 20124
+Indirizzo di posta elettronica: servizioclienti@metenergiaitalia.it 
+Durata del contratto   Indeterminata, fermo restando il diritto di recesso. 
+Condizioni dell'offerta   Offerta riservata esclusivamente ai clienti finali titolari di punti di prelievo ad uso domestico con fornitura di
+energia elettrica in bassa tensione. 
+Metodi e canali di pagamento   Il pagamento delle fatture deve essere effettuato entro 15 giorni dalla data di emissione della fattura stessa
+e   dovrà   avvenire   con   le   seguenti   modalità:   Addebito   su   conto   corrente   (SDD),   Carta   di   credito,   Bonifico
+bancario, Punti vendita Mooney e Paypal. Le fatture potranno essere rateizzate nei casi e con le modalità
+previste dalle CGF. 
+Frequenza di fatturazione   Come indicato nell’Art. 8 delle CGF, la fatturazione dei corrispettivi previsti dalla presente offerta avverrà
+con frequenza mensile. La bolletta verrà inviata in formato dematerializzato tramite posta elettronica, se
+risulta comunicato un indirizzo e-mail o sarà disponibile sull’area web riservata accessibile gratuitamente
+dal   sito,   ovvero   tramite   posta   ordinaria   secondo   quanto   previsto   all’Art.   8   delle   CGF.   In   ogni   caso   la
+trasmissione   cartacea   della   bolletta   non   prevede   alcun   onere   a   carico   del   Cliente   stesso. 
+Garanzie richieste al cliente   Nessuna. 
+SPESA ANNUA STIMATA IN €/ANNO (ESCLUSE IMPOSTE E TASSE) 
+Consumo annuo (kWh)   Spesa annua stimata dell’offerta
+Cliente con potenza impegnata 3 kW – contratto per abitazione di residenza 
+1.500   574,27 €/anno
+2.700
+3.200
+2.200   736,71 €/anno
+852,73 €/anno
+968,76 €/anno 
+Cliente con potenza impegnata 3 kW – contratto per abitazione non di residenza 
+900   530,13 €/anno
+4.000   1.249,49 €/anno 
+Cliente con potenza impegnata 4,5 kW – contratto per abitazione di residenza 
+3.500   1.073,95 €/anno 
+Cliente con potenza impegnata 6 kW – contratto per abitazione di residenza 
+6.000   1.689,66 €/anno
+Per informazioni sulla spesa personalizzata e su altre offerte disponibili nel mercato può consultare il Portale Offerte Luce e Gas www.ilportaleofferte.it. 
+CONDIZIONI ECONOMICHE 
+Prezzo   Fisso per 24 mesi 
+La   scelta   di   un’offerta   di   questo   tipo,   rispetto   a   un’offerta   a   prezzo   variabile,   può   dipendere   anche   dalla   Sua
+propensione al rischio. Optando per un prezzo fisso, paga un corrispettivo definito in anticipo e non soggetto alle
+variazioni dei prezzi sui mercati all’ingrosso dell’energia elettrica; tuttavia, a fronte di tale mitigazione del rischio di
+volatilità dei prezzi, il corrispettivo applicato potrebbe risultare più basso o più elevato rispetto ai corrispettivi
+variabili indicizzati ai prezzi sui mercati all’ingrosso dell’energia elettrica. 
+Corrispettivi definiti dal venditore * 
+Corrispettivo annuo   132,00 €/anno 
+Corrispettivo per il consumo   0,16907 €/kWh
+Al seguente link sono indicati i valori vigenti dei corrispettivi afferenti al dispacciamento, alla
+tariffa   per   l’uso   della   rete   e   agli   oneri   generali   di   sistema   come   definiti   dall’Autorità:
+https://www.arera.it/consumatori/valori-rete-oneri-domestici-ee 
+Altri corrispettivi * 
+MET ENERGIA ITALIA S.p.A.
+Sede Legale Viale F. Restelli, 3/7 - 20124, Milano (MI) 
+Scheda Sintetica 
+Offerta a prezzo fisso - Clienti domestici
+Pag. 2 / 4 
+Imposte   I corrispettivi di fornitura dell’energia elettrica e/o gas naturale sono indicati al netto di I.V.A. e di qualsiasi
+altra imposta, tassa o tributo applicabile alla somministrazione di energia elettrica e/o gas naturale. Tali
+oneri fiscali rimarranno ad esclusivo carico del Cliente, pur se versati all’erario da MET Energia Italia S.p.A. a
+norma di legge. Informazioni circa le aliquote delle imposte vigenti sono disponibili presso gli sportelli di
+MET Energia Italia S.p.A. e sul sito internet http://it.met.com/. 
+Sconti e/o bonus   L’offerta prevede uno sconto di 2 mensilità di quota fissa del corrispettivo di commercializzazione e vendita 
+per i primi due anni, per un valore complessivo di 44 €/POD. Tale sconto verrà riconosciuto nella fattura 
+riferita al 12esimo e 24esimo mese di fornitura. In caso di recesso e/o risoluzione anticipata rispetto a 12/24 
+mesi di fornitura lo sconto non verrà applicato o verrà applicato parzialmente.
+BONUS PORTA UN AMICO: ogni cliente che abbia sottoscritto uno dei prodotti di MET Energia Italia S.p.A. 
+per   la   propria   fornitura   di   gas   naturale   e/o   energia   elettrica,   potrà   ricevere   un   bonus   ricorrente   di
+€2/PdP/mese per ogni ulteriore cliente che sottoscriverà un prodotto di MET Energia Italia S.p.A. Al fine del 
+riconoscimento del bonus, il cliente portato dovrà indicare, nell’apposito spazio della CTE, il codice del 
+cliente segnalante. 
+Prodotti e/o servizi aggiuntivi   L’offerta include la messa a disposizione del Cliente dell’applicazione MET per poter monitorare i consumi,
+pagare le bollette ed usufruire di tanti altri servizi dedicati. Tale servizio ha un costo di 1 €/PdP/mese. 
+Durata condizioni e rinnovo   Le CTE sono valide per tutta la durata contrattuale, quindi a tempo indeterminato. Con un preavviso pari a 3
+mesi   rispetto   alla   scadenza   dell’applicazione   del   prezzo   fisso,   MET   Energia   Italia   S.p.A.   provvederà   ad
+aggiornare il cliente con riferimento alla variazione di prezzo e alla conseguente variazione di stima di spesa
+annua.
+Il valore del Corrispettivo per il consumo sarà fisso e invariabile per i primi 24 mesi di fornitura qualora la
+fornitura venga attivata a partire dal   01/01/2027.
+Qualora l'attivazione avvenga prima di tale data,   tutti i prelievi antecedenti il 01/01/2027 verranno fatturati
+applicando l'indice PUN Index GME, calcolato su base quartoraria come media ponderata dei prezzi zonali,
+sommato allo spread sopra indicato. La stessa modalità di fatturazione verrà applicata per tutti i consumi
+successivi alla scadenza del prezzo fisso.
+È salva la facoltà del Venditore di comunicare eventuali variazioni come disciplinato dalla regolazione ARERA
+(variazione unilaterale). 
+Altre caratteristiche   Nessuna.
+*Escluse imposte e tasse. Il costo per consumi comprende i corrispettivi di Dispacciamento, aggiornati da ARERA e da Terna. 
+ALTRE INFORMAZIONI 
+Reclami, risoluzione delle controversie e
+diritti del consumatore 
+Eventuali reclami dovranno essere presentati dal Cliente per iscritto attraverso i canali indicati
+nella sezione “Venditore” utilizzando l’apposito modulo reclami presente sul sito internet del
+Venditore.   Nel   caso   non   si   utilizzi   l’apposito   modulo,   nella   comunicazione   dovranno   essere
+indicate   obbligatoriamente   le   seguenti   informazioni   minime:   nome,   cognome,   indirizzo   di
+fornitura,   indirizzo   postale   (se   diverso   dall’indirizzo   di   fornitura)   o   di   posta   elettronica   per
+l’invio della risposta scritta, codice POD o, qualora non disponibile, il codice Cliente, il servizio
+a cui si riferisce il reclamo (in tal caso elettrico) e una breve descrizione dei fatti contestati.
+Il Cliente che, in relazione al Contratto, abbia presentato un reclamo al quale il Venditore non
+abbia   risposto   o   abbia   fornito   una   risposta   ritenuta   insoddisfacente   può   attivare
+gratuitamente la procedura di conciliazione presso il Servizio Conciliazione di ARERA. Ulteriori
+informazioni   sul   Servizio   Conciliazione   sono   disponibili   sul   sito   in
+https://www.arera.it/it/consumatori/conciliazione.htm.   L’esperimento   del   tentativo   di
+conciliazione secondo le modalità previste dal TICO è condizione di procedibilità dell’azione
+giudiziaria.
+Se   Lei   è   un   cliente   vulnerabile,   come   definito   dalla   normativa   vigente,   può   scegliere,   in
+alternativa   all’offerta   di   cui   alla   presente   Scheda,   le   condizioni   economiche   e   contrattali   di
+fornitura   definite   da   ARERA.   Per   ottenere   ulteriori   informazioni   generali   sui   propri   diritti,
+anche relativi agli obblighi di servizio pubblico universale dei venditori, e in merito al Codice di
+condotta commerciale, che impone precise regole di comportamento per i venditori, consulti 
+MET ENERGIA ITALIA S.p.A.
+Sede Legale Viale F. Restelli, 3/7 - 20124, Milano (MI) 
+Scheda Sintetica 
+Offerta a prezzo fisso - Clienti domestici
+Pag. 3 / 4 
+Diritto di ripensamento   Il   Cliente   che   riveste   la   qualifica   di   consumatore   ai   sensi   del   Codice   del   Consumo   potrà
+esercitare il diritto di ripensamento dal Contratto concluso a distanza o al di fuori dei locali
+commerciali   del   Fornitore,   senza   indicarne   le   ragioni,   entro   14   giorni   dal   giorno   della
+conclusione   del   contratto   stesso.   Tale   termine   è   esteso   a   30   giorni   nel   caso   di   contratto
+concluso nel contesto di: i) visite non richieste del Fornitore presso l'abitazione del Cliente e ii)
+escursioni organizzate dal Fornitore stesso.
+Per   esercitare   il   diritto   di   ripensamento   il   Cliente   sarà   tenuto   ad   informare   il   Fornitore
+secondo le modalità indicate all’art. 12 delle CGF. Il Cliente ha comunque facoltà di richiedere
+al Fornitore l’esecuzione del Contratto prima che sia decorso il termine per il ripensamento.
+Tale richiesta può comportare un anticipo della fornitura rispetto alle tempistiche di norma
+applicate   dal   Fornitore.   In   questo   caso,   qualora   non   sia   stata   avviata   la   fornitura,   il
+Consumatore potrà comunque esercitare il ripensamento ma sarà tenuto a corrispondere gli
+eventuali costi già sostenuti dal Fornitore così come determinati dalla normativa vigente. Nel
+caso   di   avvio   della   fornitura,   il   Consumatore   sarà   tenuto   al   pagamento   degli   eventuali
+corrispettivi di fornitura previsti dal Contratto fino al momento della cessazione della fornitura
+stessa. In questo caso, ai sensi degli artt. 50.3 e 51.8 del Codice del Consumo, il Consumatore
+riconosce che una volta che il Contratto sarà stato interamente eseguito dal Fornitore non
+avrà più diritto di esercitare il ripensamento. 
+Attivazione della fornitura   La   somministrazione   di   energia   elettrica   avrà   inizio   a   decorrere   dalla   data   indicata   nella
+Richiesta   di   fornitura.
+Salvo diversa ed espressa richiesta da parte del Cliente consumatore esercitata nella Richiesta
+di fornitura, la fornitura inizierà in ogni caso decorso il periodo di ripensamento. Nel caso in
+cui   la   data   effettiva   di   attivazione   della   fornitura   risultasse   diversa   rispetto   a   quella
+comunicata   dal   Fornitore   o   non   rispettasse   la   tempistica   sopra   indicata,   ne   verrà   data
+comunicazione   al   Cliente.
+In   caso   di   POD   non   attivi   la   data   di   attivazione   della   fornitura   potrebbe   essere   differita
+compatibilmente con le attività di competenza del Distributore quali eventuali adempimenti
+necessari   per   ottenere   la   connessione   alla   rete   di   distribuzione.   In   tali   casi,   il   Cliente   sarà
+tenuto   al   pagamento   degli   oneri   applicati   dal   Distributore   locale   per   l’esecuzione   delle
+prestazioni di propria competenza, oltre ad un corrispettivo di gestione della pratica di €20. Il
+Fornitore, inoltre, si farà carico degli eventuali adempimenti connessi alla stipula dei contratti
+di   trasmissione,   distribuzione   e   dispacciamento   in   prelievo   di   cui   all’art.   4   Allegato   A   Del.
+111/06   e   dei   relativi   oneri   che   ne   possano   conseguire   a   carico   del   Cliente. 
+Dati di lettura   L’emissione della fattura sarà di norma eseguita sulla base dei consumi effettivamente rilevati
+dalla   lettura   del   contatore   del   Cliente   o,   in   subordine,   comunicati   dal   Cliente   tramite
+autolettura del contatore. In assenza della lettura effettiva e dell’autolettura, l’emissione della
+fattura   potrà   avvenire   sulla   base   dei   consumi   stimati   dal   Venditore   secondo   il   criterio
+dell’applicazione   del   consumo   contrattuale   sul   profilo   pubblicato   da   ARERA,   secondo   la
+tipologia   di   uso. 
+Ritardo nei pagamenti   In caso di ritardato, parziale o mancato pagamento di una o più fatture, il Cliente sarà tenuto a
+corrispondere   una   somma   pari   agli   interessi   di   mora   calcolati   su   base   annua   nella   misura
+prevista dall’Art. 5 del D.Lgs. 231 di Attuazione della direttiva 2000/35/CE (pubblicato sulla G.U.
+23/10/2022 n. 249). Inoltre, il Cliente è tenuto al pagamento delle spese postali necessarie per
+l’invio della costituzione in mora quantificate forfettariamente in 8 € cadauna e degli eventuali
+importi   relativi   ai   contributi   di   disattivazione/riduzione   di   potenza   e   riattivazione/ripristino
+potenza   nel   limite   del   costo   sostenuto   dal   Fornitore   nei   confronti   del   Distributore   locale.
+Inoltre,   le   operazioni   di   richiesta   sospensione/riduzione   di   potenza/disattivazione   per
+morosità comporteranno un costo di gestione amministrativa della pratica a carico del Cliente
+pari a 20 € ad operazione.
+In caso di morosità prolungata oltre 5 giorni dal termine di pagamento delle fatture previsto
+contrattualmente, il Fornitore si riserva la facoltà di attivare le procedure di costituzione in
+mora previste dalla normativa vigente.
+Per ogni altra informazione relativa alle previsioni regolatorie di ARERA con riferimento alla
+procedura   di   messa   in   mora   ed   eventuale   sospensione   della   fornitura   è   possibile   fare
+riferimento agli artt. 3, 4 e 5 Dell’Allegato A della Del. 258/2015/R/com (TIMOE) reperibile sul
+sito internet di ARERA (https://www.arera.it/it/docs/15/258-15.htm). 
+MODALITÀ E ONERI PER IL RECESSO 
+Modalità e tempistiche   In qualsiasi momento il Cliente potrà esercitare il diritto di recesso dal Contratto secondo le
+modalità e le tempistiche di cui alla Del. 783/2017/R/com e s.m.i..
+Nel caso in cui intenda cambiare fornitore, il Cliente può recedere in qualunque momento e
+senza   oneri   dal   Contratto.   Nel   caso   di   recesso   per   switching   il   Cliente   rilascia   al   nuovo
+fornitore   apposita   procura   affinché   questi   proceda,   in   suo   nome   e   per   suo   conto,   ad
+effettuare gli adempimenti necessari. Il recesso per conto del Cliente è esercitato dal fornitore
+entrante mediante l’invio della richiesta di switching al SII.
+Nel   caso   di   recesso   per   motivi   diversi   dallo   switching   (ad   esempio   per   cessazione   della
+fornitura), il Cliente potrà inviare, in qualsiasi momento, al Fornitore, con preavviso di 1 mese,
+comunicazione di recesso con le modalità indicate all’art. 12 delle CGF.
+Il   Fornitore   ha   la   facoltà   di   esercitare   in   qualsiasi   momento   il   diritto   di   recesso   con
+comunicazione in forma scritta mediante lettera raccomandata A/R o PEC con un preavviso di
+6 mesi. 
+MET ENERGIA ITALIA S.p.A.
+Sede Legale Viale F. Restelli, 3/7 - 20124, Milano (MI) 
+Scheda Sintetica 
+Offerta a prezzo fisso - Clienti domestici
+Pag. 4 / 4 
+Onere di recesso anticipato   Nessuno. 
+OPERATORE COMMERCIALE 
+Codice identificativo o nominativo   Firma e data 
+DOCUMENTI ALLEGATI ALLA SCHEDA SINTETICA 
+Modulo per l’esercizio del ripensamento, Livelli di qualità commerciale, Ogni ulteriore documento o informazione obbligatori ai sensi della normativa
+vigente
+Nota:   Il   cliente,   prima   di   sottoscrivere   la   nuova   offerta,   è   invitato   a   verificare   la   presenza   di   oneri   di   recesso   anticipato   dal   contratto   di   fornitura
+attualmente   in   essere. 
+MET ENERGIA ITALIA S.p.A.
+Sede Legale Viale F. Restelli, 3/7 - 20124, Milano (MI) 
+FixWeb LEGGERA LUCE 24 Online 
+026846ESFML46XX326FIXWEBLEGEOL24 
+SCHEDA DI CONFRONTABILITÀ PER CLIENTI FINALI DOMESTICI DI ENERGIA ELETTRICA 
+Corrispettivi previsti dall’offerta alla data del 31/10/2026
+Le condizioni economiche e contrattuali del servizio di maggior tutela, la cui stima di spesa annua è riportata nella presente scheda, sono disponibili
+solo per i clienti vulnerabili, come definiti dalla normativa vigente. 
+STIMA DELLA SPESA ANNUA ESCLUSE LE IMPOSTE (IN EURO) 
+Consumo
+Annuo
+(kWh)
+(A)
+Offerta
+(B)
+Servizio di maggior tutela
+(C)
+Minore spesa (segno -) o
+maggiore spesa (segno +)
+A-B
+(D)
+Variazione percentuale della
+Spesa (con segno + o segno -)
+(A-B)/Bx100
+Cliente con potenza impegnata 3 kW – contratto per abitazione di residenza 
+1.500
+2.200
+2.700
+3.200
+574,27
+736,71
+852,73
+968,76
+467,14
+621,44
+731,66
+841,87
++22%
++18%
++16%
++15%
++107,13
++115,26
++121,07
++126,88 
+Cliente con potenza impegnata 3 kW – contratto per abitazione non di residenza 
+900
+4.000
+530,13
+1.249,49
+429,97
+1.113,31
++23%
++12% +136,18
++100,16 
+Cliente con potenza impegnata 4,5 kW – contratto per abitazione di residenza 
+3.500   1.073,95   943,58   +13% +130,37 
+Cliente con potenza impegnata 6 kW – contratto per abitazione di residenza 
+6.000   1.689,66   1.530,25   +10% +159,40
+I   valori   indicati   in   tabella,   calcolati   alla   data   dell’offerta,   possono   subire   variazioni,   nel   periodo   di   validità   dell’offerta,   a   seguito   di   provvedimenti
+dell'ARERA. Tali valori sono stati determinati considerando la seguente ripartizione percentuale dei consumi nelle diverse fasce orarie: F1 33%, F2 31% e
+F3 36%.
+Fasce orarie
+Fascia F1
+Fascia F2
+Fascia F3
+Dalle 8 alle 19 dal lunedì al venerdì
+Dalle 7 alle 8 e dalle 19 alle 23 da lunedì al venerdì, dalle 7 alle 23 del sabato
+Dalle 23 alle 7 dal lunedì al sabato, tutte le ore della domenica e dei giorni festivi 
+ALTRI ONERI/SERVIZI ACCESSORI 
+Applicazione MET 
+Descrizione dell’onere/servizio   Corrispettivo previsto 
+1 €/PdP/mese 
+Modalità di indicizzazione/Variazioni 
+Il valore del Corrispettivo per il consumo è fisso per   24 mesi. Le condizioni economiche relative al servizio di Maggior Tutela (la cui stima di spesa
+annua è riportata nella colonna B) variano sulla base di quanto indicato nella sezione Valori della materia energia per il Servizio di Maggior Tutela.
+L’ultimo aggiornamento di tali valori è reperibile sul sito http://www.arera.it/consumatori. Il confronto è frutto di un calcolo statico (per verificare le
+variazioni   apportate   trimestralmente   alla   tariffa   dalla   ARERA   è   possibile   consultare   il   sito   www.arera.it).   I   corrispettivi   sono   soggetti   ad   eventuali
+indicizzazioni/variazioni   definite   da   ARERA   qualora   applicabili. 
+Descrizione dello sconto e/o del bonus 
+SCONTO ProMETto -30%: MET si impegna a scontare il Corrispettivo per il consumo fisso del 30%, rispetto alla medesima offerta senza sconto, per
+essere al fianco delle famiglie in un periodo di forte instabilità energetica.
+L’offerta   prevede   uno   sconto   di   2   mensilità   di   quota   fissa   del   corrispettivo   di   commercializzazione   e   vendita   per   i   primi   due   anni,   per   un   valore
+complessivo   di   44   €/POD.   Tale   sconto   verrà   riconosciuto   nella   fattura   riferita   al   12esimo   e   24esimo   mese   di   fornitura.   In   caso   di   recesso   e/o
+risoluzione   anticipata   rispetto   a   12/24   mesi   di   fornitura   lo   sconto   non   verrà   applicato   o   verrà   applicato   parzialmente.
+BONUS PORTA UN AMICO: ogni cliente che abbia sottoscritto uno dei prodotti di MET Energia Italia S.p.A. per la propria fornitura di gas naturale e/o
+energia elettrica, potrà ricevere un bonus ricorrente di €2/PdP/mese per ogni ulteriore cliente che sottoscriverà un prodotto di MET Energia Italia
+S.p.A. Al fine del riconoscimento del bonus, il cliente portato dovrà indicare, nell’apposito spazio della CTE, il codice del cliente segnalante. 
+Altri dettagli sull’offerta 
+Nessuno. 
+MET ENERGIA ITALIA S.p.A.
+Sede Legale Viale F. Restelli, 3/7 - 20124, Milano (MI) 
+Per una stima della spesa annua personalizzata sulla base del Suo consumo effettivo può utilizzare il “Portale Offerte Luce e Gas”
+(https://www.ilportaleofferte.it/portaleOfferte/) 
+MET ENERGIA ITALIA S.p.A.
+Sede Legale Viale F. Restelli, 3/7 - 20124, Milano (MI) 

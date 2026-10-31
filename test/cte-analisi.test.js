@@ -1,42 +1,80 @@
+// Analisi completa delle CTE: verificata su 5 CTE reali (testo estratto con pdf.js come nell'app).
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { analisiCompleta, frasi } from "../src/cte-analisi.js";
+import { analisiCompleta, completaDaAnalisi, serviziObbligatori } from "../src/cte-analisi.js";
+import { analizza, bozzaOfferta } from "../src/cte.js";
 
-const testo = readFileSync(new URL("./fixtures/cte-esempio.txt", import.meta.url), "utf8");
+const leggi = (f) => readFileSync(new URL(`./fixtures/cte-reali/${f}.txt`, import.meta.url), "utf8");
+const valori = (a, k) => a.sezioni[k].voci.map((v) => v.v);
+const offerta = (f) => { const t = leggi(f), a = analisiCompleta(t, []); return { a, o: completaDaAnalisi({ ...bozzaOfferta(analizza(t), f + ".pdf"), note: [] }, a) }; };
 
-test("CTE completa: tipo di offerta, ogni importo classificato, clausole a rischio", () => {
-  const a = analisiCompleta(testo, []);
-  assert.equal(a.forn, "LUCE");
-  assert.equal(a.natura, "fisso");
-  assert.equal(a.durataMesi, 24);
-  assert.ok(a.poiIndice);
-  assert.equal(a.codice, "000123ESFML01XXLUCESICURAWEB0001");
+test("Poste Energia Luce: prezzo fisso 24 mesi, perdite incluse, nessun costo nascosto", () => {
+  const { a, o } = offerta("poste-energia-luce");
+  assert.equal(a.venditore, "Poste Energia (PostePay)");
+  assert.equal(a.codice, "036327ESFML14XX261030REPENGXXXXX");
+  assert.deepEqual([a.forn, a.natura, a.durataMesi, a.perdite], ["LUCE", "fisso", 24, "incluse nel prezzo"]);
+  assert.deepEqual(a.validita, { dal: "30/10/2026", al: "16/11/2026" });
   assert.equal(a.statistiche.daLeggere, 0);
-  const v = (k) => a.sezioni[k].voci.flatMap((x) => x.importi.map((i) => i.v));
-  assert.deepEqual(v("quota"), [10]);
-  assert.deepEqual(v("dispacciamento"), [0.011]);
-  assert.deepEqual(v("servizi"), [2.9]);
-  assert.deepEqual(v("bolletta"), [1.5]);
-  assert.deepEqual(v("pagamento"), [2]);
-  assert.deepEqual(v("deposito"), [11.5]);
-  assert.deepEqual(v("penali"), [30]);
-  assert.deepEqual(v("amministrativi"), [15]);
-  assert.deepEqual(v("stime"), [512.3]);
-  const titoli = a.avvisi.map((x) => x.titolo);
-  for (const t of ["Rinnovo alla scadenza", "Lo sconto può decadere", "Servizio attivato automaticamente", "Deposito cauzionale", "Costi se lasci prima"]) assert.ok(titoli.includes(t), t);
-  assert.deepEqual([a.attivazione.tipo, a.attivazione.mesi], ["mesi", 2]);
+  assert.deepEqual(valori(a, "indennizzi"), [30]);
+  assert.ok(a.assenze.includes("Nessuno sconto o bonus") && a.assenze.includes("Nessun servizio aggiuntivo"));
+  assert.ok(a.avvisi.some((x) => x.titolo === "Le nuove condizioni valgono se non disdici"));
+  assert.deepEqual([o.prezzi, o.quotaFissaAnnua, o.perdite], [{ F0: 0.189 }, 89, "nessuna"]);
 });
 
-test("confronto con il Portale tramite codice offerta", () => {
+test("Poste Energia Gas: clausola ETS2 sui costi delle quote di emissione", () => {
+  const { a, o } = offerta("poste-energia-gas");
+  assert.deepEqual([a.forn, a.natura, a.durataMesi], ["GAS", "fisso", 24]);
+  assert.ok(a.avvisi.some((x) => /ETS2/.test(x.titolo)));
+  assert.deepEqual([o.prezzoSmc, o.quotaFissaAnnua], [0.83, 89]);
+});
+
+test("Illumia Energia Lunga Luce: penali di recesso, deposito, servizi facoltativi, poi PUN + fee", () => {
+  const { a, o } = offerta("illumia-energia-lunga-luce");
+  assert.deepEqual([a.venditore, a.nome, a.natura, a.durataMesi], ["Illumia", "ENERGIA LUNGA LUCE", "fisso", 36]);
+  assert.equal(a.dopo, "variabile (PUN Index GME + 0,01 €/kWh)");
+  assert.ok(a.soloSdd);
+  assert.deepEqual(valori(a, "penali"), [300, 200, 100]);
+  assert.deepEqual(valori(a, "deposito"), [11.5, 15.5]);
+  assert.deepEqual(valori(a, "pratiche"), [23]);
+  assert.equal(serviziObbligatori(a).length, 0); // Caldaia Serena ed Energia Verde sono facoltativi
+  assert.equal(a.statistiche.daLeggere, 0);
+  assert.ok(a.avvisi.some((x) => x.titolo === "Onere se lasci prima della scadenza"));
+  assert.deepEqual([o.prezzi, o.quotaFissaAnnua], [{ F0: 0.135 }, 84]);
+});
+
+test("MET FixWeb Leggera Luce: costo dell'app incluso, sconto 44 € che si perde, spese di mora", () => {
+  const { a, o } = offerta("met-fixweb-leggera-luce");
+  assert.deepEqual([a.venditore, a.nome, a.natura, a.durataMesi], ["MET Energia Italia", "FIXWEB LEGGERA LUCE 24 ONLINE", "fisso", 24]);
+  assert.equal(a.dopo, "variabile (PUN Index GME + 0,0055 €/kWh)");
+  assert.deepEqual(serviziObbligatori(a).map((x) => x.annuo), [12]);
+  assert.deepEqual(valori(a, "mora"), [8, 20]);
+  assert.ok(valori(a, "sconti").includes(44));
+  assert.ok(a.assenze.includes("Nessun costo per cambiare fornitore") && a.assenze.includes("Nessun deposito o garanzia richiesti"));
+  assert.ok(a.avvisi.some((x) => x.titolo === "Lo sconto si perde se lasci prima"));
+  assert.ok(!a.avvisi.some((x) => /ETS2/.test(x.titolo))); // qui le quote CO2 sono già comprese nel prezzo
+  assert.equal(a.statistiche.daLeggere, 0);
+  assert.deepEqual([o.prezzi, o.quotaFissaAnnua], [{ F0: 0.1691 }, 132 + 12 - 22]);
+});
+
+test("MET FixWeb Leggera Gas: prezzo fisso e non lo spread del periodo successivo", () => {
+  const { a, o } = offerta("met-fixweb-leggera-gas");
+  assert.equal(a.dopo, "variabile (PSV Day Ahead + 0,052 €/Smc)");
+  assert.deepEqual([o.prezzoSmc, o.quotaFissaAnnua], [0.719, 132 + 12 - 22]);
+  assert.equal(a.statistiche.daLeggere, 0);
+});
+
+test("CTE di esempio: ogni importo classificato e codice confrontato col Portale", () => {
+  const t = readFileSync(new URL("./fixtures/cte-esempio.txt", import.meta.url), "utf8");
   const off = { id: "000123ESFML01XXLUCESICURAWEB0001", venditore: "X", nome: "Y",
     comp: [{ n: "Energia", p: [{ pr: 0.119, u: "03" }] }, { n: "Commercializzazione", p: [{ pr: 120, u: "01" }] }, { n: "Altro", p: [{ pr: 0.05, u: "03" }] }] };
-  const a = analisiCompleta(testo, [off]);
+  const a = analisiCompleta(t, [off]);
+  assert.equal(a.statistiche.daLeggere, 0);
+  assert.deepEqual(valori(a, "deposito"), [11.5]);
+  assert.deepEqual(valori(a, "penali"), [30]);
+  assert.deepEqual(valori(a, "bolletta"), [1.5]);
+  assert.deepEqual(valori(a, "pagamento"), [2]);
+  assert.deepEqual(serviziObbligatori(a).map((x) => x.annuo), [34.8]);
   assert.equal(a.portale.trovata, true);
-  assert.deepEqual(a.portale.mancanti.map((d) => d.v), [0.05]); // 10 €/mese = 120 €/anno ritrovato
-});
-
-test("righe di tabella: il valore resta attaccato alla sua voce", () => {
-  const f = frasi("Corrispettivo di commercializzazione\n10,00 €/mese\nPrezzo energia F1\n0,1234 €/kWh");
-  assert.deepEqual(f, ["Corrispettivo di commercializzazione 10,00 €/mese", "Prezzo energia F1 0,1234 €/kWh"]);
+  assert.deepEqual(a.portale.mancanti.map((d) => d.v), [0.05]);
 });
