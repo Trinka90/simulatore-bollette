@@ -1,0 +1,84 @@
+Enel Energia   -   Mercato libero dell'energia 
+Casella Postale 8080 - 85100 Potenza 
+Codice Fiscale 
+XXXXXX00X00X000X 
+N °   Cliente 
+000000000 
+Codice POD 
+IT001E00000000   ENERGIA 
+ELETTRICA 
+Dettaglio importi della bolletta sintetica per l'ENERGIA ELETTRICA 
+Riferita alla fattura elettronica n.   5469507912   del   10/09/2026   valida ai fini fiscali. 
+Spesa per la vendita di energia elettrica 
+Descrizione   Cod. IVA   Periodo di riferimento   Unit à   di misura   Prezzo
+unitario   Quantit à   Totale 
+Energia mono 
+Energia   V1   dal 01/07/26 al 31/07/26   € /kWh   0,108180   108   11,68 
+Perdite di energia   V1   € /kWh   0,108180   11   1,19 
+Energia   V1   dal 01/08/26 al 31/08/26   € /kWh   0,108180   111   12,01 
+Perdite di energia   V1   € /kWh   0,108180   11   1,19 
+Totale energia mono   26,07 
+Altri importi materia energia 
+Quota fissa 
+Commercializzazione vendita   V1   dal 01/07/26 al 31/07/26   € /cliente/ mese   9,000000   mesi 1   9,00 
+Componente di dispacciamento (DISPbt, parte
+fissa)   V1   € /cliente/ mese   0,092250   mesi 1   0,09 
+Commercializzazione vendita   V1   dal 01/08/26 al 31/08/26   € /cliente/ mese   9,000000   mesi 1   9,00 
+Componente di dispacciamento (DISPbt, parte
+fissa)   V1   € /cliente/ mese   0,092250   mesi 1   0,09 
+Quota consumi 
+CDispD (Dispacciamento)   V1   dal 01/07/26 al 31/07/26   € /kWh   0,025043   108   2,70 
+Corrispettivo di sbilanciamento   V1   € /kWh   0,003455   108   0,37 
+CDispD (Dispacciamento)   V1   dal 01/08/26 al 31/08/26   € /kWh   0,025043   111   2,78 
+Corrispettivo di sbilanciamento   V1   € /kWh   0,003960   111   0,44 
+Totale altri importi materia energia   24,47 
+Totale spesa per l'energia   50,54 
+Spesa per la tariffa per l'uso della rete elettrica 
+Descrizione   Cod. IVA   Periodo di riferimento   Unit à   di misura   Prezzo
+unitario   Quantit à   Totale 
+Quota fissa 
+Quota fissa   V1   dal 01/07/26 al 31/07/26   € /cliente/ mese   1,920000   mesi 1   1,92 
+Quota fissa   V1   dal 01/08/26 al 31/08/26   € /cliente/ mese   1,920000   mesi 1   1,92 
+Quota potenza 
+Quota potenza   V1   dal 01/07/26 al 31/07/26   € /kW di potenza
+impegnata/ mese   1,960000   kW 3,0 mesi1   5,88 
+Quota potenza   V1   dal 01/08/26 al 31/08/26   € /kW di potenza
+impegnata/ mese   1,960000   kW 3,0 mesi1   5,88 
+Quota consumi 
+Quota consumi   V1   dal 01/07/26 al 31/07/26   € /kWh   0,011900   108   1,29 
+Quota consumi   V1   dal 01/08/26 al 31/08/26   € /kWh   0,011900   111   1,32 
+Componenti relative ai meccanismi perequativi 
+Quota potenza   V1   dal 01/07/26 al 31/07/26   € /kW di potenza
+impegnata/ mese   0,016567   kW 3,0 mesi1   0,05 
+Quota consumi   V1   € /kWh   0,002830   108   0,31 
+Quota potenza   V1   dal 01/08/26 al 31/08/26   € /kW di potenza
+impegnata/ mese   0,016567   kW 3,0 mesi1   0,05 
+Quota consumi   V1   € /kWh   0,002830   111   0,31 
+Totale spesa per il trasporto dell'energia elettrica e la gestione del contatore   18,93 
+Spesa per gli oneri generali di sistema 
+Descrizione   Cod. IVA   Periodo di riferimento   Unit à   di misura   Prezzo
+unitario   Quantit à   Totale 
+Oneri generali relativi al sostegno delle energie rinnovabili ed alla cogenerazione (Asos) 
+Quota consumi 
+Quota consumi   V1   dal 01/07/26 al 31/07/26   € /kWh   0,031515   108   3,40 
+Enel Energia S.p.A. – Societ à   con unico socio Enel Italia S.p.A - Sede Legale 00198 Roma, Via Luigi Boccherini 15 - Registro Imprese di Roma Codice Fiscale 06655971007 R.E.A. 1150724 Gruppo IVA
+Enel P.I. 15844561009 - Capitale Sociale Euro 10.000.000,00 i.v. - Direzione e Coordinamento di Enel S.p.A. 
+Pagina I 
+Bolletta sintetica riferita alla fattura elettronica n.   5469507912   del   10/09/2026 .   Periodo: LUG. 2026 - AGO. 2026   Pagina II 
+Quota consumi   V1   dal 01/08/26 al 31/08/26   € /kWh   0,031515   111   3,50 
+Rimanenti oneri generali (Arim) 
+Quota consumi 
+Quota consumi   V1   dal 01/07/26 al 31/07/26   € /kWh   0,001638   108   0,18 
+Quota consumi   V1   dal 01/08/26 al 31/08/26   € /kWh   0,001638   111   0,18 
+Totale spesa oneri di sistema   7,26 
+Imposte e iva 
+Descrizione   Cod. IVA   Periodo di riferimento   Unit à   di misura   Prezzo
+unitario   Quantit à   Totale 
+IVA 10% su imponibile di euro 76,73   €   7,67 
+Totale imposte e IVA   7,67 
+Totale Bolletta   84,40 
+Canone di abbonamento alla televisione per uso
+privato - rata n. AU260810028448   VF   dal 01/08/26 al 31/08/26   €   9,00 
+Canone di abbonamento alla televisione per uso
+privato - rata n. AU260909762248   VF   dal 01/09/26 al 30/09/26   €   9,00 
+Totale da pagare   102,40 

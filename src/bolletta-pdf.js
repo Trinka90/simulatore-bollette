@@ -1,5 +1,6 @@
 // Lettura di una bolletta luce o gas (PDF con testo, formato "Bolletta 2.0" ARERA).
 // Ogni dato trovato è restituito con la frase da cui viene, per poterlo controllare.
+import { analizzaDettaglio } from "./bolletta-dettaglio.js";
 import { normalizza } from "./cte.js";
 
 /** Numero all'italiana: 3.175 = tremila, 1.234,56 · 12,5 · 6. */
@@ -37,6 +38,8 @@ function fascia(t, f) {
  * Analizza il testo di una bolletta. comuni: [{istat,nome,sigla,provincia,regione}].
  * Restituisce {tipo, campi:{nome:{valore,frase}}, avvisi}.
  */
+const VENDITORI = /\b(Enel Energia|Servizio Elettrico Nazionale|Hera Comm|A2A Energia|Edison Energia|Eni Plenitude|Plenitude|Iren Mercato|Acea Energia|Sorgenia|E\.ON Energia|Engie|Illumia|Poste Energia|PostePay|Octopus Energy|NeN|Wekiwi|Iberdrola|Dolomiti Energia|Estra Energie|Axpo|Pulsee|Alperia|Duferco|Optima Italia|Enegan|Agsm Aim|Tate|Sinergas|Bluenergy|Argos|Iren)\b/i;
+
 export function analizzaBolletta(testo, comuni = []) {
   const t = normalizza(testo);
   const c = {}, avvisi = [];
@@ -98,6 +101,18 @@ export function analizzaBolletta(testo, comuni = []) {
     const r = consumiDaBollette(st.map((x) => ({ ...x })));
     if (r && r.coperti >= 11) c.consumoAnnuo = { valore: Math.round(Object.values(r.mesi).reduce((a, b) => a + b, 0)), frase: "somma dello storico dei consumi degli ultimi 12 mesi" };
   }
+  // dettaglio importi (righe con prezzo unitario × quantità): cosa si paga e prezzi dell'offerta
+  const det = analizzaDettaglio(testo);
+  if (det && det.forn === tipo) {
+    c.dettaglio = { valore: det, frase: `${det.righe.length} righe nel dettaglio importi` };
+    if (!c.consumoPeriodo && det.consumo > 0) c.consumoPeriodo = { valore: det.consumo, frase: "somma dei consumi nelle righe «Energia» del dettaglio importi" };
+    if (!c.periodo && det.periodo) c.periodo = { valore: det.periodo, frase: "periodo delle righe del dettaglio importi" };
+    const kw = det.righe.find((r) => /potenza/i.test(r.descr) && typeof r.quantita === "string" && /kW/.test(r.quantita));
+    if (tipo === "LUCE" && kw && (!c.potenza || /€\s*\/\s*kW/.test(c.potenza.frase))) c.potenza = { valore: num(/kW\s*([\d,]+)/.exec(kw.quantita)[1]), frase: `«${kw.descr} … ${kw.quantita}»` };
+    if (det.canone && typeof c.canoneRai?.valore !== "number") c.canoneRai = { valore: det.canone, frase: "righe del canone di abbonamento alla televisione" };
+  }
+  const vend = trova(t, VENDITORI, (m) => m[1]);
+  if (vend) c.venditore = vend;
   if (tipo === "LUCE" && !c.consumoPeriodo && c.F1 && c.F2 && c.F3) c.consumoPeriodo = { valore: c.F1.valore + c.F2.valore + c.F3.valore, frase: "somma delle fasce F1+F2+F3" };
   if (!c.consumoAnnuo) avvisi.push("Non trovo il consumo annuo: controlla la sezione «consumi» della bolletta.");
   if (!c.codiceOfferta) avvisi.push("Non trovo il codice offerta (32 caratteri): senza, non posso ritrovare la tua offerta nel catalogo ARERA.");
